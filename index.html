@@ -254,6 +254,85 @@
     .seal { display: none; }
   }
 
+  /* ---------- Waitlist ---------- */
+  .waitlist {
+    background: var(--surface);
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .waitlist-inner {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 52px 28px;
+  }
+
+  .waitlist-head {
+    max-width: 56ch;
+  }
+
+  .waitlist-head h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-top: 8px;
+  }
+
+  .waitlist-head p {
+    margin-top: 10px;
+    color: var(--ink-soft);
+    font-size: 0.98rem;
+  }
+
+  form.waitlist-form {
+    margin-top: 26px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 12px;
+  }
+
+  .waitlist-form input {
+    font-family: "Public Sans", sans-serif;
+    font-size: 0.94rem;
+    color: var(--ink);
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 13px 14px;
+    min-width: 0;
+  }
+  .waitlist-form input::placeholder { color: var(--ink-faint); }
+  .waitlist-form input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-color: var(--accent);
+  }
+
+  .waitlist-form button {
+    font-family: "Public Sans", sans-serif;
+    font-weight: 600;
+    font-size: 0.94rem;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: 1px solid transparent;
+    border-radius: 3px;
+    padding: 13px 22px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .waitlist-form button:hover { background: var(--accent-strong); }
+
+  .waitlist-fine {
+    margin-top: 14px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 760px) {
+    form.waitlist-form { grid-template-columns: 1fr; }
+  }
+
   /* ---------- Sections ---------- */
   section {
     padding: 72px 0;
@@ -537,7 +616,7 @@
     <nav class="links">
       <a href="#programa">El programa</a>
       <a href="#para-quien">Para quién</a>
-      <a href="#precio">Precio</a>
+      <a href="#lista-espera">Lista de espera</a>
       <a href="#faq">Preguntas</a>
     </nav>
     <a class="btn btn-outline" href="#acceso">Acceso alumnos</a>
@@ -553,10 +632,10 @@
         <h1>Todos somos ciudadanos.<br>Pocos somos ciudadanos&nbsp;financieros.</h1>
         <p class="sub">Un curso práctico para entender cómo funciona el dinero, tomar mejores decisiones y dejar de depender únicamente de tu sueldo.</p>
         <div class="hero-ctas">
-          <a class="btn btn-primary" href="#precio">Quiero mi acceso →</a>
+          <a class="btn btn-primary" href="#lista-espera">Apúntate a la lista de espera →</a>
           <a class="link-plain" href="#programa">Ver el programa completo</a>
         </div>
-        <p class="meta-line">ACCESO INMEDIATO&nbsp;&nbsp;·&nbsp;&nbsp;APRENDE A TU RITMO&nbsp;&nbsp;·&nbsp;&nbsp;SIN CONOCIMIENTOS PREVIOS</p>
+        <p class="meta-line">PRÓXIMO LANZAMIENTO&nbsp;&nbsp;·&nbsp;&nbsp;PLAZAS LIMITADAS&nbsp;&nbsp;·&nbsp;&nbsp;SIN CONOCIMIENTOS PREVIOS</p>
       </div>
 
       <svg class="seal" viewBox="0 0 160 160" fill="none">
@@ -571,6 +650,24 @@
         <text x="80" y="76" text-anchor="middle" font-family="Fraunces, serif" font-size="26" font-weight="600" fill="var(--stamp)">CF</text>
         <text x="80" y="96" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="7" letter-spacing="1.5" fill="var(--stamp)">MMXXVI</text>
       </svg>
+    </div>
+  </section>
+
+  <section class="waitlist" id="lista-espera">
+    <div class="waitlist-inner">
+      <div class="waitlist-head">
+        <p class="eyebrow">Lista de espera</p>
+        <h2>Todavía no hemos abierto matrícula. Sé de los primeros en saberlo.</h2>
+        <p>Déjanos tus datos y te avisamos por email y WhatsApp en cuanto se abra el acceso, con condiciones especiales para quienes se apunten ahora.</p>
+      </div>
+      <!-- SYSTEME.IO: sustituir este <form> por el formulario embebido desde tu cuenta de systeme.io (Marketing → Formularios). Mantener los 3 campos: nombre, email y whatsapp. -->
+      <form class="waitlist-form" action="#" method="post">
+        <input type="text" name="nombre" placeholder="Tu nombre" required>
+        <input type="email" name="email" placeholder="Tu email" required>
+        <input type="tel" name="whatsapp" placeholder="Tu WhatsApp" required>
+        <button type="submit">Apuntarme →</button>
+      </form>
+      <p class="waitlist-fine">SIN SPAM · SOLO TE ESCRIBIREMOS PARA EL LANZAMIENTO</p>
     </div>
   </section>
 
@@ -664,7 +761,7 @@
   <section id="precio">
     <div class="wrap">
       <div class="head">
-        <p class="eyebrow">Precio</p>
+        <p class="eyebrow">Precio de lanzamiento</p>
         <h2>Tu ciudadanía financiera, en un solo pago</h2>
       </div>
 
@@ -680,8 +777,8 @@
           </ul>
         </div>
         <div class="price-cta">
-          <a class="btn btn-primary" href="#">Quiero ser ciudadano financiero</a>
-          <small>Pago seguro · Acceso inmediato</small>
+          <a class="btn btn-primary" href="#lista-espera">Apúntate a la lista de espera</a>
+          <small>Aún sin matricular · Plazas limitadas al lanzamiento</small>
         </div>
       </div>
     </div>
