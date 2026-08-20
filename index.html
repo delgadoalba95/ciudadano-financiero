@@ -283,54 +283,18 @@
     font-size: 0.98rem;
   }
 
-  form.waitlist-form {
+  .waitlist-cta {
     margin-top: 26px;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr auto;
-    gap: 12px;
+    padding: 14px 26px;
+    font-size: 0.98rem;
   }
-
-  .waitlist-form input {
-    font-family: "Public Sans", sans-serif;
-    font-size: 0.94rem;
-    color: var(--ink);
-    background: var(--surface-2);
-    border: 1px solid var(--rule);
-    border-radius: 3px;
-    padding: 13px 14px;
-    min-width: 0;
-  }
-  .waitlist-form input::placeholder { color: var(--ink-faint); }
-  .waitlist-form input:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 1px;
-    border-color: var(--accent);
-  }
-
-  .waitlist-form button {
-    font-family: "Public Sans", sans-serif;
-    font-weight: 600;
-    font-size: 0.94rem;
-    background: var(--accent);
-    color: var(--accent-ink);
-    border: 1px solid transparent;
-    border-radius: 3px;
-    padding: 13px 22px;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-  .waitlist-form button:hover { background: var(--accent-strong); }
 
   .waitlist-fine {
-    margin-top: 14px;
+    margin-top: 16px;
     font-family: "IBM Plex Mono", monospace;
     font-size: 0.72rem;
     letter-spacing: 0.02em;
     color: var(--ink-faint);
-  }
-
-  @media (max-width: 760px) {
-    form.waitlist-form { grid-template-columns: 1fr; }
   }
 
   /* ---------- Sections ---------- */
@@ -660,13 +624,7 @@
         <h2>Todavía no hemos abierto matrícula. Sé de los primeros en saberlo.</h2>
         <p>Déjanos tus datos y te avisamos por email y WhatsApp en cuanto se abra el acceso, con condiciones especiales para quienes se apunten ahora.</p>
       </div>
-      <!-- SYSTEME.IO: sustituir este <form> por el formulario embebido desde tu cuenta de systeme.io (Marketing → Formularios). Mantener los 3 campos: nombre, email y whatsapp. -->
-      <form class="waitlist-form" action="#" method="post">
-        <input type="text" name="nombre" placeholder="Tu nombre" required>
-        <input type="email" name="email" placeholder="Tu email" required>
-        <input type="tel" name="whatsapp" placeholder="Tu WhatsApp" required>
-        <button type="submit">Apuntarme →</button>
-      </form>
+      <a class="btn btn-primary waitlist-cta" href="https://ciudadanofinanciero.systeme.io/79b1e3f5">Apuntarme a la lista de espera →</a>
       <p class="waitlist-fine">SIN SPAM · SOLO TE ESCRIBIREMOS PARA EL LANZAMIENTO</p>
     </div>
   </section>
