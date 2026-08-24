@@ -305,8 +305,30 @@
     font-size: 0.9rem;
     color: var(--ink-soft);
     line-height: 1.55;
+    margin-top: 12px;
   }
   .profile-detail strong { color: var(--ink); }
+  .detail-list {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .detail-list li {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+  }
+  .detail-list li::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    flex: none;
+    margin-top: 2px;
+    background: var(--accent);
+  }
   .footer-note {
     font-family: "IBM Plex Mono", ui-monospace, monospace;
     font-size: 0.7rem;
@@ -482,7 +504,11 @@ document.getElementById("calc").addEventListener("click", () => {
           <div class="bar-track"><div class="bar-fill" style="width:${pct}%; background:${meta.color};"></div></div>
           <div class="profile-detail">
             <span class="badge" style="background:${band.bg}; color:${band.color};">${band.label}</span>
-            <strong>Miedo:</strong> ${meta.miedo} <strong>Creencia:</strong> ${meta.creencia} <strong>Siente:</strong> ${meta.siente}
+            <ul class="detail-list">
+              <li><strong>Miedo:</strong>&nbsp;${meta.miedo}</li>
+              <li><strong>Creencia:</strong>&nbsp;${meta.creencia}</li>
+              <li><strong>Siente:</strong>&nbsp;${meta.siente}</li>
+            </ul>
           </div>
         </div>
       </div>
