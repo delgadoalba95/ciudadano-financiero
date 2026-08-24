@@ -234,6 +234,100 @@
     display: none;
     margin-top: 36px;
   }
+
+  /* ---------- Gate modal ---------- */
+  .gate-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(28, 43, 71, 0.45);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 100;
+  }
+  .gate-backdrop.open { display: flex; }
+  .gate-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 4px;
+    padding: 30px 28px 26px;
+    max-width: 420px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .gate-card .eyebrow { margin-bottom: 8px; }
+  .gate-card h3 {
+    font-family: "Lora", Georgia, serif;
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin: 0 0 8px;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+  .gate-card p.gate-sub {
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    margin: 0 0 20px;
+  }
+  .gate-field {
+    margin-bottom: 12px;
+  }
+  .gate-field input[type="text"],
+  .gate-field input[type="email"],
+  .gate-field input[type="tel"] {
+    width: 100%;
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 0.94rem;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--card-border);
+    border-radius: 3px;
+    padding: 12px 13px;
+  }
+  .gate-field input::placeholder { color: var(--ink-soft); opacity: 0.8; }
+  .gate-field input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-color: var(--accent);
+  }
+  .gate-consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin: 16px 0 20px;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+  .gate-consent input {
+    margin-top: 3px;
+    flex: none;
+    accent-color: var(--accent);
+  }
+  button#gate-submit {
+    width: 100%;
+    font-family: "IBM Plex Sans", sans-serif;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: none;
+    padding: 14px 20px;
+    border-radius: 2px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button#gate-submit:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  #gate-error {
+    font-size: 0.8rem;
+    color: var(--seal);
+    margin-top: 10px;
+    display: none;
+  }
   .result-card {
     background: var(--card);
     border: 1px solid var(--card-border);
@@ -366,6 +460,32 @@
   <div class="footer-note">Ciudadano Financiero</div>
 </div>
 
+<div class="gate-backdrop" id="gate-backdrop">
+  <div class="gate-card">
+    <div class="eyebrow">Un último paso</div>
+    <h3>¿Dónde te enviamos tu resultado?</h3>
+    <p class="gate-sub">Déjanos tus datos para desbloquear tu perfil y te lo enviamos también por email y WhatsApp, junto con contenido sobre educación financiera.</p>
+
+    <div class="gate-field">
+      <input type="text" id="gate-nombre" placeholder="Tu nombre" autocomplete="name">
+    </div>
+    <div class="gate-field">
+      <input type="email" id="gate-email" placeholder="Tu email" autocomplete="email">
+    </div>
+    <div class="gate-field">
+      <input type="tel" id="gate-whatsapp" placeholder="Tu WhatsApp" autocomplete="tel">
+    </div>
+
+    <label class="gate-consent">
+      <input type="checkbox" id="gate-consent">
+      <span>Acepto recibir mi resultado y contenido sobre educación financiera por email y WhatsApp.</span>
+    </label>
+
+    <button id="gate-submit" disabled>Ver mi resultado →</button>
+    <div id="gate-error">Rellena tu nombre, email y WhatsApp, y acepta recibir información para continuar.</div>
+  </div>
+</div>
+
 <script>
 const questions = [
   { text: "Tener un buen colchón económico me hace sentir segura, incluso aunque no tenga intención de utilizarlo.", profile: "vigilante" },
@@ -476,6 +596,45 @@ function bandFor(score) {
 }
 
 document.getElementById("calc").addEventListener("click", () => {
+  document.getElementById("gate-backdrop").classList.add("open");
+  document.getElementById("gate-error").style.display = "none";
+});
+
+const gateNombre = document.getElementById("gate-nombre");
+const gateEmail = document.getElementById("gate-email");
+const gateWhatsapp = document.getElementById("gate-whatsapp");
+const gateConsent = document.getElementById("gate-consent");
+const gateSubmit = document.getElementById("gate-submit");
+
+function updateGateButton() {
+  const ready =
+    gateNombre.value.trim().length > 0 &&
+    gateEmail.value.trim().length > 0 &&
+    gateWhatsapp.value.trim().length > 0 &&
+    gateConsent.checked;
+  gateSubmit.disabled = !ready;
+}
+[gateNombre, gateEmail, gateWhatsapp].forEach(el => el.addEventListener("input", updateGateButton));
+gateConsent.addEventListener("change", updateGateButton);
+
+gateSubmit.addEventListener("click", () => {
+  if (gateSubmit.disabled) {
+    document.getElementById("gate-error").style.display = "block";
+    return;
+  }
+
+  // Lead data, ready to send to your CRM/systeme.io once that integration is wired up.
+  const lead = {
+    nombre: gateNombre.value.trim(),
+    email: gateEmail.value.trim(),
+    whatsapp: gateWhatsapp.value.trim()
+  };
+
+  document.getElementById("gate-backdrop").classList.remove("open");
+  showResults();
+});
+
+function showResults() {
   const raw = { vigilante: 0, obsesivo: 0, estatus: 0, evitativo: 0 };
   questions.forEach((q, i) => { raw[q.profile] += answers[i]; });
 
@@ -523,7 +682,7 @@ document.getElementById("calc").addEventListener("click", () => {
     </div>
   `;
   resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
-});
+}
 </script>
 
 </body>
