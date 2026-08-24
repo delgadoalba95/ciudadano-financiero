@@ -457,6 +457,28 @@
     margin-top: 12px;
   }
   .profile-detail strong { color: var(--ink); }
+  .strategy-box {
+    background: var(--paper);
+    border: 1px dashed var(--card-border);
+    border-radius: 4px;
+    padding: 18px 20px;
+    margin: 4px 0 22px;
+  }
+  .strategy-label {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .strategy-box p {
+    margin: 0;
+    font-size: 0.92rem;
+    color: var(--ink);
+    line-height: 1.55;
+  }
   .detail-list {
     list-style: none;
     margin: 10px 0 0;
@@ -575,27 +597,31 @@ const questions = [
 const profileMeta = {
   vigilante: {
     icon: "🛡️", name: "Vigilante", color: "var(--vigilante)",
-    miedo: "Inseguridad, no estar a salvo.",
-    creencia: "“Si no tengo margen, no estoy segura.”",
-    siente: "Necesidad de control."
+    creencia: "Inseguridad. “Si no tengo suficiente margen, no estoy segur@.”",
+    siente: "Necesidad de control.",
+    quehace: "Protege el dinero.",
+    estrategia: "Utilizar la prudencia como escudo. Ponle una cifra de 6 meses de tu sueldo a tu colchón de seguridad y, al alcanzarla, empieza a invertir en activos que te hagan crecer."
   },
   obsesivo: {
     icon: "🎯", name: "Obsesivo", color: "var(--obsesivo)",
-    miedo: "No ser suficiente.",
-    creencia: "“Cuando tenga más, estaré bien.”",
-    siente: "Que nunca es bastante."
+    creencia: "No ser suficiente. “Cuando tenga más, estaré bien.”",
+    siente: "Que nunca es bastante.",
+    quehace: "Persigue el dinero.",
+    estrategia: "Utilizar la ambición como motor. Cada vez que subas de sueldo o ingresos, invierte automáticamente el 50% de esa subida anual en una inversión que te permita tener más tiempo para ti."
   },
   estatus: {
     icon: "👑", name: "Estatus", color: "var(--estatus)",
-    miedo: "No ser vista ni valorada.",
-    creencia: "“Si se nota mi éxito, valgo más.”",
-    siente: "Necesidad de reconocimiento."
+    creencia: "No ser vist@ ni valorad@. “Si se nota mi éxito, valgo más.”",
+    siente: "Necesidad de reconocimiento.",
+    quehace: "Usa el dinero para demostrar.",
+    estrategia: "Utilizar el reconocimiento como impulso. Antes de una compra pensada para que la vean, espera 48 horas y, si no es necesaria, cambia el destino: compra un activo que aumente tu capacidad de producir más."
   },
   evitativo: {
     icon: "🏃", name: "Evitativo", color: "var(--evitativo)",
-    miedo: "Que el dinero la aleje de quien es.",
-    creencia: "“El dinero puede convertirme en alguien que no quiero ser.”",
-    siente: "Rechazo o culpa."
+    creencia: "Rechazo. “El dinero me convierte en alguien que no quiero ser.”",
+    siente: "Culpa por tener.",
+    quehace: "Se aleja del dinero.",
+    estrategia: "Utilizar tu calma como ventaja. Revisa tu cuenta una vez a la semana y anota tus 3 gastos más grandes de la semana, hasta que tus finanzas dejen de intimidarte."
   }
 };
 
@@ -779,12 +805,16 @@ function showResults() {
           <div class="profile-detail">
             <span class="badge" style="background:${band.bg}; color:${band.color};">${band.label}</span>
             <ul class="detail-list">
-              <li><strong>Miedo:</strong>&nbsp;${meta.miedo}</li>
               <li><strong>Creencia:</strong>&nbsp;${meta.creencia}</li>
               <li><strong>Siente:</strong>&nbsp;${meta.siente}</li>
+              <li><strong>¿Qué hace?:</strong>&nbsp;${meta.quehace}</li>
             </ul>
           </div>
         </div>
+      </div>
+      <div class="strategy-box">
+        <div class="strategy-label">Estrategia a seguir</div>
+        <p>${meta.estrategia}</p>
       </div>
     `;
   }
