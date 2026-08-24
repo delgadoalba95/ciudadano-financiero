@@ -186,6 +186,28 @@
     box-shadow: 0 0 0 1.5px var(--accent);
   }
 
+  .slider-wrap {
+    position: relative;
+  }
+  .track-ticks {
+    position: absolute;
+    top: 50%;
+    left: 9px;
+    right: 9px;
+    height: 9px;
+    transform: translateY(-50%);
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    pointer-events: none;
+  }
+  .track-ticks span {
+    width: 2px;
+    background: var(--thumb-empty-border);
+    border-radius: 1px;
+    opacity: 0.7;
+  }
+
   .tick-row {
     display: flex;
     justify-content: space-between;
@@ -636,7 +658,12 @@ questions.forEach((q, i) => {
   div.innerHTML = `
     <div class="q-num">Pregunta ${i + 1} de ${questions.length}</div>
     <div class="q-text">${q.text}</div>
-    <input type="range" min="1" max="5" step="1" value="3" list="ticks" id="slider${i}">
+    <div class="slider-wrap">
+      <input type="range" min="1" max="5" step="1" value="3" list="ticks" id="slider${i}">
+      <div class="track-ticks" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+    </div>
     <div class="tick-row">
       <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
     </div>
