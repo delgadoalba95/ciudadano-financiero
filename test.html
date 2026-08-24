@@ -737,13 +737,26 @@ gateSubmit.addEventListener("click", () => {
   showResults();
 });
 
+// Extreme answers (1 or 5) reveal more conviction than a mild lean (2 or 4),
+// so they should pull a profile's score further from neutral, not just add
+// their face value like every other answer. Weight grows with distance from
+// the neutral midpoint (3), and is applied to that same distance.
+function weightedContribution(v) {
+  const distance = Math.abs(v - 3);
+  const weight = 1 + distance;
+  return 3 + (v - 3) * weight;
+}
+
 function showResults() {
   const raw = { vigilante: 0, obsesivo: 0, estatus: 0, evitativo: 0 };
-  questions.forEach((q, i) => { raw[q.profile] += answers[i]; });
+  questions.forEach((q, i) => { raw[q.profile] += weightedContribution(answers[i]); });
 
+  // Per profile (3 questions): all "1"s -> -9, all neutral "3"s -> 9, all "5"s -> 27.
+  const RAW_MIN = -9, RAW_MAX = 27;
   const scaled = {};
   Object.keys(raw).forEach(p => {
-    scaled[p] = Math.round((raw[p] / 15) * 10 * 10) / 10;
+    const clamped = Math.max(RAW_MIN, Math.min(RAW_MAX, raw[p]));
+    scaled[p] = Math.round(((clamped - RAW_MIN) / (RAW_MAX - RAW_MIN)) * 10 * 10) / 10;
   });
 
   const order = Object.keys(scaled).sort((a, b) => scaled[b] - scaled[a]);
