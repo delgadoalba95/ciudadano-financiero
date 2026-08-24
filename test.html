@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tu relación con el dinero — Ciudadano Financiero</title>
+<meta name="description" content="Un test de 12 preguntas para descubrir tu perfil de relación con el dinero: Vigilante, Obsesivo, Estatus o Evitativo.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #eae3d0;
+    --paper-line: #ddd0ac;
+    --card: #f6f2e5;
+    --card-border: #ddd0ac;
+    --ink: #1c2b47;
+    --ink-soft: #57647c;
+    --accent: #a97d2a;
+    --accent-ink: #4a3510;
+    --seal: #8a3f2f;
+    --track-bg: #ddcfa9;
+    --thumb-empty-border: #ad9c72;
+    --vigilante: #3d6e8a;
+    --obsesivo: #b2552f;
+    --estatus: #7c5ea3;
+    --evitativo: #4f8b5e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #141d30;
+      --paper-line: #223154;
+      --card: #1a2740;
+      --card-border: #2c3c5e;
+      --ink: #f1ead9;
+      --ink-soft: #b9c2d6;
+      --accent: #d7a955;
+      --accent-ink: #241a08;
+      --seal: #d98a75;
+      --track-bg: #2c3c5e;
+      --thumb-empty-border: #57648a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #141d30;
+    --paper-line: #223154;
+    --card: #1a2740;
+    --card-border: #2c3c5e;
+    --ink: #f1ead9;
+    --ink-soft: #b9c2d6;
+    --accent: #d7a955;
+    --accent-ink: #241a08;
+    --seal: #d98a75;
+    --track-bg: #2c3c5e;
+    --thumb-empty-border: #57648a;
+  }
+  * { box-sizing: border-box; }
+  html, body { background: var(--paper); }
+  body {
+    margin: 0;
+    background: var(--paper);
+    background-image: repeating-linear-gradient(
+      to bottom, transparent, transparent 27px, var(--paper-line) 27px, var(--paper-line) 28px
+    );
+    color: var(--ink);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 48px 20px 90px;
+  }
+  .back-link {
+    display: inline-block;
+    margin-bottom: 22px;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+  .back-link:hover { color: var(--ink); }
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--seal);
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-family: "Lora", Georgia, "Times New Roman", serif;
+    font-weight: 700;
+    font-size: 2.1rem;
+    line-height: 1.15;
+    text-wrap: balance;
+    margin: 0 0 10px;
+    color: var(--ink);
+  }
+  .subtitle {
+    color: var(--ink-soft);
+    font-size: 1rem;
+    max-width: 46ch;
+    margin-bottom: 28px;
+  }
+  .intro {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 4px;
+    padding: 18px 20px;
+    margin-bottom: 28px;
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+  }
+  .intro strong { color: var(--ink); }
+  .question {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 4px;
+    padding: 22px 24px 20px;
+    margin-bottom: 14px;
+  }
+  .q-num {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    margin-bottom: 12px;
+  }
+  .q-text {
+    font-size: 1.05rem;
+    line-height: 1.45;
+    margin-bottom: 20px;
+    max-width: 58ch;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 20px;
+    background: transparent;
+    margin: 6px 0;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 3px;
+    background: var(--track-bg);
+    border-radius: 999px;
+  }
+  input[type="range"]::-moz-range-track {
+    height: 3px;
+    background: var(--track-bg);
+    border-radius: 999px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    margin-top: -8px;
+    background: transparent;
+    border: 2px solid var(--thumb-empty-border);
+    cursor: pointer;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: transparent;
+    border: 2px solid var(--thumb-empty-border);
+    cursor: pointer;
+  }
+  input[type="range"].touched::-webkit-slider-thumb {
+    background: var(--accent);
+    border: 3px solid var(--card);
+    box-shadow: 0 0 0 1.5px var(--accent);
+  }
+  input[type="range"].touched::-moz-range-thumb {
+    background: var(--accent);
+    border: 3px solid var(--card);
+    box-shadow: 0 0 0 1.5px var(--accent);
+  }
+
+  .end-labels {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.66rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+  .end-labels span:last-child { text-align: right; }
+  .current-value {
+    text-align: center;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    margin-top: 12px;
+  }
+  .current-value strong { color: var(--accent); }
+  .actions {
+    margin-top: 26px;
+    text-align: center;
+  }
+  button#calc {
+    font-family: "IBM Plex Sans", sans-serif;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: none;
+    padding: 14px 34px;
+    border-radius: 2px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+  }
+  button#calc:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  #missing-note {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    margin-top: 12px;
+  }
+  #results {
+    display: none;
+    margin-top: 36px;
+  }
+  .result-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 4px;
+    padding: 26px 26px 8px;
+    margin-bottom: 14px;
+  }
+  .result-card h2 {
+    font-family: "Lora", Georgia, serif;
+    font-weight: 700;
+    font-size: 1.3rem;
+    margin: 0 0 22px;
+    color: var(--ink);
+  }
+  .profile-block {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .seal {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 1.5px solid var(--seal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+  }
+  .profile-copy { flex: 1; min-width: 0; }
+  .result-kicker {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.68rem;
+    color: var(--ink-soft);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .profile-name {
+    font-family: "Lora", Georgia, serif;
+    font-weight: 700;
+    font-size: 1.15rem;
+    margin-bottom: 8px;
+  }
+  .bar-track {
+    background: var(--paper);
+    border: 1px solid var(--card-border);
+    border-radius: 999px;
+    height: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 999px;
+  }
+  .badge {
+    display: inline-block;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 2px;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .profile-detail {
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .profile-detail strong { color: var(--ink); }
+  .footer-note {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    text-align: center;
+    margin-top: 40px;
+    opacity: 0.7;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <a class="back-link" href="/">← Volver a Ciudadano Financiero</a>
+  <div class="eyebrow">Ciudadano Financiero · Test</div>
+  <h1>Tu relación con el dinero</h1>
+  <div class="subtitle">Tu forma de ver el dinero dice mucho de tu relación con él. Descúbrelo.</div>
+
+  <div class="intro">
+    <strong>12 preguntas</strong> (3 por perfil, mezcladas para que no se note a qué perfil pertenece
+    cada una). Mueve la barra según cuánto te identifique la frase: el centro es neutral, los extremos
+    son "totalmente en desacuerdo" o "totalmente de acuerdo".
+  </div>
+
+  <div id="questions"></div>
+
+  <div class="actions">
+    <button id="calc" disabled>Calcular resultado</button>
+    <div id="missing-note">Mueve las 12 barras para poder calcular el resultado.</div>
+  </div>
+
+  <div id="results"></div>
+
+  <div class="footer-note">Ciudadano Financiero</div>
+</div>
+
+<script>
+const questions = [
+  { text: "Tener un buen colchón económico me hace sentir segura, incluso aunque no tenga intención de utilizarlo.", profile: "vigilante" },
+  { text: "Cuando alcanzo un objetivo económico, rápidamente aparece otro que quiero conseguir.", profile: "obsesivo" },
+  { text: "Me importa que los demás perciban que me va bien económicamente.", profile: "estatus" },
+  { text: "A veces siento que preocuparse demasiado por el dinero es algo superficial o materialista.", profile: "evitativo" },
+  { text: "Me cuesta disfrutar del dinero presente porque pienso demasiado en posibles problemas futuros.", profile: "vigilante" },
+  { text: "Tengo la sensación de que todavía no he llegado al nivel económico que debería tener.", profile: "obsesivo" },
+  { text: "Me comparo económicamente con otras personas, aunque no quiera hacerlo.", profile: "estatus" },
+  { text: "Cuando pienso en tener muchísimo dinero, una parte de mí siente cierto rechazo o incomodidad.", profile: "evitativo" },
+  { text: "Me resulta difícil gastar una cantidad importante de dinero incluso cuando sé que puedo permitírmelo.", profile: "vigilante" },
+  { text: "Una parte de mí piensa: “Cuando consiga suficiente dinero, entonces podré relajarme y disfrutar de verdad.”", profile: "obsesivo" },
+  { text: "Me gusta que mi entorno pueda reconocer que he conseguido cosas importantes económicamente.", profile: "estatus" },
+  { text: "A veces prefiero no mirar demasiado mi cuenta bancaria o mis finanzas.", profile: "evitativo" },
+];
+
+const profileMeta = {
+  vigilante: {
+    icon: "🛡️", name: "Vigilante", color: "var(--vigilante)",
+    miedo: "Inseguridad, no estar a salvo.",
+    creencia: "“Si no tengo margen, no estoy segura.”",
+    siente: "Necesidad de control."
+  },
+  obsesivo: {
+    icon: "🎯", name: "Obsesivo", color: "var(--obsesivo)",
+    miedo: "No ser suficiente.",
+    creencia: "“Cuando tenga más, estaré bien.”",
+    siente: "Que nunca es bastante."
+  },
+  estatus: {
+    icon: "👑", name: "Estatus", color: "var(--estatus)",
+    miedo: "No ser vista ni valorada.",
+    creencia: "“Si se nota mi éxito, valgo más.”",
+    siente: "Necesidad de reconocimiento."
+  },
+  evitativo: {
+    icon: "🏃", name: "Evitativo", color: "var(--evitativo)",
+    miedo: "Que el dinero la aleje de quien es.",
+    creencia: "“El dinero puede convertirme en alguien que no quiero ser.”",
+    siente: "Rechazo o culpa."
+  }
+};
+
+const answers = new Array(questions.length).fill(3);
+const touched = new Array(questions.length).fill(false);
+const capForValue = { 1: "Totalmente en desacuerdo", 2: "Bastante en desacuerdo", 3: "Neutral", 4: "Bastante de acuerdo", 5: "Totalmente de acuerdo" };
+
+const qContainer = document.getElementById("questions");
+questions.forEach((q, i) => {
+  const div = document.createElement("div");
+  div.className = "question";
+  div.innerHTML = `
+    <div class="q-num">Pregunta ${i + 1} de ${questions.length}</div>
+    <div class="q-text">${q.text}</div>
+    <input type="range" min="1" max="5" step="1" value="3" list="ticks" id="slider${i}">
+    <div class="end-labels">
+      <span>Totalmente en desacuerdo</span>
+      <span>Totalmente de acuerdo</span>
+    </div>
+    <div class="current-value" id="current${i}">Todavía no has movido la barra</div>
+  `;
+  qContainer.appendChild(div);
+
+  const slider = div.querySelector(`#slider${i}`);
+  const currentLabel = div.querySelector(`#current${i}`);
+
+  function markTouched() {
+    const v = parseInt(slider.value, 10);
+    answers[i] = v;
+    touched[i] = true;
+    slider.classList.add("touched");
+    currentLabel.innerHTML = `Tu respuesta: <strong>${v} · ${capForValue[v]}</strong>`;
+    updateCalcButton();
+  }
+
+  slider.addEventListener("input", markTouched);
+  slider.addEventListener("pointerdown", markTouched);
+  slider.addEventListener("keydown", markTouched);
+});
+
+const datalist = document.createElement("datalist");
+datalist.id = "ticks";
+[1,2,3,4,5].forEach(v => {
+  const opt = document.createElement("option");
+  opt.value = v;
+  datalist.appendChild(opt);
+});
+document.body.appendChild(datalist);
+
+function updateCalcButton() {
+  const answeredCount = touched.filter(Boolean).length;
+  const btn = document.getElementById("calc");
+  const note = document.getElementById("missing-note");
+  if (answeredCount === questions.length) {
+    btn.disabled = false;
+    note.textContent = "";
+  } else {
+    btn.disabled = true;
+    note.textContent = `Has movido ${answeredCount} de ${questions.length} barras.`;
+  }
+}
+
+function bandFor(score) {
+  if (score >= 6.75) return { label: "Alta", color: "#c0472e", bg: "#f6d9d1" };
+  if (score >= 5.5) return { label: "Moderada-alta", color: "#b5762a", bg: "#f3e2c8" };
+  if (score >= 3.75) return { label: "Media", color: "#9a8a2a", bg: "#f0edc9" };
+  return { label: "Baja", color: "#3f8a4c", bg: "#d9efdc" };
+}
+
+document.getElementById("calc").addEventListener("click", () => {
+  const raw = { vigilante: 0, obsesivo: 0, estatus: 0, evitativo: 0 };
+  questions.forEach((q, i) => { raw[q.profile] += answers[i]; });
+
+  const scaled = {};
+  Object.keys(raw).forEach(p => {
+    scaled[p] = Math.round((raw[p] / 15) * 10 * 10) / 10;
+  });
+
+  const order = Object.keys(scaled).sort((a, b) => scaled[b] - scaled[a]);
+  const top = order[0];
+  const second = order[1];
+
+  const resultsDiv = document.getElementById("results");
+  resultsDiv.style.display = "block";
+
+  function rowHtml(p, kicker) {
+    const meta = profileMeta[p];
+    const band = bandFor(scaled[p]);
+    const pct = Math.min(100, (scaled[p] / 10) * 100);
+    return `
+      <div class="profile-block">
+        <div class="seal">${meta.icon}</div>
+        <div class="profile-copy">
+          <div class="result-kicker">${kicker}</div>
+          <div class="profile-name">${meta.name}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${pct}%; background:${meta.color};"></div></div>
+          <div class="profile-detail">
+            <span class="badge" style="background:${band.bg}; color:${band.color};">${band.label}</span>
+            <strong>Miedo:</strong> ${meta.miedo} <strong>Creencia:</strong> ${meta.creencia} <strong>Siente:</strong> ${meta.siente}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  resultsDiv.innerHTML = `
+    <div class="result-card">
+      <h2>Tu resultado</h2>
+      ${rowHtml(top, "Tu perfil más marcado")}
+      ${rowHtml(second, "Tu segundo perfil")}
+    </div>
+  `;
+  resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+</script>
+
+</body>
+</html>
