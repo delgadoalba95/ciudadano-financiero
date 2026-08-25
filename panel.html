@@ -21,6 +21,7 @@
     --accent-ink: #FBF6E8;
     --rule: #C9BA8C;
     --stamp: #7C3232;
+    --bad-bg: #f6d9d1;
     --good: #3f8a4c;
     --good-bg: #d9efdc;
   }
@@ -37,6 +38,7 @@
       --accent-ink: #1B1404;
       --rule: #33456354;
       --stamp: #C25555;
+      --bad-bg: #3a1a1a;
       --good: #6fbf7c;
       --good-bg: #163422;
     }
@@ -53,6 +55,7 @@
     --accent-ink: #1B1404;
     --rule: #33456354;
     --stamp: #C25555;
+    --bad-bg: #3a1a1a;
     --good: #6fbf7c;
     --good-bg: #163422;
   }
@@ -302,6 +305,15 @@
     color: var(--ink-soft);
   }
   #loading-state { display: none; }
+  #load-error {
+    background: var(--bad-bg);
+    border: 1px solid var(--stamp);
+    color: var(--stamp);
+    border-radius: 4px;
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+  }
 </style>
 </head>
 <body>
@@ -356,6 +368,7 @@
       </select>
     </div>
 
+    <div id="load-error" style="display:none;"></div>
     <div id="loading-state">Cargando contactos...</div>
     <div id="empty-state" style="display:none;">No hay contactos que coincidan con la búsqueda.</div>
     <div class="contact-list" id="contact-list"></div>
@@ -416,7 +429,7 @@
         "Authorization": `Bearer ${access_token}`
       }
     });
-    if (!res.ok) throw new Error("No se pudieron cargar los contactos.");
+    if (!res.ok) throw new Error("No se pudieron cargar los contactos. Prueba a recargar la página.");
     return res.json();
   }
 
@@ -433,26 +446,44 @@
     }
   }
 
+  // Loading contacts is separate from being logged in: a failure here (network
+  // hiccup, RLS misconfigured, etc.) should show "0 contactos" with a notice —
+  // never lock someone with valid credentials out of their own dashboard.
+  async function loadContactsIntoDashboard(access_token) {
+    const loadError = document.getElementById("load-error");
+    try {
+      allContacts = await fetchContacts(access_token);
+      loadError.style.display = "none";
+    } catch (e) {
+      allContacts = [];
+      loadError.textContent = e.message || "No se pudieron cargar los contactos.";
+      loadError.style.display = "block";
+    }
+    renderContacts();
+  }
+
   async function boot() {
     const session = loadSession();
     if (!session) { showLogin(); return; }
 
+    showDashboard();
+    let access_token = session.access_token;
     try {
-      let access_token = session.access_token;
-      // Try loading contacts directly; if the token has expired, refresh once.
+      await fetch(`${window.SUPABASE_URL}/rest/v1/contacts?select=id&limit=1`, {
+        headers: { "apikey": window.SUPABASE_ANON_KEY, "Authorization": `Bearer ${access_token}` }
+      }).then(r => { if (r.status === 401) throw new Error("expired"); });
+    } catch {
       try {
-        allContacts = await fetchContacts(access_token);
-      } catch {
         const refreshed = await refreshSession(session.refresh_token);
         saveSession(refreshed);
-        allContacts = await fetchContacts(refreshed.access_token);
+        access_token = refreshed.access_token;
+      } catch {
+        clearSession();
+        showLogin("Tu sesión ha caducado. Entra de nuevo.");
+        return;
       }
-      showDashboard();
-      renderContacts();
-    } catch (e) {
-      clearSession();
-      showLogin("Tu sesión ha caducado. Entra de nuevo.");
     }
+    await loadContactsIntoDashboard(access_token);
   }
 
   loginBtn.addEventListener("click", async () => {
@@ -462,9 +493,8 @@
     try {
       const session = await login(loginEmail.value.trim(), loginPassword.value);
       saveSession(session);
-      allContacts = await fetchContacts(session.access_token);
       showDashboard();
-      renderContacts();
+      await loadContactsIntoDashboard(session.access_token);
     } catch (e) {
       loginError.textContent = e.message || "No se pudo iniciar sesión.";
       loginError.style.display = "block";
@@ -546,6 +576,9 @@
 
     if (filtered.length === 0) {
       list.innerHTML = "";
+      empty.textContent = allContacts.length === 0
+        ? "Todavía no tienes contactos. En cuanto alguien se apunte a la lista de espera o haga el test, aparecerá aquí."
+        : "No hay contactos que coincidan con la búsqueda.";
       empty.style.display = "block";
       return;
     }
