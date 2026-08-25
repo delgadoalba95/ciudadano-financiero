@@ -600,6 +600,7 @@
   </div>
 </div>
 
+<script src="/supabase-config.js"></script>
 <script>
 const questions = [
   { text: "Tener un buen colchón económico me hace sentir segura, incluso aunque no tenga intención de utilizarlo.", profile: "vigilante" },
@@ -773,18 +774,35 @@ gateCountry.addEventListener("change", () => {
 });
 updatePhoneHint();
 
-gateSubmit.addEventListener("click", () => {
+gateSubmit.addEventListener("click", async () => {
   if (gateSubmit.disabled) {
     document.getElementById("gate-error").style.display = "block";
     return;
   }
 
-  // Lead data, ready to send to your CRM/systeme.io once that integration is wired up.
-  const lead = {
-    nombre: gateNombre.value.trim(),
-    email: gateEmail.value.trim(),
-    whatsapp: "+" + gateCountry.value + " " + gateWhatsapp.value.trim()
-  };
+  const { scaled, order } = computeScores();
+  const answersByProfile = {};
+  questions.forEach((q, i) => { answersByProfile[i] = { profile: q.profile, value: answers[i] }; });
+
+  gateSubmit.disabled = true;
+  gateSubmit.textContent = "Guardando...";
+
+  try {
+    await submitContact({
+      nombre: gateNombre.value.trim(),
+      email: gateEmail.value.trim(),
+      whatsapp: "+" + gateCountry.value + " " + gateWhatsapp.value.trim(),
+      consent: true,
+      source: "test",
+      testAnswers: { raw_answers: answersByProfile, scores: scaled },
+      testResultTop: order[0],
+      testResultSecond: order[1]
+    });
+  } catch (e) {
+    // Even if saving fails, don't block the person from seeing their result —
+    // just log it quietly so the experience isn't held hostage by the network.
+    console.error(e);
+  }
 
   document.getElementById("gate-backdrop").classList.remove("open");
   showResults();
@@ -800,7 +818,7 @@ function weightedContribution(v) {
   return 3 + (v - 3) * weight;
 }
 
-function showResults() {
+function computeScores() {
   const raw = { vigilante: 0, obsesivo: 0, estatus: 0, evitativo: 0 };
   questions.forEach((q, i) => { raw[q.profile] += weightedContribution(answers[i]); });
 
@@ -813,6 +831,11 @@ function showResults() {
   });
 
   const order = Object.keys(scaled).sort((a, b) => scaled[b] - scaled[a]);
+  return { scaled, order };
+}
+
+function showResults() {
+  const { scaled, order } = computeScores();
   const top = order[0];
 
   const resultsDiv = document.getElementById("results");

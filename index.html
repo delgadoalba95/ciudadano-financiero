@@ -283,11 +283,95 @@
     font-size: 0.98rem;
   }
 
-  .waitlist-cta {
+  .waitlist-form {
     margin-top: 26px;
+    max-width: 480px;
+  }
+
+  .waitlist-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .waitlist-fields input {
+    font-family: "Public Sans", sans-serif;
+    font-size: 0.94rem;
+    color: var(--ink);
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 13px 14px;
+    width: 100%;
+  }
+  .waitlist-fields input::placeholder { color: var(--ink-faint); }
+  .waitlist-fields input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-color: var(--accent);
+  }
+  .waitlist-fields input.field-invalid {
+    border-color: var(--stamp);
+  }
+  .wl-phone-row {
+    display: flex;
+    gap: 8px;
+  }
+  .wl-phone-row select {
+    font-family: "Public Sans", sans-serif;
+    font-size: 0.9rem;
+    color: var(--ink);
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 12px 8px;
+    flex: none;
+    width: 108px;
+  }
+  .wl-phone-row input[type="tel"] {
+    width: 100%;
+    min-width: 0;
+  }
+  .wl-phone-hint {
+    font-size: 0.74rem;
+    color: var(--ink-faint);
+    margin-top: 2px;
+  }
+
+  .waitlist-consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin: 14px 0 4px;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+  .waitlist-consent input {
+    margin-top: 3px;
+    flex: none;
+    accent-color: var(--accent);
+  }
+
+  .waitlist-cta {
+    margin-top: 14px;
     padding: 14px 26px;
     font-size: 0.98rem;
+    cursor: pointer;
+    border: 1px solid transparent;
   }
+  .waitlist-cta:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .waitlist-status {
+    margin-top: 12px;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+  .waitlist-status.ok { color: #3f8a4c; }
+  .waitlist-status.err { color: var(--stamp); }
 
   .waitlist-fine {
     margin-top: 16px;
@@ -628,7 +712,35 @@
         <h2>Todavía no hemos abierto matrícula. Sé de los primeros en saberlo.</h2>
         <p>Déjanos tus datos y te avisamos por email y WhatsApp en cuanto se abra el acceso, con condiciones especiales para quienes se apunten ahora.</p>
       </div>
-      <a class="btn btn-primary waitlist-cta" href="https://ciudadanofinanciero.systeme.io/listadeespera">Apuntarme a la lista de espera →</a>
+      <form class="waitlist-form" id="waitlist-form">
+        <div class="waitlist-fields">
+          <input type="text" id="wl-nombre" placeholder="Tu nombre" autocomplete="name">
+          <input type="email" id="wl-email" placeholder="Tu email" autocomplete="email">
+          <div class="wl-phone-row">
+            <select id="wl-country" aria-label="Código de país">
+              <option value="34" selected>🇪🇸 +34</option>
+              <option value="52">🇲🇽 +52</option>
+              <option value="54">🇦🇷 +54</option>
+              <option value="57">🇨🇴 +57</option>
+              <option value="56">🇨🇱 +56</option>
+              <option value="51">🇵🇪 +51</option>
+              <option value="58">🇻🇪 +58</option>
+              <option value="593">🇪🇨 +593</option>
+              <option value="1">🇺🇸 +1</option>
+              <option value="44">🇬🇧 +44</option>
+              <option value="other">🌐 Otro</option>
+            </select>
+            <input type="tel" id="wl-whatsapp" placeholder="600 000 000" autocomplete="tel" inputmode="numeric">
+          </div>
+          <div class="wl-phone-hint" id="wl-phone-hint">España: 9 dígitos.</div>
+        </div>
+        <label class="waitlist-consent">
+          <input type="checkbox" id="wl-consent">
+          <span>Acepto recibir el aviso de lanzamiento y contenido sobre educación financiera por email y WhatsApp.</span>
+        </label>
+        <button type="submit" class="btn btn-primary waitlist-cta" id="wl-submit" disabled>Apuntarme a la lista de espera →</button>
+        <p class="waitlist-status" id="wl-status"></p>
+      </form>
       <p class="waitlist-fine">SIN SPAM · SOLO TE ESCRIBIREMOS PARA EL LANZAMIENTO</p>
     </div>
   </section>
@@ -804,5 +916,79 @@
     </div>
   </div>
 </footer>
+
+<script src="/supabase-config.js"></script>
+<script>
+(function () {
+  const nombre = document.getElementById("wl-nombre");
+  const email = document.getElementById("wl-email");
+  const country = document.getElementById("wl-country");
+  const whatsapp = document.getElementById("wl-whatsapp");
+  const phoneHint = document.getElementById("wl-phone-hint");
+  const consent = document.getElementById("wl-consent");
+  const submitBtn = document.getElementById("wl-submit");
+  const status = document.getElementById("wl-status");
+  const form = document.getElementById("waitlist-form");
+
+  function isValidEmail(v) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+  }
+  function requiredDigits() {
+    return country.value === "34" ? 9 : 6;
+  }
+  function isValidPhone(v) {
+    return v.replace(/\D/g, "").length >= requiredDigits();
+  }
+  function updatePhoneHint() {
+    phoneHint.textContent = country.value === "34" ? "España: 9 dígitos." : "Mínimo 6 dígitos.";
+  }
+
+  function updateSubmitState() {
+    const nombreOk = nombre.value.trim().length > 1;
+    const emailOk = isValidEmail(email.value);
+    const phoneOk = isValidPhone(whatsapp.value);
+
+    email.classList.toggle("field-invalid", email.value.length > 0 && !emailOk);
+    whatsapp.classList.toggle("field-invalid", whatsapp.value.length > 0 && !phoneOk);
+
+    submitBtn.disabled = !(nombreOk && emailOk && phoneOk && consent.checked);
+  }
+
+  [nombre, email, whatsapp].forEach(el => el.addEventListener("input", updateSubmitState));
+  consent.addEventListener("change", updateSubmitState);
+  country.addEventListener("change", () => { updatePhoneHint(); updateSubmitState(); });
+  updatePhoneHint();
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (submitBtn.disabled) return;
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Guardando...";
+    status.textContent = "";
+    status.className = "waitlist-status";
+
+    try {
+      await submitContact({
+        nombre: nombre.value.trim(),
+        email: email.value.trim(),
+        whatsapp: "+" + country.value + " " + whatsapp.value.trim(),
+        consent: true,
+        source: "waitlist"
+      });
+      form.reset();
+      updatePhoneHint();
+      status.textContent = "¡Listo! Te avisaremos en cuanto abramos matrícula.";
+      status.className = "waitlist-status ok";
+      submitBtn.textContent = "Apuntarme a la lista de espera →";
+    } catch (err) {
+      status.textContent = "Algo ha fallado. Inténtalo de nuevo en un momento.";
+      status.className = "waitlist-status err";
+      submitBtn.textContent = "Apuntarme a la lista de espera →";
+      submitBtn.disabled = false;
+    }
+  });
+})();
+</script>
 </body>
 </html>
