@@ -180,6 +180,46 @@
     padding: 28px 24px 60px;
   }
 
+  .panel-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .panel-tab {
+    font-family: "Public Sans", sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: transparent;
+    color: var(--ink-soft);
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 10px 4px;
+    margin-bottom: -1px;
+    cursor: pointer;
+  }
+  .panel-tab.active {
+    color: var(--ink);
+    border-bottom-color: var(--accent);
+  }
+  .panel-tab:hover { color: var(--ink); }
+
+  .email-row {
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .email-row .subject { font-weight: 600; font-size: 0.94rem; }
+  .email-row .meta { font-size: 0.82rem; color: var(--ink-soft); margin-top: 2px; }
+  .badge-sent { background: var(--good-bg); color: var(--good); }
+  .badge-failed { background: var(--bad-bg); color: var(--stamp); }
+
   .stats-row {
     display: flex;
     gap: 14px;
@@ -344,34 +384,57 @@
   </header>
 
   <main class="panel-main">
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="num" id="stat-total">0</div>
-        <div class="label">Contactos</div>
-      </div>
-      <div class="stat-card">
-        <div class="num" id="stat-waitlist">0</div>
-        <div class="label">Lista de espera</div>
-      </div>
-      <div class="stat-card">
-        <div class="num" id="stat-test">0</div>
-        <div class="label">Hicieron el test</div>
-      </div>
+    <div class="panel-tabs">
+      <button class="panel-tab active" id="tab-btn-contacts">Contactos</button>
+      <button class="panel-tab" id="tab-btn-emails">Emails enviados</button>
     </div>
 
-    <div class="toolbar">
-      <input type="text" id="search-input" placeholder="Buscar por nombre o email...">
-      <select class="filter-select" id="filter-source">
-        <option value="all">Todos</option>
-        <option value="waitlist">Solo lista de espera</option>
-        <option value="test">Solo test</option>
-      </select>
+    <div id="tab-contacts">
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="num" id="stat-total">0</div>
+          <div class="label">Contactos</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" id="stat-waitlist">0</div>
+          <div class="label">Lista de espera</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" id="stat-test">0</div>
+          <div class="label">Hicieron el test</div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <input type="text" id="search-input" placeholder="Buscar por nombre o email...">
+        <select class="filter-select" id="filter-source">
+          <option value="all">Todos</option>
+          <option value="waitlist">Solo lista de espera</option>
+          <option value="test">Solo test</option>
+        </select>
+      </div>
+
+      <div id="load-error" style="display:none;"></div>
+      <div id="loading-state">Cargando contactos...</div>
+      <div id="empty-state" style="display:none;">No hay contactos que coincidan con la búsqueda.</div>
+      <div class="contact-list" id="contact-list"></div>
     </div>
 
-    <div id="load-error" style="display:none;"></div>
-    <div id="loading-state">Cargando contactos...</div>
-    <div id="empty-state" style="display:none;">No hay contactos que coincidan con la búsqueda.</div>
-    <div class="contact-list" id="contact-list"></div>
+    <div id="tab-emails" style="display:none;">
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="num" id="stat-emails-sent">0</div>
+          <div class="label">Enviados</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" id="stat-emails-failed">0</div>
+          <div class="label">Fallidos</div>
+        </div>
+      </div>
+      <div id="email-load-error" style="display:none;"></div>
+      <div id="email-empty-state" style="display:none;">Todavía no se ha enviado ningún email.</div>
+      <div class="contact-list" id="email-list"></div>
+    </div>
   </main>
 </div>
 
@@ -389,6 +452,9 @@
   const logoutBtn = document.getElementById("logout-btn");
 
   let allContacts = [];
+  let allEmails = [];
+  let currentAccessToken = null;
+  let emailsLoaded = false;
 
   function saveSession(session) {
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
@@ -446,10 +512,81 @@
     }
   }
 
+  async function fetchEmailLog(access_token) {
+    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/email_log?select=*&order=sent_at.desc`, {
+      headers: {
+        "apikey": window.SUPABASE_ANON_KEY,
+        "Authorization": `Bearer ${access_token}`
+      }
+    });
+    if (!res.ok) throw new Error("No se pudo cargar el historial de emails.");
+    return res.json();
+  }
+
+  function renderEmailLog() {
+    document.getElementById("stat-emails-sent").textContent = allEmails.filter(e => e.status === "sent").length;
+    document.getElementById("stat-emails-failed").textContent = allEmails.filter(e => e.status === "failed").length;
+
+    const list = document.getElementById("email-list");
+    const empty = document.getElementById("email-empty-state");
+
+    if (allEmails.length === 0) {
+      list.innerHTML = "";
+      empty.style.display = "block";
+      return;
+    }
+    empty.style.display = "none";
+    list.innerHTML = allEmails.map(e => `
+      <div class="email-row">
+        <div>
+          <div class="subject">${escapeHtml(e.subject)}</div>
+          <div class="meta">${escapeHtml(e.email)}${e.error ? " · " + escapeHtml(e.error) : ""}</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span class="badge ${e.status === 'sent' ? 'badge-sent' : 'badge-failed'}">${e.status === 'sent' ? 'Enviado' : 'Fallido'}</span>
+          <div class="contact-date">${formatDate(e.sent_at)}</div>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  async function loadEmailLogIntoDashboard(access_token) {
+    const loadError = document.getElementById("email-load-error");
+    try {
+      allEmails = await fetchEmailLog(access_token);
+      loadError.style.display = "none";
+      emailsLoaded = true;
+    } catch (e) {
+      allEmails = [];
+      loadError.textContent = e.message || "No se pudo cargar el historial de emails.";
+      loadError.style.display = "block";
+    }
+    renderEmailLog();
+  }
+
+  const tabBtnContacts = document.getElementById("tab-btn-contacts");
+  const tabBtnEmails = document.getElementById("tab-btn-emails");
+  tabBtnContacts.addEventListener("click", () => {
+    tabBtnContacts.classList.add("active");
+    tabBtnEmails.classList.remove("active");
+    document.getElementById("tab-contacts").style.display = "block";
+    document.getElementById("tab-emails").style.display = "none";
+  });
+  tabBtnEmails.addEventListener("click", async () => {
+    tabBtnEmails.classList.add("active");
+    tabBtnContacts.classList.remove("active");
+    document.getElementById("tab-contacts").style.display = "none";
+    document.getElementById("tab-emails").style.display = "block";
+    if (!emailsLoaded && currentAccessToken) {
+      await loadEmailLogIntoDashboard(currentAccessToken);
+    }
+  });
+
   // Loading contacts is separate from being logged in: a failure here (network
   // hiccup, RLS misconfigured, etc.) should show "0 contactos" with a notice —
   // never lock someone with valid credentials out of their own dashboard.
   async function loadContactsIntoDashboard(access_token) {
+    currentAccessToken = access_token;
     const loadError = document.getElementById("load-error");
     try {
       allContacts = await fetchContacts(access_token);
@@ -507,6 +644,9 @@
   logoutBtn.addEventListener("click", () => {
     clearSession();
     allContacts = [];
+    allEmails = [];
+    emailsLoaded = false;
+    currentAccessToken = null;
     showLogin();
   });
 
