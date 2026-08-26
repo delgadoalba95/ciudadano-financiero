@@ -727,8 +727,7 @@ function bandFor(score) {
 }
 
 document.getElementById("calc").addEventListener("click", () => {
-  document.getElementById("gate-backdrop").classList.add("open");
-  document.getElementById("gate-error").style.display = "none";
+  showResults();
 });
 
 const gateNombre = document.getElementById("gate-nombre");
