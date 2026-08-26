@@ -220,6 +220,91 @@
   .badge-sent { background: var(--good-bg); color: var(--good); }
   .badge-failed { background: var(--bad-bg); color: var(--stamp); }
 
+  .select-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .select-all {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .select-all input { accent-color: var(--accent); }
+  .contact-checkbox {
+    margin-right: 12px;
+    accent-color: var(--accent);
+    flex: none;
+  }
+  .contact-row-top { align-items: flex-start; }
+
+  .compose-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(28, 43, 71, 0.5);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 200;
+  }
+  .compose-backdrop.open { display: flex; }
+  .compose-card {
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 26px 28px;
+    max-width: 560px;
+    width: 100%;
+    max-height: 88vh;
+    overflow-y: auto;
+  }
+  .compose-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .compose-header h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+  .compose-field { margin-bottom: 14px; }
+  .compose-field label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    margin-bottom: 5px;
+  }
+  .compose-field input, .compose-field textarea {
+    width: 100%;
+    font-family: "Public Sans", sans-serif;
+    font-size: 0.92rem;
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 11px 13px;
+    resize: vertical;
+  }
+  #compose-error {
+    font-size: 0.85rem;
+    color: var(--stamp);
+    margin-bottom: 12px;
+  }
+  #compose-success {
+    font-size: 0.85rem;
+    color: var(--good);
+    margin-bottom: 12px;
+  }
+
   .stats-row {
     display: flex;
     gap: 14px;
@@ -414,6 +499,14 @@
         </select>
       </div>
 
+      <div class="select-bar">
+        <label class="select-all">
+          <input type="checkbox" id="select-all-checkbox">
+          <span>Seleccionar todos los visibles</span>
+        </label>
+        <button class="btn-outline" id="compose-btn" disabled>Redactar email (<span id="selected-count">0</span>)</button>
+      </div>
+
       <div id="load-error" style="display:none;"></div>
       <div id="loading-state">Cargando contactos...</div>
       <div id="empty-state" style="display:none;">No hay contactos que coincidan con la búsqueda.</div>
@@ -436,6 +529,26 @@
       <div class="contact-list" id="email-list"></div>
     </div>
   </main>
+</div>
+
+<div class="compose-backdrop" id="compose-backdrop">
+  <div class="compose-card">
+    <div class="compose-header">
+      <h3>Redactar email — <span id="compose-recipient-count">0</span> destinatarios</h3>
+      <button class="btn-outline" id="compose-close-btn">Cerrar</button>
+    </div>
+    <div class="compose-field">
+      <label for="compose-subject">Asunto</label>
+      <input type="text" id="compose-subject" placeholder="Asunto del email">
+    </div>
+    <div class="compose-field">
+      <label for="compose-body">Mensaje (HTML permitido, usa {{nombre}} para el nombre de cada persona)</label>
+      <textarea id="compose-body" rows="10" placeholder="Hola {{nombre}},&#10;&#10;..."></textarea>
+    </div>
+    <div id="compose-error" style="display:none;"></div>
+    <div id="compose-success" style="display:none;"></div>
+    <button class="btn" id="compose-send-btn">Enviar</button>
+  </div>
 </div>
 
 <script src="/supabase-config.js"></script>
@@ -680,10 +793,12 @@
       `;
     }
 
+    const checked = selectedContactIds.has(c.id) ? "checked" : "";
     return `
       <div class="contact-row" data-id="${c.id}">
         <div class="contact-row-top">
-          <div>
+          <input type="checkbox" class="contact-checkbox" data-id="${c.id}" ${checked}>
+          <div style="flex:1; min-width:0;">
             <div class="contact-name">${escapeHtml(c.name)}</div>
             <div class="contact-meta">${escapeHtml(c.email)} · ${escapeHtml(c.whatsapp)}</div>
           </div>
@@ -695,6 +810,14 @@
         ${detail ? `<div class="contact-detail">${detail}</div>` : ""}
       </div>
     `;
+  }
+
+  const selectedContactIds = new Set();
+
+  function updateComposeButton() {
+    const count = selectedContactIds.size;
+    document.getElementById("selected-count").textContent = count;
+    document.getElementById("compose-btn").disabled = count === 0;
   }
 
   function renderContacts() {
@@ -726,15 +849,119 @@
     list.innerHTML = filtered.map(contactRowHtml).join("");
 
     list.querySelectorAll(".contact-row").forEach(row => {
-      row.addEventListener("click", () => {
+      row.addEventListener("click", (e) => {
+        if (e.target.classList.contains("contact-checkbox")) return;
         const d = row.querySelector(".contact-detail");
         if (d) d.classList.toggle("open");
       });
     });
+    list.querySelectorAll(".contact-checkbox").forEach(cb => {
+      cb.addEventListener("click", (e) => e.stopPropagation());
+      cb.addEventListener("change", () => {
+        const id = cb.dataset.id;
+        if (cb.checked) selectedContactIds.add(id); else selectedContactIds.delete(id);
+        updateComposeButton();
+        syncSelectAllCheckbox(filtered);
+      });
+    });
+
+    syncSelectAllCheckbox(filtered);
+    updateComposeButton();
   }
+
+  function syncSelectAllCheckbox(filtered) {
+    const selectAll = document.getElementById("select-all-checkbox");
+    if (filtered.length === 0) { selectAll.checked = false; return; }
+    selectAll.checked = filtered.every(c => selectedContactIds.has(c.id));
+  }
+
+  document.getElementById("select-all-checkbox").addEventListener("change", (e) => {
+    const q = document.getElementById("search-input").value.trim().toLowerCase();
+    const filter = document.getElementById("filter-source").value;
+    const filtered = allContacts.filter(c => {
+      const matchesQuery = !q || c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q);
+      const matchesFilter = filter === "all" || (filter === "waitlist" && c.is_waitlist) || (filter === "test" && c.is_test);
+      return matchesQuery && matchesFilter;
+    });
+    filtered.forEach(c => {
+      if (e.target.checked) selectedContactIds.add(c.id); else selectedContactIds.delete(c.id);
+    });
+    renderContacts();
+  });
 
   document.getElementById("search-input").addEventListener("input", renderContacts);
   document.getElementById("filter-source").addEventListener("change", renderContacts);
+
+  // ---------- Compose & send ----------
+  const composeBackdrop = document.getElementById("compose-backdrop");
+  document.getElementById("compose-btn").addEventListener("click", () => {
+    document.getElementById("compose-recipient-count").textContent = selectedContactIds.size;
+    document.getElementById("compose-error").style.display = "none";
+    document.getElementById("compose-success").style.display = "none";
+    composeBackdrop.classList.add("open");
+  });
+  document.getElementById("compose-close-btn").addEventListener("click", () => {
+    composeBackdrop.classList.remove("open");
+  });
+
+  document.getElementById("compose-send-btn").addEventListener("click", async () => {
+    const subject = document.getElementById("compose-subject").value.trim();
+    const body = document.getElementById("compose-body").value.trim();
+    const errorEl = document.getElementById("compose-error");
+    const successEl = document.getElementById("compose-success");
+    errorEl.style.display = "none";
+    successEl.style.display = "none";
+
+    if (!subject || !body) {
+      errorEl.textContent = "Escribe un asunto y un mensaje.";
+      errorEl.style.display = "block";
+      return;
+    }
+    if (selectedContactIds.size === 0) {
+      errorEl.textContent = "No hay destinatarios seleccionados.";
+      errorEl.style.display = "block";
+      return;
+    }
+    if (!currentAccessToken) {
+      errorEl.textContent = "Tu sesión no está lista todavía, recarga la página.";
+      errorEl.style.display = "block";
+      return;
+    }
+
+    const recipients = allContacts.filter(c => selectedContactIds.has(c.id))
+      .map(c => ({ id: c.id, email: c.email, name: c.name }));
+
+    const sendBtn = document.getElementById("compose-send-btn");
+    sendBtn.disabled = true;
+    sendBtn.textContent = "Enviando...";
+
+    try {
+      const res = await fetch(`${window.SUPABASE_URL}/functions/v1/send-manual-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${currentAccessToken}`,
+          "apikey": window.SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({ contacts: recipients, subject, html: body.replace(/\n/g, "<br>") })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "No se pudo enviar.");
+
+      successEl.textContent = `Enviado: ${data.sent} · Fallidos: ${data.failed}`;
+      successEl.style.display = "block";
+      emailsLoaded = false;
+      if (document.getElementById("tab-emails").style.display === "block") {
+        await loadEmailLogIntoDashboard(currentAccessToken);
+      }
+    } catch (e) {
+      errorEl.textContent = e.message || "No se pudo enviar el email.";
+      errorEl.style.display = "block";
+    } finally {
+      sendBtn.disabled = false;
+      sendBtn.textContent = "Enviar";
+    }
+  });
 
   boot();
 })();
