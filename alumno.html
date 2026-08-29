@@ -338,13 +338,20 @@
     </div>
     <div class="eyebrow">Área de alumnos</div>
     <h1>Entra a tu balance</h1>
-    <p class="desc">Escribe el email con el que te matriculaste. Te mandamos un enlace de acceso, sin contraseña.</p>
-    <div class="gate-field">
+    <p class="desc">Escribe el email con el que te matriculaste. Te mandamos un enlace de acceso y un código de 6 dígitos, sin contraseña.</p>
+    <div class="gate-field" id="field-email">
       <label for="login-email">Email</label>
       <input type="email" id="login-email" autocomplete="email" placeholder="tú@email.com">
     </div>
     <button class="gate-btn" id="login-btn">Enviarme el enlace de acceso</button>
     <div class="gate-note" id="login-note"></div>
+
+    <div class="gate-field" id="field-code" style="display:none; margin-top:16px;">
+      <label for="login-code">Código de 6 dígitos</label>
+      <input type="text" id="login-code" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" maxlength="6">
+    </div>
+    <button class="gate-btn" id="code-btn" style="display:none; margin-top:10px;">Confirmar código</button>
+    <div class="gate-note" id="code-note"></div>
   </div>
 </div>
 
@@ -531,6 +538,20 @@
     }
   }
 
+  async function verifyOtpCode(email, token){
+    var res = await fetch(window.SUPABASE_URL + "/auth/v1/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "apikey": window.SUPABASE_ANON_KEY },
+      body: JSON.stringify({ type: "email", email: email, token: token })
+    });
+    if(!res.ok){
+      var data = null;
+      try{ data = await res.json(); }catch(e){}
+      throw new Error((data && data.msg) || "Código incorrecto o caducado.");
+    }
+    return res.json();
+  }
+
   async function refreshSession(refresh_token){
     var res = await fetch(window.SUPABASE_URL + "/auth/v1/token?grant_type=refresh_token", {
       method: "POST",
@@ -577,6 +598,11 @@
   var loginEmail = document.getElementById("login-email");
   var loginBtn = document.getElementById("login-btn");
   var loginNote = document.getElementById("login-note");
+  var fieldCode = document.getElementById("field-code");
+  var loginCode = document.getElementById("login-code");
+  var codeBtn = document.getElementById("code-btn");
+  var codeNote = document.getElementById("code-note");
+  var pendingEmail = null;
 
   loginBtn.addEventListener("click", async function(){
     var email = loginEmail.value.trim();
@@ -591,14 +617,48 @@
     loginBtn.textContent = "Enviando...";
     try{
       await requestMagicLink(email);
+      pendingEmail = email;
       loginNote.className = "gate-note success";
-      loginNote.textContent = "Te hemos enviado un enlace a " + email + ". Ábrelo desde este mismo dispositivo.";
+      loginNote.textContent = "Te hemos enviado un email a " + email + ". Puedes abrir el enlace, o escribir aquí el código de 6 dígitos que también incluye.";
+      fieldCode.style.display = "block";
+      codeBtn.style.display = "block";
+      loginCode.focus();
     }catch(e){
       loginNote.className = "gate-note error";
       loginNote.textContent = e.message || "No se pudo enviar el enlace.";
     }finally{
       loginBtn.disabled = false;
       loginBtn.textContent = "Enviarme el enlace de acceso";
+    }
+  });
+
+  codeBtn.addEventListener("click", async function(){
+    var code = loginCode.value.trim();
+    codeNote.className = "gate-note";
+    codeNote.textContent = "";
+    if(!pendingEmail){
+      codeNote.className = "gate-note error";
+      codeNote.textContent = "Pide primero el código con tu email.";
+      return;
+    }
+    if(!code){
+      codeNote.className = "gate-note error";
+      codeNote.textContent = "Escribe el código de 6 dígitos.";
+      return;
+    }
+    codeBtn.disabled = true;
+    codeBtn.textContent = "Comprobando...";
+    try{
+      var tokenData = await verifyOtpCode(pendingEmail, code);
+      saveSession({ access_token: tokenData.access_token, refresh_token: tokenData.refresh_token });
+      location.hash = "";
+      await boot();
+    }catch(e){
+      codeNote.className = "gate-note error";
+      codeNote.textContent = e.message || "Código incorrecto o caducado.";
+    }finally{
+      codeBtn.disabled = false;
+      codeBtn.textContent = "Confirmar código";
     }
   });
 
