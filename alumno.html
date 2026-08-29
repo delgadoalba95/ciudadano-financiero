@@ -338,20 +338,21 @@
     </div>
     <div class="eyebrow">Área de alumnos</div>
     <h1>Entra a tu balance</h1>
-    <p class="desc">Escribe el email con el que te matriculaste. Te mandamos un enlace de acceso y un código de 6 dígitos, sin contraseña.</p>
+    <p class="desc">Escribe el email con el que te matriculaste.</p>
     <div class="gate-field" id="field-email">
       <label for="login-email">Email</label>
       <input type="email" id="login-email" autocomplete="email" placeholder="tú@email.com">
     </div>
-    <button class="gate-btn" id="login-btn">Enviarme el enlace de acceso</button>
+    <button class="gate-btn" id="email-btn">Continuar</button>
     <div class="gate-note" id="login-note"></div>
 
-    <div class="gate-field" id="field-code" style="display:none; margin-top:16px;">
-      <label for="login-code">Código de 6 dígitos</label>
-      <input type="text" id="login-code" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" maxlength="6">
+    <div class="gate-field" id="field-password" style="display:none; margin-top:16px;">
+      <label for="login-password">Contraseña</label>
+      <input type="password" id="login-password" autocomplete="current-password" placeholder="••••••••">
+      <p class="desc" style="font-size:0.82rem; margin:8px 0 0;">Si es tu primera vez, escribe la contraseña que quieras usar a partir de ahora.</p>
     </div>
-    <button class="gate-btn" id="code-btn" style="display:none; margin-top:10px;">Confirmar código</button>
-    <div class="gate-note" id="code-note"></div>
+    <button class="gate-btn" id="password-btn" style="display:none; margin-top:10px;">Entrar</button>
+    <div class="gate-note" id="password-note"></div>
   </div>
 </div>
 
@@ -524,32 +525,48 @@
     }catch(e){ return null; }
   }
 
-  async function requestMagicLink(email){
-    var redirectTo = encodeURIComponent(location.origin + location.pathname);
-    var res = await fetch(window.SUPABASE_URL + "/auth/v1/otp?redirect_to=" + redirectTo, {
+  // Comprueba, antes de nada, si el email está en la lista de alumnos que Alba
+  // ha autorizado. Solo devuelve true/false; nunca expone la lista.
+  async function isEmailAutorizado(email){
+    var res = await fetch(window.SUPABASE_URL + "/rest/v1/rpc/email_autorizado", {
       method: "POST",
       headers: { "Content-Type": "application/json", "apikey": window.SUPABASE_ANON_KEY },
-      body: JSON.stringify({ email: email, create_user: true })
+      body: JSON.stringify({ p_email: email })
     });
-    if(!res.ok){
-      var data = null;
-      try{ data = await res.json(); }catch(e){}
-      throw new Error((data && data.msg) || "No se pudo enviar el enlace. Inténtalo de nuevo.");
-    }
+    if(!res.ok) throw new Error("No se pudo comprobar tu acceso. Inténtalo de nuevo.");
+    var autorizado = await res.json();
+    return autorizado === true;
   }
 
-  async function verifyOtpCode(email, token){
-    var res = await fetch(window.SUPABASE_URL + "/auth/v1/verify", {
+  async function signInWithPassword(email, password){
+    var res = await fetch(window.SUPABASE_URL + "/auth/v1/token?grant_type=password", {
       method: "POST",
       headers: { "Content-Type": "application/json", "apikey": window.SUPABASE_ANON_KEY },
-      body: JSON.stringify({ type: "email", email: email, token: token })
+      body: JSON.stringify({ email: email, password: password })
     });
-    if(!res.ok){
-      var data = null;
-      try{ data = await res.json(); }catch(e){}
-      throw new Error((data && data.msg) || "Código incorrecto o caducado.");
-    }
+    if(!res.ok) return null;
     return res.json();
+  }
+
+  async function signUpWithPassword(email, password){
+    var res = await fetch(window.SUPABASE_URL + "/auth/v1/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "apikey": window.SUPABASE_ANON_KEY },
+      body: JSON.stringify({ email: email, password: password })
+    });
+    var data = null;
+    try{ data = await res.json(); }catch(e){}
+    if(!res.ok){
+      var msg = (data && (data.msg || data.error_description || data.message)) || "";
+      if(/already/i.test(msg) || /registered/i.test(msg)) {
+        throw new Error("Contraseña incorrecta. Si no la recuerdas, escríbenos y te la restablecemos.");
+      }
+      if(/at least|password/i.test(msg)) {
+        throw new Error("La contraseña debe tener al menos 6 caracteres.");
+      }
+      throw new Error("No se pudo crear tu acceso. Inténtalo de nuevo.");
+    }
+    return data;
   }
 
   async function refreshSession(refresh_token){
@@ -596,71 +613,90 @@
 
   // ---------- Login screen wiring ----------
   var loginEmail = document.getElementById("login-email");
-  var loginBtn = document.getElementById("login-btn");
+  var emailBtn = document.getElementById("email-btn");
   var loginNote = document.getElementById("login-note");
-  var fieldCode = document.getElementById("field-code");
-  var loginCode = document.getElementById("login-code");
-  var codeBtn = document.getElementById("code-btn");
-  var codeNote = document.getElementById("code-note");
+  var fieldPassword = document.getElementById("field-password");
+  var loginPassword = document.getElementById("login-password");
+  var passwordBtn = document.getElementById("password-btn");
+  var passwordNote = document.getElementById("password-note");
   var pendingEmail = null;
 
-  loginBtn.addEventListener("click", async function(){
+  // Paso 1: solo seguimos si el email está en la lista de alumnos autorizados.
+  emailBtn.addEventListener("click", async function(){
     var email = loginEmail.value.trim();
     loginNote.className = "gate-note";
     loginNote.textContent = "";
+    passwordNote.textContent = "";
     if(!email){
       loginNote.className = "gate-note error";
       loginNote.textContent = "Escribe tu email.";
       return;
     }
-    loginBtn.disabled = true;
-    loginBtn.textContent = "Enviando...";
+    emailBtn.disabled = true;
+    emailBtn.textContent = "Comprobando...";
     try{
-      await requestMagicLink(email);
+      var autorizado = await isEmailAutorizado(email);
+      if(!autorizado){
+        loginNote.className = "gate-note error";
+        loginNote.textContent = "Este email no está en la lista de alumnos. Si ya te has matriculado, escríbenos y te damos acceso.";
+        fieldPassword.style.display = "none";
+        passwordBtn.style.display = "none";
+        return;
+      }
       pendingEmail = email;
-      loginNote.className = "gate-note success";
-      loginNote.textContent = "Te hemos enviado un email a " + email + ". Puedes abrir el enlace, o escribir aquí el código de 6 dígitos que también incluye.";
-      fieldCode.style.display = "block";
-      codeBtn.style.display = "block";
-      loginCode.focus();
+      loginNote.className = "gate-note";
+      loginNote.textContent = "";
+      fieldPassword.style.display = "block";
+      passwordBtn.style.display = "block";
+      loginPassword.focus();
     }catch(e){
       loginNote.className = "gate-note error";
-      loginNote.textContent = e.message || "No se pudo enviar el enlace.";
+      loginNote.textContent = e.message || "No se pudo comprobar tu acceso.";
     }finally{
-      loginBtn.disabled = false;
-      loginBtn.textContent = "Enviarme el enlace de acceso";
+      emailBtn.disabled = false;
+      emailBtn.textContent = "Continuar";
     }
   });
 
-  codeBtn.addEventListener("click", async function(){
-    var code = loginCode.value.trim();
-    codeNote.className = "gate-note";
-    codeNote.textContent = "";
+  // Paso 2: entra con su contraseña. Si aún no tiene cuenta, la crea con la
+  // contraseña que acaba de escribir (su email ya está autorizado).
+  passwordBtn.addEventListener("click", async function(){
+    var password = loginPassword.value;
+    passwordNote.className = "gate-note";
+    passwordNote.textContent = "";
     if(!pendingEmail){
-      codeNote.className = "gate-note error";
-      codeNote.textContent = "Pide primero el código con tu email.";
+      passwordNote.className = "gate-note error";
+      passwordNote.textContent = "Escribe primero tu email.";
       return;
     }
-    if(!code){
-      codeNote.className = "gate-note error";
-      codeNote.textContent = "Escribe el código de 6 dígitos.";
+    if(!password){
+      passwordNote.className = "gate-note error";
+      passwordNote.textContent = "Escribe tu contraseña.";
       return;
     }
-    codeBtn.disabled = true;
-    codeBtn.textContent = "Comprobando...";
+    passwordBtn.disabled = true;
+    passwordBtn.textContent = "Entrando...";
     try{
-      var tokenData = await verifyOtpCode(pendingEmail, code);
+      var tokenData = await signInWithPassword(pendingEmail, password);
+      if(!tokenData){
+        tokenData = await signUpWithPassword(pendingEmail, password);
+      }
+      if(!tokenData || !tokenData.access_token){
+        throw new Error("No se pudo iniciar sesión. Inténtalo de nuevo.");
+      }
       saveSession({ access_token: tokenData.access_token, refresh_token: tokenData.refresh_token });
-      location.hash = "";
       await boot();
     }catch(e){
-      codeNote.className = "gate-note error";
-      codeNote.textContent = e.message || "Código incorrecto o caducado.";
+      passwordNote.className = "gate-note error";
+      passwordNote.textContent = e.message || "No se pudo entrar.";
     }finally{
-      codeBtn.disabled = false;
-      codeBtn.textContent = "Confirmar código";
+      passwordBtn.disabled = false;
+      passwordBtn.textContent = "Entrar";
     }
   });
+
+  loginEmail.addEventListener("keydown", function(e){ if(e.key === "Enter") emailBtn.click(); });
+  loginPassword.addEventListener("keydown", function(e){ if(e.key === "Enter") passwordBtn.click(); });
 
   document.getElementById("denied-logout-btn").addEventListener("click", function(){
     clearSession();
