@@ -472,6 +472,7 @@
     <div class="panel-tabs">
       <button class="panel-tab active" id="tab-btn-contacts">Contactos</button>
       <button class="panel-tab" id="tab-btn-emails">Emails enviados</button>
+      <button class="panel-tab" id="tab-btn-alumnos">Alumnos</button>
     </div>
 
     <div id="tab-contacts">
@@ -528,6 +529,34 @@
       <div id="email-empty-state" style="display:none;">Todavía no se ha enviado ningún email.</div>
       <div class="contact-list" id="email-list"></div>
     </div>
+
+    <div id="tab-alumnos" style="display:none;">
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="num" id="stat-alumnos">0</div>
+          <div class="label">Alumnos autorizados</div>
+        </div>
+      </div>
+
+      <div class="email-row" style="align-items:flex-end; margin-bottom:20px;">
+        <div style="display:flex; gap:12px; flex-wrap:wrap; flex:1;">
+          <div class="compose-field" style="margin:0; flex:1; min-width:220px;">
+            <label for="alumno-email-input">Email del alumno</label>
+            <input type="email" id="alumno-email-input" placeholder="alumno@email.com">
+          </div>
+          <div class="compose-field" style="margin:0; flex:1; min-width:180px;">
+            <label for="alumno-nombre-input">Nombre (opcional)</label>
+            <input type="text" id="alumno-nombre-input" placeholder="Nombre del alumno">
+          </div>
+        </div>
+        <button class="btn" style="width:auto; padding:11px 18px;" id="alumno-add-btn">Dar acceso</button>
+      </div>
+      <div id="alumno-error" style="display:none; color:var(--stamp); font-size:0.85rem; margin-bottom:14px;"></div>
+
+      <div id="alumnos-load-error" style="display:none;"></div>
+      <div id="alumnos-empty-state" style="display:none;">Todavía no has autorizado a ningún alumno. Añade su email arriba para darle acceso a la plataforma.</div>
+      <div class="contact-list" id="alumnos-list"></div>
+    </div>
   </main>
 </div>
 
@@ -566,8 +595,10 @@
 
   let allContacts = [];
   let allEmails = [];
+  let allAlumnos = [];
   let currentAccessToken = null;
   let emailsLoaded = false;
+  let alumnosLoaded = false;
 
   function saveSession(session) {
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
@@ -679,19 +710,154 @@
 
   const tabBtnContacts = document.getElementById("tab-btn-contacts");
   const tabBtnEmails = document.getElementById("tab-btn-emails");
-  tabBtnContacts.addEventListener("click", () => {
-    tabBtnContacts.classList.add("active");
-    tabBtnEmails.classList.remove("active");
-    document.getElementById("tab-contacts").style.display = "block";
-    document.getElementById("tab-emails").style.display = "none";
-  });
+  const tabBtnAlumnos = document.getElementById("tab-btn-alumnos");
+  const allTabBtns = [tabBtnContacts, tabBtnEmails, tabBtnAlumnos];
+  const allTabPanes = {
+    contacts: document.getElementById("tab-contacts"),
+    emails: document.getElementById("tab-emails"),
+    alumnos: document.getElementById("tab-alumnos")
+  };
+  function activateTab(name) {
+    allTabBtns.forEach(b => b.classList.remove("active"));
+    Object.values(allTabPanes).forEach(p => p.style.display = "none");
+    ({ contacts: tabBtnContacts, emails: tabBtnEmails, alumnos: tabBtnAlumnos })[name].classList.add("active");
+    allTabPanes[name].style.display = "block";
+  }
+  tabBtnContacts.addEventListener("click", () => activateTab("contacts"));
   tabBtnEmails.addEventListener("click", async () => {
-    tabBtnEmails.classList.add("active");
-    tabBtnContacts.classList.remove("active");
-    document.getElementById("tab-contacts").style.display = "none";
-    document.getElementById("tab-emails").style.display = "block";
+    activateTab("emails");
     if (!emailsLoaded && currentAccessToken) {
       await loadEmailLogIntoDashboard(currentAccessToken);
+    }
+  });
+  tabBtnAlumnos.addEventListener("click", async () => {
+    activateTab("alumnos");
+    if (!alumnosLoaded && currentAccessToken) {
+      await loadAlumnosIntoDashboard(currentAccessToken);
+    }
+  });
+
+  // ---------- Alumnos autorizados ----------
+  async function fetchAlumnos(access_token) {
+    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/alumnos_autorizados?select=*&order=created_at.desc`, {
+      headers: { "apikey": window.SUPABASE_ANON_KEY, "Authorization": `Bearer ${access_token}` }
+    });
+    if (!res.ok) throw new Error("No se pudieron cargar los alumnos autorizados.");
+    return res.json();
+  }
+
+  function renderAlumnos() {
+    document.getElementById("stat-alumnos").textContent = allAlumnos.length;
+    const list = document.getElementById("alumnos-list");
+    const empty = document.getElementById("alumnos-empty-state");
+    if (allAlumnos.length === 0) {
+      list.innerHTML = "";
+      empty.style.display = "block";
+      return;
+    }
+    empty.style.display = "none";
+    list.innerHTML = allAlumnos.map(a => `
+      <div class="contact-row" style="cursor:default;">
+        <div class="contact-row-top">
+          <div style="flex:1; min-width:0;">
+            <div class="contact-name">${escapeHtml(a.nombre || a.email)}</div>
+            <div class="contact-meta">${escapeHtml(a.email)}</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="contact-date">${formatDate(a.created_at)}</div>
+            <button class="btn-outline" style="padding:6px 12px; font-size:0.78rem;" data-email="${escapeHtml(a.email)}">Quitar acceso</button>
+          </div>
+        </div>
+      </div>
+    `).join("");
+    list.querySelectorAll("button[data-email]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        if (!confirm(`¿Quitar el acceso de ${btn.dataset.email}?`)) return;
+        btn.disabled = true;
+        try {
+          await deleteAlumno(currentAccessToken, btn.dataset.email);
+          allAlumnos = allAlumnos.filter(a => a.email !== btn.dataset.email);
+          renderAlumnos();
+        } catch (e) {
+          alert(e.message || "No se pudo quitar el acceso.");
+          btn.disabled = false;
+        }
+      });
+    });
+  }
+
+  async function loadAlumnosIntoDashboard(access_token) {
+    const loadError = document.getElementById("alumnos-load-error");
+    try {
+      allAlumnos = await fetchAlumnos(access_token);
+      loadError.style.display = "none";
+      alumnosLoaded = true;
+    } catch (e) {
+      allAlumnos = [];
+      loadError.textContent = e.message || "No se pudieron cargar los alumnos autorizados.";
+      loadError.style.display = "block";
+    }
+    renderAlumnos();
+  }
+
+  async function addAlumno(access_token, email, nombre) {
+    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/alumnos_autorizados`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": window.SUPABASE_ANON_KEY,
+        "Authorization": `Bearer ${access_token}`,
+        "Prefer": "return=representation"
+      },
+      body: JSON.stringify({ email, nombre: nombre || null })
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      if (data && data.code === "23505") throw new Error("Ese email ya tiene acceso.");
+      throw new Error((data && data.message) || "No se pudo dar acceso a ese email.");
+    }
+    return res.json();
+  }
+
+  async function deleteAlumno(access_token, email) {
+    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/alumnos_autorizados?email=eq.${encodeURIComponent(email)}`, {
+      method: "DELETE",
+      headers: { "apikey": window.SUPABASE_ANON_KEY, "Authorization": `Bearer ${access_token}` }
+    });
+    if (!res.ok) throw new Error("No se pudo quitar el acceso.");
+  }
+
+  document.getElementById("alumno-add-btn").addEventListener("click", async () => {
+    const emailInput = document.getElementById("alumno-email-input");
+    const nombreInput = document.getElementById("alumno-nombre-input");
+    const errorEl = document.getElementById("alumno-error");
+    errorEl.style.display = "none";
+    const email = emailInput.value.trim();
+    if (!email) {
+      errorEl.textContent = "Escribe un email.";
+      errorEl.style.display = "block";
+      return;
+    }
+    if (!currentAccessToken) {
+      errorEl.textContent = "Tu sesión no está lista todavía, recarga la página.";
+      errorEl.style.display = "block";
+      return;
+    }
+    const btn = document.getElementById("alumno-add-btn");
+    btn.disabled = true;
+    btn.textContent = "Añadiendo...";
+    try {
+      const created = await addAlumno(currentAccessToken, email, nombreInput.value.trim());
+      allAlumnos.unshift(created[0]);
+      renderAlumnos();
+      emailInput.value = "";
+      nombreInput.value = "";
+    } catch (e) {
+      errorEl.textContent = e.message || "No se pudo dar acceso a ese email.";
+      errorEl.style.display = "block";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Dar acceso";
     }
   });
 
