@@ -155,6 +155,20 @@
     font-size: 0.84rem;
     line-height: 1.5;
   }
+  .link-btn {
+    display: block;
+    width: 100%;
+    margin-top: 14px;
+    background: none;
+    border: none;
+    padding: 4px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .link-btn:hover { color: var(--accent-strong); }
   .gate-note.error { color: var(--stamp); }
   .gate-note.success { color: var(--positive); }
   .gate-note.muted { color: var(--ink-faint); }
@@ -353,6 +367,32 @@
     </div>
     <button class="gate-btn" id="password-btn" style="display:none; margin-top:10px;">Entrar</button>
     <div class="gate-note" id="password-note"></div>
+    <button class="link-btn" id="forgot-btn" style="display:none;">He olvidado mi contraseña</button>
+  </div>
+</div>
+
+<!-- RECUPERAR CONTRASEÑA -->
+<div class="gate-screen" id="screen-recovery" style="display:none;">
+  <div class="gate-card">
+    <div class="gate-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240"><g fill="none" stroke="currentColor"><circle cx="120" cy="120" r="104" stroke-width="7"></circle><circle cx="120" cy="120" r="90" stroke-width="3.5"></circle></g><g fill="currentColor"><path d="M70 72 H90 V110 H113 V130 H90 V168 H70 V72 Z"></path><path d="M170 72 H150 V110 H127 V130 H150 V168 H170 V72 Z"></path></g></svg>
+      <span>Ciudadano Financiero</span>
+    </div>
+    <div class="eyebrow">Área de alumnos</div>
+    <h1>Crea una contraseña nueva</h1>
+    <p class="desc" id="recovery-desc">Mira tu bandeja de entrada: te hemos enviado un código para que puedas cambiarla.</p>
+
+    <div class="gate-field" id="field-recovery-code">
+      <label for="recovery-code">Código del email</label>
+      <input type="text" id="recovery-code" inputmode="numeric" autocomplete="one-time-code" placeholder="123456">
+    </div>
+    <div class="gate-field" style="margin-top:16px;">
+      <label for="recovery-password">Contraseña nueva</label>
+      <input type="password" id="recovery-password" autocomplete="new-password" placeholder="Al menos 6 caracteres">
+    </div>
+    <button class="gate-btn" id="recovery-btn">Guardar contraseña nueva</button>
+    <div class="gate-note" id="recovery-note"></div>
+    <button class="link-btn" id="recovery-back-btn">Volver</button>
   </div>
 </div>
 
@@ -494,7 +534,8 @@
   var appEl = document.getElementById("app");
 
   function showOnly(el){
-    [screenLogin, screenChecking, screenDenied, appEl].forEach(function(s){ s.style.display = "none"; });
+    [screenLogin, screenChecking, screenDenied, appEl,
+     document.getElementById("screen-recovery")].forEach(function(s){ s.style.display = "none"; });
     el.style.display = el === appEl ? "block" : "flex";
   }
 
@@ -514,8 +555,9 @@
     var access_token = params.get("access_token");
     var refresh_token = params.get("refresh_token");
     if(!access_token) return null;
+    var type = params.get("type");
     history.replaceState(null, "", location.pathname);
-    return { access_token: access_token, refresh_token: refresh_token };
+    return { access_token: access_token, refresh_token: refresh_token, type: type };
   }
 
   function decodeJwtEmail(token){
@@ -546,6 +588,48 @@
     });
     if(!res.ok) return null;
     return res.json();
+  }
+
+  // ---- Recuperar contraseña ----
+  // Supabase envía un email con enlace Y con un código. Usamos el código porque
+  // un enlace se puede "gastar" si el gestor de correo lo abre por seguridad.
+  async function requestRecovery(email){
+    var redirectTo = encodeURIComponent(location.origin + location.pathname);
+    var res = await fetch(window.SUPABASE_URL + "/auth/v1/recover?redirect_to=" + redirectTo, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "apikey": window.SUPABASE_ANON_KEY },
+      body: JSON.stringify({ email: email })
+    });
+    if(!res.ok) throw new Error("No se pudo enviar el email. Inténtalo de nuevo en un minuto.");
+  }
+
+  async function verifyRecoveryCode(email, token){
+    var res = await fetch(window.SUPABASE_URL + "/auth/v1/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "apikey": window.SUPABASE_ANON_KEY },
+      body: JSON.stringify({ type: "recovery", email: email, token: token })
+    });
+    if(!res.ok) throw new Error("El código no es correcto o ya ha caducado. Pide uno nuevo.");
+    return res.json();
+  }
+
+  async function updatePassword(access_token, newPassword){
+    var res = await fetch(window.SUPABASE_URL + "/auth/v1/user", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": window.SUPABASE_ANON_KEY,
+        "Authorization": "Bearer " + access_token
+      },
+      body: JSON.stringify({ password: newPassword })
+    });
+    if(!res.ok){
+      var data = null;
+      try{ data = await res.json(); }catch(e){}
+      var msg = (data && (data.msg || data.message)) || "";
+      if(/at least|6/i.test(msg)) throw new Error("La contraseña debe tener al menos 6 caracteres.");
+      throw new Error("No se pudo guardar la contraseña nueva.");
+    }
   }
 
   async function signUpWithPassword(email, password){
@@ -641,6 +725,7 @@
         loginNote.textContent = "Este email no está en la lista de alumnos. Si ya te has matriculado, escríbenos y te damos acceso.";
         fieldPassword.style.display = "none";
         passwordBtn.style.display = "none";
+        document.getElementById("forgot-btn").style.display = "none";
         return;
       }
       pendingEmail = email;
@@ -648,6 +733,7 @@
       loginNote.textContent = "";
       fieldPassword.style.display = "block";
       passwordBtn.style.display = "block";
+      document.getElementById("forgot-btn").style.display = "block";
       loginPassword.focus();
     }catch(e){
       loginNote.className = "gate-note error";
@@ -697,6 +783,80 @@
 
   loginEmail.addEventListener("keydown", function(e){ if(e.key === "Enter") emailBtn.click(); });
   loginPassword.addEventListener("keydown", function(e){ if(e.key === "Enter") passwordBtn.click(); });
+
+  // ---------- Recuperar contraseña ----------
+  var screenRecovery = document.getElementById("screen-recovery");
+  var forgotBtn = document.getElementById("forgot-btn");
+  var recoveryCode = document.getElementById("recovery-code");
+  var recoveryPassword = document.getElementById("recovery-password");
+  var recoveryBtn = document.getElementById("recovery-btn");
+  var recoveryNote = document.getElementById("recovery-note");
+  var fieldRecoveryCode = document.getElementById("field-recovery-code");
+  // Cuando el alumno llega pinchando el enlace del email ya viene autenticado:
+  // en ese caso no hace falta código, solo escribir la contraseña nueva.
+  var recoveryTokenFromLink = null;
+
+  forgotBtn.addEventListener("click", async function(){
+    if(!pendingEmail) return;
+    forgotBtn.disabled = true;
+    forgotBtn.textContent = "Enviando...";
+    try{
+      await requestRecovery(pendingEmail);
+      recoveryTokenFromLink = null;
+      fieldRecoveryCode.style.display = "block";
+      recoveryCode.value = "";
+      recoveryPassword.value = "";
+      recoveryNote.textContent = "";
+      document.getElementById("recovery-desc").textContent =
+        "Mira tu bandeja de entrada: te hemos enviado un código a " + pendingEmail + " para que puedas cambiarla.";
+      showOnly(screenRecovery);
+      recoveryCode.focus();
+    }catch(e){
+      passwordNote.className = "gate-note error";
+      passwordNote.textContent = e.message || "No se pudo enviar el email.";
+    }finally{
+      forgotBtn.disabled = false;
+      forgotBtn.textContent = "He olvidado mi contraseña";
+    }
+  });
+
+  recoveryBtn.addEventListener("click", async function(){
+    var newPassword = recoveryPassword.value;
+    recoveryNote.className = "gate-note";
+    recoveryNote.textContent = "";
+    if(!newPassword){
+      recoveryNote.className = "gate-note error";
+      recoveryNote.textContent = "Escribe tu contraseña nueva.";
+      return;
+    }
+    recoveryBtn.disabled = true;
+    recoveryBtn.textContent = "Guardando...";
+    try{
+      var token = recoveryTokenFromLink;
+      if(!token){
+        var code = recoveryCode.value.trim();
+        if(!code) throw new Error("Escribe el código que te hemos enviado por email.");
+        var session = await verifyRecoveryCode(pendingEmail, code);
+        token = session.access_token;
+      }
+      await updatePassword(token, newPassword);
+      recoveryNote.className = "gate-note success";
+      recoveryNote.textContent = "Contraseña guardada. Entrando...";
+      saveSession({ access_token: token, refresh_token: null });
+      await boot();
+    }catch(e){
+      recoveryNote.className = "gate-note error";
+      recoveryNote.textContent = e.message || "No se pudo guardar la contraseña.";
+    }finally{
+      recoveryBtn.disabled = false;
+      recoveryBtn.textContent = "Guardar contraseña nueva";
+    }
+  });
+
+  document.getElementById("recovery-back-btn").addEventListener("click", function(){
+    recoveryTokenFromLink = null;
+    showOnly(screenLogin);
+  });
 
   document.getElementById("denied-logout-btn").addEventListener("click", function(){
     clearSession();
@@ -896,6 +1056,21 @@
     var hashSession = parseHashSession();
     var stored = loadSession();
     var access_token, refresh_token;
+
+    // Ha llegado pinchando el enlace de "recuperar contraseña" del email:
+    // ya viene identificado, solo tiene que escribir la contraseña nueva.
+    if(hashSession && hashSession.type === "recovery"){
+      recoveryTokenFromLink = hashSession.access_token;
+      pendingEmail = decodeJwtEmail(hashSession.access_token);
+      fieldRecoveryCode.style.display = "none";
+      recoveryPassword.value = "";
+      recoveryNote.textContent = "";
+      document.getElementById("recovery-desc").textContent =
+        "Escribe la contraseña que quieras usar a partir de ahora.";
+      showOnly(screenRecovery);
+      recoveryPassword.focus();
+      return;
+    }
 
     if(hashSession){
       access_token = hashSession.access_token;
