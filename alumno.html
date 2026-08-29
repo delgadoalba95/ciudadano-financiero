@@ -518,10 +518,11 @@
   }
 
   async function requestMagicLink(email){
-    var res = await fetch(window.SUPABASE_URL + "/auth/v1/otp", {
+    var redirectTo = encodeURIComponent(location.origin + location.pathname);
+    var res = await fetch(window.SUPABASE_URL + "/auth/v1/otp?redirect_to=" + redirectTo, {
       method: "POST",
       headers: { "Content-Type": "application/json", "apikey": window.SUPABASE_ANON_KEY },
-      body: JSON.stringify({ email: email, create_user: true, options: { email_redirect_to: location.origin + location.pathname } })
+      body: JSON.stringify({ email: email, create_user: true })
     });
     if(!res.ok){
       var data = null;
