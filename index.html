@@ -762,6 +762,23 @@
     cursor: pointer;
   }
   .legal-modal-close:hover { color: var(--ink); }
+
+  @media (max-width: 560px) {
+    .legal-modal-backdrop { padding: 0; align-items: stretch; }
+    .legal-modal {
+      max-height: 100vh;
+      border-radius: 0;
+      padding: 56px 20px 32px;
+    }
+    .legal-modal h2 { font-size: 1.3rem; }
+    .legal-modal-close {
+      top: 10px;
+      right: 10px;
+      width: 42px;
+      height: 42px;
+      font-size: 1.7rem;
+    }
+  }
 </style>
 </head>
 <body>
@@ -1033,7 +1050,6 @@
     <div class="footer-links">
       <a href="#" data-modal="legal-modal">Términos</a>
       <a href="#" data-modal="privacy-modal">Privacidad</a>
-      <a href="#acceso">Acceso alumnos</a>
     </div>
   </div>
 </footer>
@@ -1070,13 +1086,13 @@
     <p>Tu nombre, email y número de WhatsApp, si te apuntas a la lista de espera o haces el test de relación con el dinero. En el test también guardamos tus respuestas y el resultado.</p>
 
     <h3>¿Para qué los usamos?</h3>
-    <p>Para avisarte del lanzamiento del curso, enviarte contenido sobre educación financiera y responderte si nos escribes. No los usamos con ningún otro fin.</p>
+    <p>Para avisarte del lanzamiento del curso, enviarte contenido sobre educación financiera y responderte si nos escribes.</p>
 
     <h3>¿Cuál es la base legal?</h3>
     <p>Tu consentimiento expreso, que nos das al marcar la casilla del formulario.</p>
 
     <h3>¿Con quién compartimos tus datos?</h3>
-    <p>Con los proveedores que usamos para operar la web — Supabase (base de datos) y Resend (envío de emails) — que actúan como encargados del tratamiento y no usan tus datos para fines propios.</p>
+    <p>Únicamente con los proveedores tecnológicos que nos permiten operar la web y enviar los emails, que actúan como encargados del tratamiento y no usan tus datos para fines propios.</p>
 
     <h3>¿Cuánto tiempo los guardamos?</h3>
     <p>Hasta que nos pidas que los eliminemos o hasta que dejen de ser necesarios para la finalidad indicada.</p>
