@@ -514,6 +514,9 @@
   }
 
   .price-figure {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
     font-family: "IBM Plex Mono", monospace;
     font-size: 2.6rem;
     font-weight: 600;
@@ -521,12 +524,31 @@
     color: var(--ink);
   }
   .price-figure span { font-size: 1rem; color: var(--ink-faint); font-weight: 500; }
+  .price-figure .price-old {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    text-decoration: line-through;
+    text-decoration-color: var(--stamp);
+    text-decoration-thickness: 3px;
+  }
+  .price-discount-note {
+    margin-top: 10px;
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--accent-strong);
+  }
 
   .price-terms {
     margin-top: 4px;
     font-size: 0.86rem;
     color: var(--ink-faint);
     font-family: "IBM Plex Mono", monospace;
+  }
+
+  .price-start {
+    color: var(--accent-strong);
+    font-weight: 600;
   }
 
   .price-includes {
@@ -673,9 +695,21 @@
   }
   .whatsapp-fab:hover { transform: scale(1.06); }
   .whatsapp-fab svg { width: 30px; height: 30px; }
+
+  .launch-banner {
+    background: var(--accent);
+    color: var(--accent-ink);
+    text-align: center;
+    padding: 9px 20px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
 </style>
 </head>
 <body>
+<div class="launch-banner">PRÓXIMO LANZAMIENTO: 22 DE SEPTIEMBRE</div>
 <header class="site">
   <div class="nav-row">
     <a class="logo" href="#top">
@@ -804,25 +838,26 @@
   <section id="precio">
     <div class="wrap">
       <div class="head">
-        <p class="eyebrow">Precio de lanzamiento</p>
-        <h2>Tu ciudadanía financiera, en un solo pago</h2>
+        <p class="eyebrow">Precio de la primera edición</p>
+        <h2>Esto es una inversión en tu ciudadanía financiera</h2>
       </div>
 
       <div class="price-card">
         <div>
-          <div class="price-figure">250 <span>EUR</span></div>
-          <div class="price-terms">PAGO ÚNICO · ACCESO POR 1 AÑO</div>
+          <div class="price-figure"><span class="price-old">320</span> 250 <span>EUR</span></div>
+          <div class="price-discount-note">Descuento de lanzamiento 1ª edición</div>
+          <div class="price-terms">1 MES Y MEDIO DE FORMACIÓN · ACCESO POR 1 AÑO</div>
+          <div class="price-terms price-start">INICIO: 22 DE SEPTIEMBRE</div>
           <ul class="price-includes">
-            <li>Las lecciones completas en vídeo</li>
-            <li>Directos y contacto para preguntas</li>
-            <li>Plantillas y recursos descargables</li>
-            <li>Acceso a futuras actualizaciones del curso</li>
+            <li>Lecciones completas en vídeo</li>
+            <li>Plantillas y recursos para poner en práctica lo aprendido</li>
+            <li>Directos para preguntas</li>
             <li>Tu área privada de alumno</li>
           </ul>
         </div>
         <div class="price-cta">
           <a class="btn btn-primary" href="#lista-espera">Apúntate a la lista de espera</a>
-          <small>Plazas limitadas</small>
+          <small>Solo 10 plazas para la primera edición</small>
         </div>
       </div>
     </div>
@@ -851,7 +886,11 @@
       </div>
       <div class="faq-item">
         <h3>¿Cuánto dura?</h3>
-        <p>Cada edición se realiza con todos los alumnos a la vez durante 1 mes y medio.</p>
+        <p>1 mes y medio, y cada edición se realiza con todos los alumnos comenzando a la vez.</p>
+      </div>
+      <div class="faq-item">
+        <h3>¿Cuándo es el próximo lanzamiento?</h3>
+        <p>El día 22 de septiembre.</p>
       </div>
       <div class="faq-item">
         <h3>¿Hasta cuándo tengo acceso a la formación y recursos?</h3>
@@ -863,7 +902,7 @@
       </div>
       <div class="faq-item">
         <h3>¿Cómo accedo después de comprar?</h3>
-        <p>Recibirás acceso inmediato a tu área privada de alumno, donde están todos los vídeos y recursos.</p>
+        <p>Recibirás acceso el día de lanzamiento a tu área privada de alumno, donde están todos los vídeos y recursos.</p>
       </div>
     </div>
   </section>
