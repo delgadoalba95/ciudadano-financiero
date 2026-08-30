@@ -711,6 +711,57 @@
     font-weight: 600;
     letter-spacing: 0.04em;
   }
+
+  .legal-modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(28, 43, 66, 0.55);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 1000;
+  }
+  .legal-modal-backdrop.open { display: flex; }
+  .legal-modal {
+    position: relative;
+    background: var(--surface-2);
+    max-width: 640px;
+    width: 100%;
+    max-height: 82vh;
+    overflow-y: auto;
+    border-radius: 6px;
+    padding: 40px 32px;
+  }
+  .legal-modal h2 {
+    font-size: 1.5rem;
+    margin-bottom: 18px;
+  }
+  .legal-modal h3 {
+    font-size: 1rem;
+    margin: 22px 0 8px;
+    color: var(--ink);
+  }
+  .legal-modal p, .legal-modal li {
+    color: var(--ink-soft);
+    font-size: 0.94rem;
+    line-height: 1.6;
+  }
+  .legal-modal-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: var(--ink-faint);
+    cursor: pointer;
+  }
+  .legal-modal-close:hover { color: var(--ink); }
 </style>
 </head>
 <body>
@@ -980,12 +1031,60 @@
       </div>
     </div>
     <div class="footer-links">
-      <a href="#">Términos</a>
-      <a href="#">Privacidad</a>
+      <a href="#" data-modal="legal-modal">Términos</a>
+      <a href="#" data-modal="privacy-modal">Privacidad</a>
       <a href="#acceso">Acceso alumnos</a>
     </div>
   </div>
 </footer>
+
+<div class="legal-modal-backdrop" id="legal-modal">
+  <div class="legal-modal">
+    <button class="legal-modal-close" aria-label="Cerrar">&times;</button>
+    <h2>Aviso Legal</h2>
+    <p><strong>Titular:</strong> Alba Delgado Iranzo</p>
+    <p><strong>Actividad:</strong> Ciudadano Financiero — formación online de educación financiera.</p>
+    <p><strong>Contacto:</strong> hola@ciudadanofinanciero.com · WhatsApp +34 658 643 494</p>
+
+    <h3>Objeto</h3>
+    <p>Esta web tiene como finalidad informar sobre el curso Ciudadano Financiero, gestionar la lista de espera de personas interesadas y ofrecer un test gratuito sobre la relación con el dinero.</p>
+
+    <h3>Propiedad intelectual</h3>
+    <p>Los contenidos de esta web (textos, marca, diseño y materiales del curso) son propiedad de Alba Delgado Iranzo y no pueden reproducirse sin autorización.</p>
+
+    <h3>Responsabilidad</h3>
+    <p>El contenido de esta web y del curso tiene carácter formativo y divulgativo. No constituye asesoramiento financiero personalizado ni una recomendación de inversión.</p>
+
+    <h3>Legislación aplicable</h3>
+    <p>Esta web se rige por la legislación española.</p>
+  </div>
+</div>
+
+<div class="legal-modal-backdrop" id="privacy-modal">
+  <div class="legal-modal">
+    <button class="legal-modal-close" aria-label="Cerrar">&times;</button>
+    <h2>Política de Privacidad</h2>
+    <p><strong>Responsable del tratamiento:</strong> Alba Delgado Iranzo — hola@ciudadanofinanciero.com</p>
+
+    <h3>¿Qué datos recogemos?</h3>
+    <p>Tu nombre, email y número de WhatsApp, si te apuntas a la lista de espera o haces el test de relación con el dinero. En el test también guardamos tus respuestas y el resultado.</p>
+
+    <h3>¿Para qué los usamos?</h3>
+    <p>Para avisarte del lanzamiento del curso, enviarte contenido sobre educación financiera y responderte si nos escribes. No los usamos con ningún otro fin.</p>
+
+    <h3>¿Cuál es la base legal?</h3>
+    <p>Tu consentimiento expreso, que nos das al marcar la casilla del formulario.</p>
+
+    <h3>¿Con quién compartimos tus datos?</h3>
+    <p>Con los proveedores que usamos para operar la web — Supabase (base de datos) y Resend (envío de emails) — que actúan como encargados del tratamiento y no usan tus datos para fines propios.</p>
+
+    <h3>¿Cuánto tiempo los guardamos?</h3>
+    <p>Hasta que nos pidas que los eliminemos o hasta que dejen de ser necesarios para la finalidad indicada.</p>
+
+    <h3>¿Cuáles son tus derechos?</h3>
+    <p>Puedes acceder, rectificar, eliminar, limitar u oponerte al tratamiento de tus datos, y solicitar su portabilidad, escribiéndonos a hola@ciudadanofinanciero.com. También puedes reclamar ante la Agencia Española de Protección de Datos (aepd.es) si consideras que no hemos atendido tu solicitud correctamente.</p>
+  </div>
+</div>
 
 <script src="/supabase-config.js"></script>
 <script>
@@ -1059,6 +1158,21 @@
     }
   });
 })();
+
+document.querySelectorAll("a[data-modal]").forEach((a) => {
+  a.addEventListener("click", (e) => {
+    e.preventDefault();
+    document.getElementById(a.dataset.modal).classList.add("open");
+  });
+});
+document.querySelectorAll(".legal-modal-backdrop").forEach((backdrop) => {
+  backdrop.addEventListener("click", (e) => {
+    if (e.target === backdrop) backdrop.classList.remove("open");
+  });
+  backdrop.querySelector(".legal-modal-close").addEventListener("click", () => {
+    backdrop.classList.remove("open");
+  });
+});
 </script>
 
 <a class="whatsapp-fab" href="https://wa.me/34658643494" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp">
