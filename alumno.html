@@ -533,6 +533,15 @@
   var screenDenied = document.getElementById("screen-denied");
   var appEl = document.getElementById("app");
 
+  // Devolver al alumno al login sin decirle nada deja fallos invisibles.
+  // Si algo va mal después de identificarse, que se vea el motivo.
+  function showLoginError(mensaje){
+    showOnly(screenLogin);
+    var note = document.getElementById("login-note");
+    note.className = "gate-note error";
+    note.textContent = mensaje;
+  }
+
   function showOnly(el){
     [screenLogin, screenChecking, screenDenied, appEl,
      document.getElementById("screen-recovery")].forEach(function(s){ s.style.display = "none"; });
@@ -558,6 +567,13 @@
     var type = params.get("type");
     history.replaceState(null, "", location.pathname);
     return { access_token: access_token, refresh_token: refresh_token, type: type };
+  }
+
+  function decodeJwtSub(token){
+    try{
+      var payload = JSON.parse(atob(token.split(".")[1].replace(/-/g,"+").replace(/_/g,"/")));
+      return payload.sub || null;
+    }catch(e){ return null; }
   }
 
   function decodeJwtEmail(token){
@@ -1110,18 +1126,23 @@
           }
         }catch(e2){
           clearSession();
-          showOnly(screenLogin);
+          showLoginError(e2.message || "Tu sesión ha caducado. Entra de nuevo.");
           return;
         }
       } else {
         clearSession();
-        showOnly(screenLogin);
+        showLoginError(e.message || "No hemos podido comprobar tu acceso. Entra de nuevo.");
         return;
       }
     }
 
-    var payload = JSON.parse(atob(access_token.split(".")[1].replace(/-/g,"+").replace(/_/g,"/")));
-    session = { access_token: access_token, refresh_token: refresh_token, user_id: payload.sub, email: email };
+    var userId = decodeJwtSub(access_token);
+    if(!userId || !email){
+      clearSession();
+      showLoginError("No hemos podido leer tu sesión. Entra de nuevo, por favor.");
+      return;
+    }
+    session = { access_token: access_token, refresh_token: refresh_token, user_id: userId, email: email };
     await enterApp();
   }
 
