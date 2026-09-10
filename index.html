@@ -248,14 +248,49 @@
 
   .seal {
     justify-self: end;
-    width: 132px;
-    height: 132px;
+    align-self: center;
     flex: none;
+    transform: rotate(-7deg);
+    padding: 5px;
+    border: 2px solid var(--stamp);
+    border-radius: 6px;
+    color: var(--stamp);
+    opacity: 0.92;
+    max-width: 240px;
+  }
+  .seal-inner {
+    border: 1px solid var(--stamp);
+    border-radius: 3px;
+    padding: 16px 20px;
+    text-align: center;
+  }
+  .seal-line1 {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .seal-line2 {
+    font-family: "Newsreader", ui-serif, Georgia, serif;
+    font-optical-sizing: auto;
+    font-size: 1.45rem;
+    font-weight: 600;
+    line-height: 1.1;
+    margin-top: 6px;
+    text-wrap: balance;
+  }
+  .seal-rule {
+    height: 1px;
+    background: var(--stamp);
+    opacity: 0.5;
+    margin: 10px auto 0;
+    width: 40px;
   }
 
   @media (max-width: 700px) {
     .hero-inner { grid-template-columns: 1fr; }
-    .seal { display: none; }
+    .seal { justify-self: start; margin-top: 10px; max-width: 220px; }
   }
 
   /* ---------- Waitlist ---------- */
@@ -821,6 +856,14 @@
           <a class="btn btn-outline" href="/test.html">Test sobre tu relación con el dinero</a>
         </div>
         <p class="meta-line">PRÓXIMO LANZAMIENTO&nbsp;&nbsp;·&nbsp;&nbsp;SIN CONOCIMIENTOS PREVIOS</p>
+      </div>
+
+      <div class="seal" role="img" aria-label="Si no estás invirtiendo, estás perdiendo dinero">
+        <div class="seal-inner">
+          <div class="seal-line1">Si no estás invirtiendo</div>
+          <div class="seal-line2">estás perdiendo dinero</div>
+          <div class="seal-rule"></div>
+        </div>
       </div>
     </div>
   </section>
