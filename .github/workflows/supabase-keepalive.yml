@@ -1,0 +1,35 @@
+name: Mantener Supabase activo
+
+# Supabase pausa los proyectos gratuitos tras 7 días sin actividad.
+# Este workflow hace una consulta mínima a la base de datos cada 3 días
+# para que el proyecto cuente como activo y no se pause.
+# Si la consulta falla (p. ej. el proyecto ya está pausado), el workflow
+# falla y GitHub avisa por email al propietario del repositorio.
+
+on:
+  schedule:
+    - cron: "0 8 */3 * *"   # cada 3 días a las 08:00 UTC (10:00 en España en verano)
+  workflow_dispatch:         # permite lanzarlo a mano desde la pestaña Actions
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Consulta mínima a Supabase
+        env:
+          SUPABASE_URL: https://srhopldaiqdyybomnhsh.supabase.co
+          # Clave "publishable": es pública por diseño (ya está en supabase-config.js).
+          SUPABASE_ANON_KEY: sb_publishable_NN--xuNPdjUxQ4_TVaA7LA_KUKJMOci
+        run: |
+          set -e
+          code=$(curl -s -o /tmp/resp.txt -w "%{http_code}" -m 30 \
+            -X POST "$SUPABASE_URL/rest/v1/rpc/email_autorizado" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"p_email":"keepalive@ciudadanofinanciero.com"}')
+          echo "HTTP $code — respuesta: $(cat /tmp/resp.txt)"
+          if [ "$code" != "200" ]; then
+            echo "::error::Supabase no respondió correctamente (HTTP $code). Puede que el proyecto esté pausado: entra en supabase.com y pulsa Restore project."
+            exit 1
+          fi
