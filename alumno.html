@@ -235,9 +235,9 @@
   }
   .topbar h1 { font-size: 30px; }
   .student-chip {
-    display:flex; align-items:center; gap: 10px;
+    display:flex; align-items:center;
     background: var(--surface-2); border: 1px solid var(--rule);
-    padding: 8px 14px 8px 8px; border-radius: 999px;
+    padding: 8px; border-radius: 999px;
   }
   .student-chip .avatar {
     width: 30px; height:30px; border-radius: 50%;
@@ -245,7 +245,6 @@
     display:flex; align-items:center; justify-content:center;
     font-weight: 700; font-size: 13px; font-family: "Newsreader", serif;
   }
-  .student-chip .name { font-size: 13px; font-weight: 700; }
 
   section.view { display:none; }
   section.view.active { display:block; }
@@ -449,7 +448,6 @@
         </div>
         <div class="student-chip">
           <div class="avatar" id="avatar-initials">A</div>
-          <div class="name" id="chip-email">—</div>
         </div>
       </div>
 
@@ -903,6 +901,11 @@
   var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [] };
   var saveTimer = null;
 
+  // El email no se muestra en pantalla: solo sus dos primeras letras.
+  function initials(email){
+    return (email || "").slice(0, 2).toUpperCase();
+  }
+
   function setAutosave(mode, text){
     var el = document.getElementById("autosave-indicator");
     el.className = "autosave " + mode;
@@ -1048,9 +1051,9 @@
 
   // ---------- Boot ----------
   async function enterApp(){
-    document.getElementById("sidebar-email").textContent = session.email;
-    document.getElementById("chip-email").textContent = session.email;
-    document.getElementById("avatar-initials").textContent = session.email.slice(0, 2).toUpperCase();
+    var iniciales = initials(session.email);
+    document.getElementById("sidebar-email").textContent = iniciales;
+    document.getElementById("avatar-initials").textContent = iniciales;
     setAutosave("saved", "Tus cifras se guardan en tu cuenta.");
     try{
       var data = await fetchBalance(session.access_token, session.user_id);
