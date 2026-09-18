@@ -283,6 +283,55 @@
     padding: 2px 0; font: inherit; font-weight:600; color: var(--ink); width: 100%;
   }
   .amount-field { position: relative; flex: none; width: 148px; }
+  /* Conceptos que se reparten entre activos y pasivos: dos importes. */
+  .line-item.split { align-items: flex-end; }
+  .amount-pair { display: flex; gap: 10px; flex: none; }
+  .amount-col { display: flex; flex-direction: column; gap: 4px; }
+  .amount-col .amount-field { width: 118px; }
+  .amount-cap {
+    font-family: "Public Sans", sans-serif; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-faint);
+  }
+  .amount-field.wide { width: 246px; }
+  .amount-field.narrow { width: 128px; }
+  .amount-empty {
+    width: 118px; border: 1px dashed var(--rule); border-radius: 6px;
+    padding: 8px 10px; text-align: center; color: var(--ink-faint);
+    font-family: "IBM Plex Mono", monospace; font-size: 13.5px; font-weight: 600;
+  }
+  @media (max-width: 560px){ .amount-empty { width: 100%; } }
+  .tipo-select {
+    flex: none; width: 108px; font-family: "Public Sans", sans-serif; font-size: 12.5px;
+    font-weight: 600; color: var(--ink-soft); background: var(--surface);
+    border: 1px solid var(--rule); border-radius: 6px; padding: 9px 8px; cursor: pointer;
+  }
+  .tipo-select:hover { border-color: var(--accent); }
+
+  .growth { margin: 0 10px 14px; padding: 12px 10px 0; border-top: 1px solid var(--rule); }
+  .growth-top { display:flex; align-items:baseline; justify-content:space-between; gap: 10px; }
+  .growth-label {
+    font-family: "Public Sans", sans-serif; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft);
+  }
+  .growth-figures { font-family: "IBM Plex Mono", monospace; font-size: 13px; white-space: nowrap; }
+  .growth-figures strong { font-weight: 700; }
+  .growth-figures span { color: var(--ink-faint); }
+  .growth-track {
+    margin-top: 7px; height: 6px; border-radius: 999px;
+    background: var(--hairline-faint); overflow: hidden;
+  }
+  .growth-fill { height: 100%; border-radius: 999px; background: var(--positive); transition: width 0.2s ease; }
+  @media (prefers-reduced-motion: reduce){ .growth-fill { transition: none; } }
+  @media (max-width: 560px){
+    .tipo-select { width: 100%; }
+    .amount-field.narrow { width: 100%; }
+  }
+  @media (max-width: 560px){
+    .line-item.split { flex-wrap: wrap; }
+    .amount-pair { width: 100%; }
+    .amount-col { flex: 1; }
+    .amount-col .amount-field, .amount-field.wide { width: 100%; }
+  }
   .amount-field .sign { position:absolute; left: 12px; top:50%; transform: translateY(-50%); font-size: 13px; color: var(--ink-faint); font-weight:600; pointer-events:none; }
   .amount-field input {
     width:100%; background: var(--bg); border: 1px solid var(--rule); border-radius: 6px;
@@ -488,6 +537,13 @@
             </div>
             <div class="line-list" id="list-activo"></div>
             <button class="add-line" data-target="activo">+ Añadir otro</button>
+            <div class="growth">
+              <div class="growth-top">
+                <span class="growth-label">Para crecer (activo)</span>
+                <span class="growth-figures"><strong id="growth-activo">0 €</strong> <span id="growth-activo-pct">0%</span></span>
+              </div>
+              <div class="growth-track"><div class="growth-fill" id="growth-activo-bar" style="width:0%"></div></div>
+            </div>
           </div>
 
           <div class="panel pasivo">
@@ -497,6 +553,13 @@
             </div>
             <div class="line-list" id="list-pasivo"></div>
             <button class="add-line" data-target="pasivo">+ Añadir otro</button>
+            <div class="growth">
+              <div class="growth-top">
+                <span class="growth-label">Para crecer (activo)</span>
+                <span class="growth-figures"><strong id="growth-pasivo">0 €</strong> <span id="growth-pasivo-pct">0%</span></span>
+              </div>
+              <div class="growth-track"><div class="growth-fill" id="growth-pasivo-bar" style="width:0%"></div></div>
+            </div>
           </div>
         </div>
 
@@ -901,18 +964,27 @@
   });
 
   // ---------- Balance UI (same shape as the mockup, now backed by Supabase) ----------
+  // Tercer valor: true = se reparte entre activos y pasivos;
+  // "activos" / "pasivos" = cuenta entero de ese lado, sin reparto.
   var ACTIVO_DEFAULTS = [
-    ["casa", "Casa(s) en propiedad"],
-    ["vehiculo", "Vehículo(s)"],
-    ["efectivo", "Dinero en efectivo / cuentas"],
-    ["inversiones", "Inversiones (fondos, acciones, etc.)"]
+    ["casa", "Casa(s) en propiedad", true],
+    ["vehiculo", "Vehículo(s)", true],
+    ["efectivo", "Dinero en efectivo / cuentas", "pasivos"],
+    ["inversiones", "Inversiones (fondos, acciones, etc.)", "activos"]
   ];
   var PASIVO_DEFAULTS = [
-    ["hipoteca", "Hipoteca"],
-    ["prestamo_personal", "Préstamo personal bancario"],
-    ["deuda_particular", "Deuda con una persona particular"],
-    ["pago_plazos", "Pago a plazos de producto/servicio"]
+    ["hipoteca", "Hipoteca", true],
+    ["prestamo_personal", "Préstamo personal bancario", true],
+    ["deuda_particular", "Deuda con una persona particular", true],
+    ["pago_plazos", "Pago a plazos de producto/servicio", true]
   ];
+  var SUB_CAPS = [["activos", "Activos"], ["pasivos", "Pasivos"]];
+
+  // Un concepto repartido guarda dos cifras: "casa_activos" y "casa_pasivos".
+  function subKey(key, sub){ return key + "_" + sub; }
+
+  // Las líneas propias guardadas antes de existir el selector no traen tipo.
+  function tipoDe(item){ return item.tipo === "pasivos" ? "pasivos" : "activos"; }
 
   var session = null; // { access_token, refresh_token, user_id, email }
   var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [] };
@@ -989,20 +1061,75 @@
     });
   }
 
-  function buildFixedRow(key, label, group){
-    var row = document.createElement("div");
-    row.className = "line-item";
-    var lbl = document.createElement("div");
-    lbl.className = "line-label";
-    lbl.textContent = label;
+  // Un importe con su símbolo de euro.
+  function buildAmountField(getValue, setValue, extraClass){
     var field = document.createElement("div");
-    field.className = "amount-field";
+    field.className = "amount-field" + (extraClass ? " " + extraClass : "");
     var sign = document.createElement("span");
     sign.className = "sign"; sign.textContent = "€";
     var input = document.createElement("input");
-    wireAmountInput(input, function(){ return state[group][key] || 0; }, function(n){ state[group][key] = n; });
+    wireAmountInput(input, getValue, setValue);
     field.appendChild(sign); field.appendChild(input);
-    row.appendChild(lbl); row.appendChild(field);
+    return field;
+  }
+
+  function buildFixedRow(key, label, group, split){
+    var row = document.createElement("div");
+    row.className = "line-item" + (split ? " split" : "");
+    var lbl = document.createElement("div");
+    lbl.className = "line-label";
+    lbl.textContent = label;
+    row.appendChild(lbl);
+
+    if(split === "activos" || split === "pasivos"){
+      // Cae entero de un lado: la otra columna se marca como no aplicable.
+      var fixedPair = document.createElement("div");
+      fixedPair.className = "amount-pair";
+      SUB_CAPS.forEach(function(c){
+        var col = document.createElement("div");
+        col.className = "amount-col";
+        var cap = document.createElement("span");
+        cap.className = "amount-cap";
+        cap.textContent = c[1];
+        col.appendChild(cap);
+        if(c[0] === split){
+          col.appendChild(buildAmountField(
+            function(){ return state[group][key] || 0; },
+            function(n){ state[group][key] = n; }));
+        }else{
+          var raya = document.createElement("div");
+          raya.className = "amount-empty";
+          raya.textContent = "—";
+          col.appendChild(raya);
+        }
+        fixedPair.appendChild(col);
+      });
+      row.appendChild(fixedPair);
+      row.className += " split";
+    }else if(split === true){
+      // El mismo concepto se reparte entre activos y pasivos.
+      var pair = document.createElement("div");
+      pair.className = "amount-pair";
+      SUB_CAPS.forEach(function(c){
+        var k = subKey(key, c[0]);
+        var col = document.createElement("div");
+        col.className = "amount-col";
+        var cap = document.createElement("span");
+        cap.className = "amount-cap";
+        cap.textContent = c[1];
+        col.appendChild(cap);
+        col.appendChild(buildAmountField(
+          function(){ return state[group][k] || 0; },
+          function(n){ state[group][k] = n; }));
+        pair.appendChild(col);
+      });
+      row.appendChild(pair);
+    }else{
+      row.appendChild(buildAmountField(
+        function(){ return state[group][key] || 0; },
+        function(n){ state[group][key] = n; },
+        "wide"));
+    }
     return row;
   }
 
@@ -1015,13 +1142,27 @@
     lbl.placeholder = "Escribe el concepto";
     lbl.value = item.label || "";
     lbl.addEventListener("input", function(){ item.label = lbl.value; queueSave(); });
-    var field = document.createElement("div");
-    field.className = "amount-field";
-    var sign = document.createElement("span");
-    sign.className = "sign"; sign.textContent = "€";
-    var input = document.createElement("input");
-    wireAmountInput(input, function(){ return item.value || 0; }, function(n){ item.value = n; });
-    field.appendChild(sign); field.appendChild(input);
+
+    // Quien añade la línea decide si cuenta como activo o como pasivo.
+    var tipo = document.createElement("select");
+    tipo.className = "tipo-select";
+    tipo.setAttribute("aria-label", "¿Activo o pasivo?");
+    SUB_CAPS.forEach(function(c){
+      var opt = document.createElement("option");
+      opt.value = c[0];
+      opt.textContent = c[1].slice(0, -1); // "Activos" -> "Activo"
+      tipo.appendChild(opt);
+    });
+    tipo.value = tipoDe(item);
+    tipo.addEventListener("change", function(){
+      item.tipo = tipo.value;
+      queueSave();
+      recalc();
+    });
+
+    var field = buildAmountField(
+      function(){ return item.value || 0; },
+      function(n){ item.value = n; }, "narrow");
     var del = document.createElement("button");
     del.className = "remove-btn";
     del.setAttribute("aria-label", "Eliminar línea");
@@ -1032,26 +1173,76 @@
       queueSave();
       render();
     });
-    row.appendChild(lbl); row.appendChild(field); row.appendChild(del);
+    row.appendChild(lbl); row.appendChild(tipo); row.appendChild(field); row.appendChild(del);
     return row;
+  }
+
+  // Lo guardado antes de repartir traía una sola cifra por concepto.
+  // Se coloca en "activos" para no perderla; ya se moverá a mano.
+  function migrarRepartidos(){
+    [["activo", ACTIVO_DEFAULTS], ["pasivo", PASIVO_DEFAULTS]].forEach(function(par){
+      var group = par[0];
+      par[1].forEach(function(p){
+        if(p[2] !== true) return;
+        var viejo = state[group][p[0]];
+        if(typeof viejo === "number" && viejo !== 0
+           && state[group][subKey(p[0], "activos")] === undefined
+           && state[group][subKey(p[0], "pasivos")] === undefined){
+          state[group][subKey(p[0], "activos")] = viejo;
+        }
+        delete state[group][p[0]];
+      });
+    });
   }
 
   function render(){
     var listActivo = document.getElementById("list-activo");
     var listPasivo = document.getElementById("list-pasivo");
     listActivo.innerHTML = ""; listPasivo.innerHTML = "";
-    ACTIVO_DEFAULTS.forEach(function(p){ listActivo.appendChild(buildFixedRow(p[0], p[1], "activo")); });
+    ACTIVO_DEFAULTS.forEach(function(p){ listActivo.appendChild(buildFixedRow(p[0], p[1], "activo", p[2])); });
     state.customActivo.forEach(function(item, i){ listActivo.appendChild(buildCustomRow(item, "activo", i)); });
-    PASIVO_DEFAULTS.forEach(function(p){ listPasivo.appendChild(buildFixedRow(p[0], p[1], "pasivo")); });
+    PASIVO_DEFAULTS.forEach(function(p){ listPasivo.appendChild(buildFixedRow(p[0], p[1], "pasivo", p[2])); });
     state.customPasivo.forEach(function(item, i){ listPasivo.appendChild(buildCustomRow(item, "pasivo", i)); });
     recalc();
   }
 
+  // Un concepto repartido suma sus dos cifras; el resto, la suya.
+  function valorConcepto(group, p){
+    if(p[2] === true){
+      return (Number(state[group][subKey(p[0], "activos")]) || 0)
+           + (Number(state[group][subKey(p[0], "pasivos")]) || 0);
+    }
+    return Number(state[group][p[0]]) || 0;
+  }
+
+  // Cuánto de una mitad está marcado como activo, es decir, lo que crece.
+  function sumaParaCrecer(group, defaults, customs){
+    var total = 0;
+    defaults.forEach(function(p){
+      if(p[2] === true){
+        total += Number(state[group][subKey(p[0], "activos")]) || 0;
+      }else if(p[2] === "activos"){
+        total += Number(state[group][p[0]]) || 0;
+      }
+    });
+    customs.forEach(function(item){
+      if(tipoDe(item) === "activos") total += Number(item.value) || 0;
+    });
+    return total;
+  }
+
+  function pintarParaCrecer(id, importe, total){
+    var pct = total > 0 ? Math.round((importe / total) * 100) : 0;
+    document.getElementById("growth-" + id).textContent = fmt(importe);
+    document.getElementById("growth-" + id + "-pct").textContent = pct + "%";
+    document.getElementById("growth-" + id + "-bar").style.width = pct + "%";
+  }
+
   function recalc(){
     var totalActivo = 0, totalPasivo = 0;
-    ACTIVO_DEFAULTS.forEach(function(p){ totalActivo += Number(state.activo[p[0]]) || 0; });
+    ACTIVO_DEFAULTS.forEach(function(p){ totalActivo += valorConcepto("activo", p); });
     state.customActivo.forEach(function(item){ totalActivo += Number(item.value) || 0; });
-    PASIVO_DEFAULTS.forEach(function(p){ totalPasivo += Number(state.pasivo[p[0]]) || 0; });
+    PASIVO_DEFAULTS.forEach(function(p){ totalPasivo += valorConcepto("pasivo", p); });
     state.customPasivo.forEach(function(item){ totalPasivo += Number(item.value) || 0; });
     var neto = totalActivo - totalPasivo;
     document.getElementById("total-activo").textContent = fmt(totalActivo);
@@ -1062,6 +1253,9 @@
     var max = Math.max(totalActivo, totalPasivo, 1);
     document.getElementById("bar-activo").style.width = Math.min(100, (totalActivo / max) * 100) + "%";
     document.getElementById("bar-pasivo").style.width = Math.min(100, (totalPasivo / max) * 100) + "%";
+
+    pintarParaCrecer("activo", sumaParaCrecer("activo", ACTIVO_DEFAULTS, state.customActivo), totalActivo);
+    pintarParaCrecer("pasivo", sumaParaCrecer("pasivo", PASIVO_DEFAULTS, state.customPasivo), totalPasivo);
   }
 
   document.getElementById("save-btn").addEventListener("click", function(){
@@ -1071,8 +1265,9 @@
   document.querySelectorAll(".add-line").forEach(function(btn){
     btn.addEventListener("click", function(){
       var target = btn.getAttribute("data-target");
-      if(target === "activo"){ state.customActivo.push({ label: "", value: 0 }); }
-      else { state.customPasivo.push({ label: "", value: 0 }); }
+      var linea = { label: "", value: 0, tipo: "activos" };
+      if(target === "activo"){ state.customActivo.push(linea); }
+      else { state.customPasivo.push(linea); }
       queueSave();
       render();
     });
@@ -1103,6 +1298,7 @@
         state.pasivo = data.pasivo || {};
         state.customActivo = data.customActivo || [];
         state.customPasivo = data.customPasivo || [];
+        migrarRepartidos();
       }
     }catch(e){
       setAutosave("error", "No se pudo cargar tu balance guardado. Escribir cifras nuevas las guardará igualmente.");
