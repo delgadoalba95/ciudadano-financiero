@@ -354,6 +354,56 @@
   }
   .add-line:hover { border-color: var(--accent); color: var(--accent-ink); background: var(--surface); }
 
+  /* ---------- Flujo de caja ---------- */
+  .flow-wrap { overflow-x: auto; }
+  .flow-table {
+    min-width: 640px; background: var(--surface-2);
+    border: 1px solid var(--rule); border-radius: 12px; overflow: hidden;
+  }
+  .flow-head, .flow-cat, .flow-row, .flow-add {
+    display: grid; grid-template-columns: minmax(200px, 1fr) 150px 110px 130px;
+    align-items: center; gap: 12px; padding: 10px 20px;
+  }
+  .flow-head {
+    background: var(--surface); border-bottom: 1px solid var(--rule);
+    font-family: "Public Sans", sans-serif; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft);
+  }
+  .flow-head .num, .flow-cat .num, .flow-row .num { text-align: right; }
+
+  .flow-section {
+    grid-column: 1 / -1; padding: 14px 20px 6px;
+    font-family: "Public Sans", sans-serif; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.09em; color: var(--ink-faint);
+    border-top: 1px solid var(--rule);
+  }
+  .flow-section:first-child { border-top: none; }
+
+  .flow-cat { background: var(--surface); border-top: 1px solid var(--rule); }
+  .flow-cat .name { font-weight: 700; font-size: 14px; }
+  .flow-cat .total, .flow-cat .pct {
+    font-family: "IBM Plex Mono", monospace; font-weight: 700; font-size: 13.5px;
+  }
+  /* Se ha pasado del porcentaje que debería dedicar a esa partida. */
+  .flow-cat .pct.off { color: var(--negative); }
+  .flow-ideal {
+    font-family: "IBM Plex Mono", monospace; font-size: 12.5px; font-weight: 600;
+    text-align: right; color: var(--ink-soft);
+  }
+
+  .flow-row { border-top: 1px solid var(--hairline-faint); }
+  .flow-row .name { font-size: 13.5px; font-weight: 600; color: var(--ink-soft); padding-left: 14px; }
+  .flow-row .pct { font-family: "IBM Plex Mono", monospace; font-size: 12.5px; color: var(--ink-faint); }
+  .flow-row .custom-input {
+    background: transparent; border: none; border-bottom: 1px dashed var(--ink-faint);
+    padding: 2px 0; font: inherit; font-size: 13.5px; font-weight: 600; color: var(--ink); width: 100%;
+  }
+  .flow-row .row-end { display:flex; align-items:center; justify-content:flex-end; gap: 8px; }
+  .flow-add { padding-top: 6px; padding-bottom: 14px; }
+  .flow-add .add-line { margin: 0; width: auto; padding: 8px 14px; }
+  .flow-summary { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 780px){ .flow-summary { grid-template-columns: 1fr; } }
+
   .summary {
     margin-top: 26px; background: var(--header-bg); color: var(--header-ink);
     border-radius: 12px; padding: 26px 30px; display:grid;
@@ -495,7 +545,7 @@
       <nav>
         <button class="nav-item" data-view="curso"><span class="ico">&#9679;</span> Curso</button>
         <button class="nav-item active" data-view="balance"><span class="ico">&#9633;</span> Balance</button>
-        <button class="nav-item" data-view="flujo"><span class="ico">&#8646;</span> Flujo de caja <span class="tag">pronto</span></button>
+        <button class="nav-item" data-view="flujo"><span class="ico">&#8646;</span> Flujo de caja</button>
       </nav>
       <div class="sidebar-foot">
         <span id="sidebar-email"></span>
@@ -591,11 +641,40 @@
       </section>
 
       <section class="view" id="view-flujo">
-        <div class="placeholder-card">
-          <h3 style="font-size:16px; margin-bottom:8px;">Flujo de caja</h3>
-          <p style="color:var(--ink-faint); font-size:13.5px; max-width:60ch; line-height:1.6;">
-            Próximamente: ingresos y gastos mensuales, con el mismo estilo interactivo que el Balance.
-          </p>
+        <div class="instructions">
+          <span class="mark">&#9432;</span>
+          <p>Reparte lo que te entra cada mes entre estas partidas. El <strong>porcentaje se calcula solo</strong> sobre el total que repartas, y al lado tienes la <strong>situación ideal</strong> para comparar.</p>
+        </div>
+
+        <div class="flow-wrap">
+          <div class="flow-table">
+            <div class="flow-head">
+              <div>Concepto</div>
+              <div class="num">Importe</div>
+              <div class="num">Porcentaje</div>
+              <div class="num">Situación ideal</div>
+            </div>
+            <div id="flow-body"></div>
+          </div>
+        </div>
+
+        <div class="summary flow-summary">
+          <div class="summary-stat">
+            <div class="label">Total repartido</div>
+            <div class="value" id="flow-total">0 €</div>
+          </div>
+          <div class="summary-stat activo">
+            <div class="label">A activos (ahorro, inversión y educación)</div>
+            <div class="value" id="flow-activos">0 €</div>
+          </div>
+          <div class="summary-stat pasivo">
+            <div class="label">A pasivos (gastos y lujos)</div>
+            <div class="value" id="flow-pasivos">0 €</div>
+          </div>
+        </div>
+
+        <div class="save-row">
+          <div class="autosave" id="autosave-indicator-flujo"><span class="dot"></span> <span>Tus cifras se guardan en tu cuenta.</span></div>
         </div>
       </section>
     </main>
@@ -776,9 +855,10 @@
     return rows.length > 0 ? rows[0].data : null;
   }
 
-  async function saveBalance(access_token, user_id, email, data){
+  async function saveBalance(access_token, user_id, email, data, keepalive){
     var res = await fetch(window.SUPABASE_URL + "/rest/v1/balances?on_conflict=user_id", {
       method: "POST",
+      keepalive: !!keepalive,
       headers: {
         "Content-Type": "application/json",
         "apikey": window.SUPABASE_ANON_KEY,
@@ -987,7 +1067,8 @@
   function tipoDe(item){ return item.tipo === "pasivos" ? "pasivos" : "activos"; }
 
   var session = null; // { access_token, refresh_token, user_id, email }
-  var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [] };
+  var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [], flujo: {} };
+  var filasFlujo = [];
   var saveTimer = null;
 
   // El email no se muestra en pantalla: solo sus dos primeras letras.
@@ -1029,6 +1110,7 @@
     setSaveBtn("Guardando...", true);
     try{
       await saveBalance(session.access_token, session.user_id, session.email, state);
+      hayPendiente = false;
       setAutosave("saved", "Guardado en tu cuenta.");
       setSaveBtn("Guardado", true);
     }catch(e){
@@ -1037,14 +1119,35 @@
     }
   }
 
-  // Al escribir se marca como pendiente y se guarda solo medio segundo
-  // después. El botón queda activo por si se quiere guardar en el acto.
+  // Se guarda nada más escribir. La espera es mínima: solo agrupa las
+  // pulsaciones seguidas de un mismo número para no lanzar una petición
+  // por tecla.
+  var SAVE_DELAY = 250;
+  var hayPendiente = false;
+
   function queueSave(){
-    setAutosave("saving", "Sin guardar...");
+    hayPendiente = true;
+    setAutosave("saving", "Guardando...");
     setSaveBtn("Guardar", false);
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(saveNow, 500);
+    saveTimer = setTimeout(saveNow, SAVE_DELAY);
   }
+
+  // Si cierra la pestaña o cambia de app con algo a medias, se manda ya.
+  // keepalive permite que la petición sobreviva a la página.
+  function flushSave(){
+    if(!hayPendiente || !session) return;
+    clearTimeout(saveTimer);
+    hayPendiente = false;
+    try{
+      saveBalance(session.access_token, session.user_id, session.email, state, true);
+    }catch(e){ /* la pestaña se está yendo: no hay nada más que hacer */ }
+  }
+
+  window.addEventListener("pagehide", flushSave);
+  document.addEventListener("visibilitychange", function(){
+    if(document.visibilityState === "hidden") flushSave();
+  });
 
   function wireAmountInput(input, getValue, setValue){
     input.type = "text";
@@ -1195,6 +1298,206 @@
     });
   }
 
+
+  // ---------- Flujo de caja ----------
+  // Cada grupo lleva su porcentaje ideal sobre el total repartido.
+  var FLUJO = [
+    { lado: "pasivos", key: "obligatorios", nombre: "Gastos obligatorios", ideal: 50, items: [
+      ["alquiler", "Alquiler / hipoteca"],
+      ["casa", "Gastos de la casa"],
+      ["transporte", "Coche o transporte"],
+      ["comida", "Comida"]
+    ]},
+    { lado: "pasivos", key: "basicos", nombre: "Gastos básicos", ideal: 10, items: [
+      ["gimnasio", "Gimnasio"],
+      ["suscripciones", "Suscripciones"]
+    ]},
+    { lado: "pasivos", key: "lujos", nombre: "Lujos", ideal: 10, items: [
+      ["viajes", "Viajes"],
+      ["comidas_fuera", "Comidas fuera"],
+      ["regalos", "Regalos"],
+      ["planes", "Planes con amigos / pareja"]
+    ]},
+    { lado: "activos", key: "ahorro", nombre: "Ahorro e inversión", ideal: 20, items: [
+      ["ahorro", "Ahorro"],
+      ["inversion", "Inversión"]
+    ]},
+    { lado: "activos", key: "educacion", nombre: "Educación", ideal: 10, items: [
+      ["terapia", "Terapia"],
+      ["idiomas", "Aprender idiomas"],
+      ["profesional", "Crecer profesionalmente"]
+    ]}
+  ];
+  var LADOS = [
+    { key: "pasivos", titulo: "Pasivos — lo que sale y no vuelve" },
+    { key: "activos", titulo: "Activos — lo que te hace crecer" }
+  ];
+
+  function flujoGrupo(key){
+    if(!state.flujo[key]) state.flujo[key] = { items: {}, custom: [] };
+    if(!state.flujo[key].items) state.flujo[key].items = {};
+    if(!state.flujo[key].custom) state.flujo[key].custom = [];
+    return state.flujo[key];
+  }
+
+  function totalGrupo(g){
+    var grupo = flujoGrupo(g.key), total = 0;
+    g.items.forEach(function(it){ total += Number(grupo.items[it[0]]) || 0; });
+    grupo.custom.forEach(function(c){ total += Number(c.value) || 0; });
+    return total;
+  }
+
+  function totalFlujo(){
+    var total = 0;
+    FLUJO.forEach(function(g){ total += totalGrupo(g); });
+    return total;
+  }
+
+  function pct(parte, total){
+    return total > 0 ? Math.round((parte / total) * 100) : 0;
+  }
+
+  function celdaNum(texto, clase){
+    var d = document.createElement("div");
+    d.className = "num " + (clase || "");
+    d.textContent = texto;
+    return d;
+  }
+
+  function filaFlujo(nombreNodo, getValue, setValue, extra){
+    var row = document.createElement("div");
+    row.className = "flow-row";
+    var name = document.createElement("div");
+    name.className = "name";
+    name.appendChild(nombreNodo);
+    row.appendChild(name);
+
+    var celdaImporte = document.createElement("div");
+    celdaImporte.className = "num row-end";
+    celdaImporte.appendChild(buildAmountField(getValue, setValue, "narrow"));
+    if(extra) celdaImporte.appendChild(extra);
+    row.appendChild(celdaImporte);
+
+    var pctCell = celdaNum("0%", "pct");
+    row.appendChild(pctCell);
+    row.appendChild(celdaNum(""));
+    row._pct = pctCell;
+    row._valor = getValue;
+    return row;
+  }
+
+  function renderFlujo(){
+    var body = document.getElementById("flow-body");
+    if(!body) return;
+    body.innerHTML = "";
+    filasFlujo = [];
+
+    LADOS.forEach(function(lado){
+      var cab = document.createElement("div");
+      cab.className = "flow-section";
+      cab.textContent = lado.titulo;
+      body.appendChild(cab);
+
+      FLUJO.filter(function(g){ return g.lado === lado.key; }).forEach(function(g){
+        var grupo = flujoGrupo(g.key);
+
+        var cat = document.createElement("div");
+        cat.className = "flow-cat";
+        var nom = document.createElement("div");
+        nom.className = "name";
+        nom.textContent = g.nombre;
+        cat.appendChild(nom);
+        var tot = celdaNum("0 €", "total");
+        cat.appendChild(tot);
+        var cpct = celdaNum("0%", "pct");
+        cat.appendChild(cpct);
+        var ideal = document.createElement("div");
+        ideal.className = "flow-ideal";
+        ideal.textContent = g.ideal + "%";
+        cat.appendChild(ideal);
+        body.appendChild(cat);
+        filasFlujo.push({ tipo: "grupo", g: g, total: tot, pct: cpct, ideal: ideal });
+
+        g.items.forEach(function(it){
+          var etiqueta = document.createTextNode(it[1]);
+          var row = filaFlujo(etiqueta,
+            function(){ return grupo.items[it[0]] || 0; },
+            function(n){ grupo.items[it[0]] = n; });
+          body.appendChild(row);
+          filasFlujo.push({ tipo: "linea", row: row });
+        });
+
+        grupo.custom.forEach(function(item, i){
+          var input = document.createElement("input");
+          input.type = "text";
+          input.className = "custom-input";
+          input.placeholder = "Escribe el concepto";
+          input.value = item.label || "";
+          input.addEventListener("input", function(){ item.label = input.value; queueSave(); });
+
+          var del = document.createElement("button");
+          del.className = "remove-btn";
+          del.setAttribute("aria-label", "Eliminar línea");
+          del.textContent = "×";
+          del.addEventListener("click", function(){
+            grupo.custom.splice(i, 1);
+            queueSave();
+            renderFlujo();
+          });
+
+          var row = filaFlujo(input,
+            function(){ return item.value || 0; },
+            function(n){ item.value = n; }, del);
+          body.appendChild(row);
+          filasFlujo.push({ tipo: "linea", row: row });
+        });
+
+        var addWrap = document.createElement("div");
+        addWrap.className = "flow-add";
+        var add = document.createElement("button");
+        add.className = "add-line";
+        add.textContent = "+ Añadir otro";
+        add.addEventListener("click", function(){
+          grupo.custom.push({ label: "", value: 0 });
+          queueSave();
+          renderFlujo();
+        });
+        addWrap.appendChild(add);
+        body.appendChild(addWrap);
+      });
+    });
+
+    recalcFlujo();
+  }
+
+  function recalcFlujo(){
+    var total = totalFlujo();
+    var activos = 0, pasivos = 0;
+    FLUJO.forEach(function(g){
+      var t = totalGrupo(g);
+      if(g.lado === "activos") activos += t; else pasivos += t;
+    });
+
+    filasFlujo.forEach(function(f){
+      if(f.tipo === "grupo"){
+        var t = totalGrupo(f.g);
+        var p = pct(t, total);
+        f.total.textContent = fmt(t);
+        f.pct.textContent = p + "%";
+        // Pasarse solo es malo en los pasivos: en ahorro o educación,
+        // superar lo ideal es justo lo que se busca.
+        var pasado = f.g.lado === "pasivos" && total > 0 && p > f.g.ideal;
+        f.pct.className = "num pct" + (pasado ? " off" : "");
+      }else{
+        f.row._pct.textContent = pct(f.row._valor(), total) + "%";
+      }
+    });
+
+    document.getElementById("flow-total").textContent = fmt(total);
+    document.getElementById("flow-activos").textContent = fmt(activos) + " · " + pct(activos, total) + "%";
+    document.getElementById("flow-pasivos").textContent = fmt(pasivos) + " · " + pct(pasivos, total) + "%";
+  }
+
   function render(){
     var listActivo = document.getElementById("list-activo");
     var listPasivo = document.getElementById("list-pasivo");
@@ -1203,6 +1506,7 @@
     state.customActivo.forEach(function(item, i){ listActivo.appendChild(buildCustomRow(item, "activo", i)); });
     PASIVO_DEFAULTS.forEach(function(p){ listPasivo.appendChild(buildFixedRow(p[0], p[1], "pasivo", p[2])); });
     state.customPasivo.forEach(function(item, i){ listPasivo.appendChild(buildCustomRow(item, "pasivo", i)); });
+    renderFlujo();
     recalc();
   }
 
@@ -1254,6 +1558,8 @@
     document.getElementById("bar-activo").style.width = Math.min(100, (totalActivo / max) * 100) + "%";
     document.getElementById("bar-pasivo").style.width = Math.min(100, (totalPasivo / max) * 100) + "%";
 
+    recalcFlujo();
+
     pintarParaCrecer("activo", sumaParaCrecer("activo", ACTIVO_DEFAULTS, state.customActivo), totalActivo);
     pintarParaCrecer("pasivo", sumaParaCrecer("pasivo", PASIVO_DEFAULTS, state.customPasivo), totalPasivo);
   }
@@ -1298,6 +1604,7 @@
         state.pasivo = data.pasivo || {};
         state.customActivo = data.customActivo || [];
         state.customPasivo = data.customPasivo || [];
+        state.flujo = data.flujo || {};
         migrarRepartidos();
       }
     }catch(e){
