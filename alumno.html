@@ -1378,11 +1378,10 @@
     if(extra) celdaImporte.appendChild(extra);
     row.appendChild(celdaImporte);
 
-    var pctCell = celdaNum("0%", "pct");
-    row.appendChild(pctCell);
+    // El porcentaje solo se muestra en la fila del grupo: mezclarlo con el
+    // de las subpartidas confundía dos bases de cálculo distintas.
     row.appendChild(celdaNum(""));
-    row._pct = pctCell;
-    row._valor = getValue;
+    row.appendChild(celdaNum(""));
     return row;
   }
 
@@ -1424,7 +1423,6 @@
             function(){ return grupo.items[it[0]] || 0; },
             function(n){ grupo.items[it[0]] = n; });
           body.appendChild(row);
-          filasFlujo.push({ tipo: "linea", row: row });
         });
 
         grupo.custom.forEach(function(item, i){
@@ -1449,7 +1447,6 @@
             function(){ return item.value || 0; },
             function(n){ item.value = n; }, del);
           body.appendChild(row);
-          filasFlujo.push({ tipo: "linea", row: row });
         });
 
         var addWrap = document.createElement("div");
@@ -1479,8 +1476,8 @@
     });
 
     filasFlujo.forEach(function(f){
-      if(f.tipo === "grupo"){
-        var t = totalGrupo(f.g);
+      var t = totalGrupo(f.g);
+      {
         var p = pct(t, total);
         f.total.textContent = fmt(t);
         f.pct.textContent = p + "%";
@@ -1488,8 +1485,6 @@
         var mal = total > 0 &&
           (f.g.lado === "pasivos" ? p > f.g.ideal : p < f.g.ideal);
         f.pct.className = "num pct" + (mal ? " off" : "");
-      }else{
-        f.row._pct.textContent = pct(f.row._valor(), total) + "%";
       }
     });
 
