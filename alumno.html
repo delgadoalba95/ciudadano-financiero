@@ -384,7 +384,7 @@
   .flow-cat .total, .flow-cat .pct {
     font-family: "IBM Plex Mono", monospace; font-weight: 700; font-size: 13.5px;
   }
-  /* Se ha pasado del porcentaje que debería dedicar a esa partida. */
+  /* Se aleja del porcentaje ideal: de más en pasivos, de menos en activos. */
   .flow-cat .pct.off { color: var(--negative); }
   .flow-ideal {
     font-family: "IBM Plex Mono", monospace; font-size: 12.5px; font-weight: 600;
@@ -1484,10 +1484,10 @@
         var p = pct(t, total);
         f.total.textContent = fmt(t);
         f.pct.textContent = p + "%";
-        // Pasarse solo es malo en los pasivos: en ahorro o educación,
-        // superar lo ideal es justo lo que se busca.
-        var pasado = f.g.lado === "pasivos" && total > 0 && p > f.g.ideal;
-        f.pct.className = "num pct" + (pasado ? " off" : "");
+        // En pasivos avisa pasarse del ideal; en activos, quedarse corto.
+        var mal = total > 0 &&
+          (f.g.lado === "pasivos" ? p > f.g.ideal : p < f.g.ideal);
+        f.pct.className = "num pct" + (mal ? " off" : "");
       }else{
         f.row._pct.textContent = pct(f.row._valor(), total) + "%";
       }
