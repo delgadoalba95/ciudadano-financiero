@@ -635,8 +635,8 @@
         </div>
 
         <div class="save-row">
-          <div class="autosave" id="autosave-indicator"><span class="dot"></span> <span id="autosave-text">Tus cifras se guardan en tu cuenta.</span></div>
-          <button class="btn-save" id="save-btn" disabled>Guardado</button>
+          <div class="autosave"><span class="dot"></span> <span class="autosave-text">Tus cifras se guardan en tu cuenta.</span></div>
+          <button class="btn-save" disabled>Guardado</button>
         </div>
       </section>
 
@@ -674,7 +674,8 @@
         </div>
 
         <div class="save-row">
-          <div class="autosave" id="autosave-indicator-flujo"><span class="dot"></span> <span>Tus cifras se guardan en tu cuenta.</span></div>
+          <div class="autosave"><span class="dot"></span> <span class="autosave-text">Tus cifras se guardan en tu cuenta.</span></div>
+          <button class="btn-save" disabled>Guardado</button>
         </div>
       </section>
     </main>
@@ -1076,10 +1077,14 @@
     return (email || "").slice(0, 2).toUpperCase();
   }
 
+  // Balance y Flujo de caja guardan lo mismo, así que los dos indicadores
+  // y los dos botones muestran siempre el mismo estado.
   function setAutosave(mode, text){
-    var el = document.getElementById("autosave-indicator");
-    el.className = "autosave " + mode;
-    document.getElementById("autosave-text").textContent = text;
+    document.querySelectorAll(".autosave").forEach(function(el){
+      el.className = "autosave " + mode;
+      var t = el.querySelector(".autosave-text");
+      if(t) t.textContent = text;
+    });
   }
 
   function formatThousands(n){
@@ -1096,10 +1101,10 @@
 
   // Estado del botón de guardar: "limpio" = no hay nada pendiente.
   function setSaveBtn(label, disabled){
-    var btn = document.getElementById("save-btn");
-    if(!btn) return;
-    btn.textContent = label;
-    btn.disabled = !!disabled;
+    document.querySelectorAll(".btn-save").forEach(function(btn){
+      btn.textContent = label;
+      btn.disabled = !!disabled;
+    });
   }
 
   // El guardado de verdad. Lo usan tanto el automático como el botón.
@@ -1559,8 +1564,8 @@
     pintarParaCrecer("pasivo", sumaParaCrecer("pasivo", PASIVO_DEFAULTS, state.customPasivo), totalPasivo);
   }
 
-  document.getElementById("save-btn").addEventListener("click", function(){
-    saveNow();
+  document.querySelectorAll(".btn-save").forEach(function(btn){
+    btn.addEventListener("click", function(){ saveNow(); });
   });
 
   document.querySelectorAll(".add-line").forEach(function(btn){
