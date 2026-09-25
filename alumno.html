@@ -253,6 +253,35 @@
     background: var(--surface-2); border: 1px solid var(--rule); border-radius: 12px; padding: 40px;
   }
 
+  /* ---------- Curso ---------- */
+  .modulo {
+    background: var(--surface-2); border: 1px solid var(--rule); border-radius: 12px;
+    padding: 22px 24px; margin-bottom: 16px;
+  }
+  .modulo-head { display:flex; align-items:baseline; gap:14px; }
+  .modulo-num {
+    font-family:"IBM Plex Mono", monospace; font-size:12px; font-weight:700;
+    letter-spacing:.08em; color: var(--accent-strong); flex:none; min-width:24px;
+  }
+  .modulo-head h3 { font-size:16px; }
+  .modulo-body { margin-left: 38px; }
+  .modulo-desc { color: var(--ink-faint); font-size:13px; margin:6px 0 0; line-height:1.55; max-width:70ch; }
+  .modulo-soon { margin:10px 0 0; font-size:12.5px; color: var(--ink-faint); font-style: italic; }
+  .leccion { margin-top: 18px; }
+  .leccion-title { display:flex; align-items:center; gap:10px; font-size:14px; font-weight:600; margin-bottom:10px; }
+  .leccion-dur {
+    font-family:"IBM Plex Mono", monospace; font-size:11.5px; font-weight:500;
+    color: var(--ink-faint); letter-spacing:.04em;
+  }
+  .video-wrap {
+    position:relative; padding-bottom:56.25%; height:0; overflow:hidden;
+    border-radius:10px; border:1px solid var(--rule); background:#000;
+  }
+  .video-wrap iframe { position:absolute; top:0; left:0; width:100%; height:100%; border:0; }
+  @media (max-width: 640px) {
+    .modulo-body { margin-left: 0; }
+  }
+
   /* ---------- Balance ---------- */
   .instructions {
     display:flex; gap: 14px; background: var(--surface); border: 1px solid var(--rule);
@@ -565,11 +594,57 @@
       </div>
 
       <section class="view" id="view-curso">
-        <div class="placeholder-card">
-          <h3 style="font-size:16px; margin-bottom:8px;">Tu progreso</h3>
-          <p style="color:var(--ink-faint); font-size:13.5px; margin:0; max-width:60ch; line-height:1.6;">
-            Aquí verás los módulos del curso y tu avance. Lo conectamos en la siguiente iteración.
-          </p>
+        <div class="instructions">
+          <span class="mark">&#9432;</span>
+          <p>Aquí tienes las lecciones del curso. Se irán publicando por módulos y puedes verlas <strong>tantas veces como quieras</strong> durante tu año de acceso.</p>
+        </div>
+
+        <div class="modulo">
+          <div class="modulo-head"><span class="modulo-num">I</span><h3>Introducción</h3></div>
+          <div class="modulo-body">
+            <p class="modulo-desc">Comenzamos desde tu momento actual financiero, qué puedes esperar y cómo vas a salir del curso.</p>
+            <p class="modulo-soon">Próximamente</p>
+          </div>
+        </div>
+
+        <div class="modulo">
+          <div class="modulo-head"><span class="modulo-num">II</span><h3>Percepción financiera y gastos</h3></div>
+          <div class="modulo-body">
+            <p class="modulo-desc">Tu perfil personal con el dinero y cómo contrarrestarlo, creencias limitantes, mentalidad del dinero, tu flujo de caja personal y gestión de gastos.</p>
+            <p class="modulo-soon">Próximamente</p>
+          </div>
+        </div>
+
+        <div class="modulo">
+          <div class="modulo-head"><span class="modulo-num">III</span><h3>Gestión de las finanzas personales: organiza tu dinero</h3></div>
+          <div class="modulo-body">
+            <p class="modulo-desc">Tu balance personal, la deuda, activos y pasivos, cómo se relacionan las decisiones financieras con las personales y los riesgos.</p>
+            <p class="modulo-soon">Próximamente</p>
+          </div>
+        </div>
+
+        <div class="modulo">
+          <div class="modulo-head"><span class="modulo-num">IV</span><h3>Inversiones</h3></div>
+          <div class="modulo-body">
+            <p class="modulo-desc">Las 3 habilidades clave del dinero, los productos financieros, cómo invertir de una forma rentable.</p>
+            <div class="leccion">
+              <div class="leccion-title">Análisis Técnico <span class="leccion-dur">47 min</span></div>
+              <div class="video-wrap">
+                <iframe src="https://www.loom.com/embed/dd3a1b36fa6547c482b74ff9013cba0b"
+                        title="Análisis Técnico"
+                        allow="fullscreen"
+                        allowfullscreen></iframe>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modulo">
+          <div class="modulo-head"><span class="modulo-num">V</span><h3>La inversión en mercado bursátil</h3></div>
+          <div class="modulo-body">
+            <p class="modulo-desc">Análisis fundamental, técnico y todo lo que debes saber para multiplicar tu dinero.</p>
+            <p class="modulo-soon">Próximamente</p>
+          </div>
         </div>
       </section>
 
