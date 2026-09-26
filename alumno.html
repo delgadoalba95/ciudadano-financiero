@@ -267,19 +267,41 @@
   .modulo-body { margin-left: 38px; }
   .modulo-desc { color: var(--ink-faint); font-size:13px; margin:6px 0 0; line-height:1.55; max-width:70ch; }
   .modulo-soon { margin:10px 0 0; font-size:12.5px; color: var(--ink-faint); font-style: italic; }
-  .leccion { margin-top: 18px; }
-  .leccion-title { display:flex; align-items:center; gap:10px; font-size:14px; font-weight:600; margin-bottom:10px; }
+  .lecciones {
+    margin-top: 16px; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden;
+  }
+  .leccion + .leccion { border-top: 1px solid var(--rule); }
+  .leccion-head {
+    width:100%; display:flex; align-items:center; gap:14px; text-align:left;
+    background: rgba(255,255,255,0.38); border:0; cursor:pointer; padding: 14px 16px;
+    font-family: inherit; color: var(--ink); transition: background .15s ease;
+  }
+  .leccion-head:hover { background: rgba(255,255,255,0.72); }
+  .leccion-head[aria-expanded="true"] { background: rgba(255,255,255,0.8); }
+  .leccion-play { flex:none; display:inline-flex; color: var(--accent-strong); }
+  .leccion-play svg { width:22px; height:22px; }
+  .leccion-name {
+    flex:1; font-size:13px; font-weight:700; letter-spacing:.055em;
+    text-transform: uppercase; line-height:1.35;
+  }
+  .leccion-meta { flex:none; display:flex; align-items:center; gap:14px; }
+  .leccion-clip { display:inline-flex; color: var(--ink-faint); }
+  .leccion-clip svg { width:15px; height:15px; }
   .leccion-dur {
-    font-family:"IBM Plex Mono", monospace; font-size:11.5px; font-weight:500;
+    font-family:"IBM Plex Mono", monospace; font-size:12px; font-weight:500;
     color: var(--ink-faint); letter-spacing:.04em;
   }
+  .leccion-body { padding: 16px; background: rgba(255,255,255,0.5); }
+  .leccion-body[hidden] { display:none; }
   .video-wrap {
     position:relative; padding-bottom:56.25%; height:0; overflow:hidden;
-    border-radius:10px; border:1px solid var(--rule); background:#000;
+    border-radius:8px; border:1px solid var(--rule); background:#000;
   }
   .video-wrap iframe { position:absolute; top:0; left:0; width:100%; height:100%; border:0; }
   @media (max-width: 640px) {
     .modulo-body { margin-left: 0; }
+    .leccion-head { padding: 13px 12px; gap: 11px; }
+    .leccion-name { font-size: 12px; }
   }
 
   /* ---------- Balance ---------- */
@@ -627,13 +649,38 @@
           <div class="modulo-head"><span class="modulo-num">IV</span><h3>Inversiones</h3></div>
           <div class="modulo-body">
             <p class="modulo-desc">Las 3 habilidades clave del dinero, los productos financieros, cómo invertir de una forma rentable.</p>
-            <div class="leccion">
-              <div class="leccion-title">Análisis Técnico <span class="leccion-dur">47 min</span></div>
-              <div class="video-wrap">
-                <iframe src="https://www.loom.com/embed/dd3a1b36fa6547c482b74ff9013cba0b?hideEmbedTopBar=true&amp;hide_share=true&amp;hide_owner=true&amp;hide_title=true"
-                        title="Análisis Técnico"
-                        allow="fullscreen"
-                        allowfullscreen></iframe>
+            <!--
+              Para añadir una clase nueva, copia un bloque .leccion completo y cambia
+              nombre, duración y la URL del vídeo (data-src).
+              Si esa clase tiene ejercicios, añade el clip dentro de .leccion-meta,
+              ANTES de .leccion-dur:
+
+              <span class="leccion-clip" title="Incluye ejercicios" aria-label="Incluye ejercicios">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M21 11.5l-8.8 8.8a5 5 0 0 1-7.1-7.1l9-9a3.5 3.5 0 1 1 5 5l-9 9a2 2 0 0 1-2.8-2.8l8.3-8.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </span>
+            -->
+            <div class="lecciones">
+              <div class="leccion">
+                <button class="leccion-head" type="button" aria-expanded="false">
+                  <span class="leccion-play" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10.25" stroke="currentColor" stroke-width="1.5"></circle>
+                      <path d="M10 8.4 16.2 12 10 15.6V8.4Z" fill="currentColor"></path>
+                    </svg>
+                  </span>
+                  <span class="leccion-name">Análisis Técnico</span>
+                  <span class="leccion-meta">
+                    <span class="leccion-dur">46:33</span>
+                  </span>
+                </button>
+                <div class="leccion-body" hidden>
+                  <div class="video-wrap">
+                    <iframe data-src="https://www.loom.com/embed/dd3a1b36fa6547c482b74ff9013cba0b?hideEmbedTopBar=true&amp;hide_share=true&amp;hide_owner=true&amp;hide_title=true"
+                            title="Análisis Técnico"
+                            allow="fullscreen"
+                            allowfullscreen></iframe>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1663,6 +1710,30 @@
       document.querySelectorAll(".view").forEach(function(v){ v.classList.remove("active"); });
       document.getElementById("view-" + target).classList.add("active");
       document.getElementById("page-title").textContent = VIEWS[target];
+    });
+  });
+
+  // ---------- Lecciones: desplegar y cargar el vídeo solo al pulsar ----------
+  document.querySelectorAll(".leccion-head").forEach(function(head){
+    head.addEventListener("click", function(){
+      var body = head.nextElementSibling;
+      var abierta = head.getAttribute("aria-expanded") === "true";
+
+      if (abierta) {
+        head.setAttribute("aria-expanded", "false");
+        body.hidden = true;
+        return;
+      }
+
+      head.setAttribute("aria-expanded", "true");
+      body.hidden = false;
+
+      // El iframe no se carga hasta la primera vez que se abre la clase
+      var frame = body.querySelector("iframe[data-src]");
+      if (frame) {
+        frame.src = frame.getAttribute("data-src");
+        frame.removeAttribute("data-src");
+      }
     });
   });
 
