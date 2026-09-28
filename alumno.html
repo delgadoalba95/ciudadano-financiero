@@ -1736,9 +1736,16 @@
     });
   });
 
-  // ---------- Lecciones: solo una abierta a la vez ----------
-  // Al cerrar hay que descargar el iframe: ocultarlo no detiene el vídeo y
-  // se seguiría oyendo de fondo.
+  // ---------- Lecciones: precargadas y solo una abierta a la vez ----------
+  // Los vídeos se cargan al abrir la página para que al pulsar una clase se vea
+  // al instante. Al cerrar una clase se recarga su iframe: ocultarlo no detiene
+  // la reproducción (se seguiría oyendo), y recargarlo lo deja listo otra vez.
+  function precargarVideos(){
+    document.querySelectorAll(".leccion-body iframe[data-src]").forEach(function(frame){
+      if (!frame.getAttribute("src")) frame.src = frame.getAttribute("data-src");
+    });
+  }
+
   function cerrarLeccion(head){
     var body = head.nextElementSibling;
     var frame = body.querySelector("iframe");
@@ -1746,23 +1753,19 @@
     head.setAttribute("aria-expanded", "false");
     body.hidden = true;
 
-    if (frame && frame.getAttribute("src")) {
-      frame.setAttribute("data-src", frame.getAttribute("src"));
-      frame.removeAttribute("src");
-    }
+    // Recargar corta el audio y deja el vídeo preparado para la próxima vez
+    if (frame) frame.src = frame.getAttribute("data-src");
   }
 
   function abrirLeccion(head){
     var body = head.nextElementSibling;
-    var frame = body.querySelector("iframe[data-src]");
+    var frame = body.querySelector("iframe");
 
     head.setAttribute("aria-expanded", "true");
     body.hidden = false;
 
-    if (frame) {
-      frame.src = frame.getAttribute("data-src");
-      frame.removeAttribute("data-src");
-    }
+    // Red de seguridad por si la precarga no llegó a ejecutarse
+    if (frame && !frame.getAttribute("src")) frame.src = frame.getAttribute("data-src");
   }
 
   document.querySelectorAll(".leccion-head").forEach(function(head){
@@ -1778,6 +1781,8 @@
       abrirLeccion(head);
     });
   });
+
+  precargarVideos();
 
   // ---------- Boot ----------
   async function enterApp(){
