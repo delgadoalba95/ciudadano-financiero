@@ -1736,27 +1736,46 @@
     });
   });
 
-  // ---------- Lecciones: desplegar y cargar el vídeo solo al pulsar ----------
+  // ---------- Lecciones: solo una abierta a la vez ----------
+  // Al cerrar hay que descargar el iframe: ocultarlo no detiene el vídeo y
+  // se seguiría oyendo de fondo.
+  function cerrarLeccion(head){
+    var body = head.nextElementSibling;
+    var frame = body.querySelector("iframe");
+
+    head.setAttribute("aria-expanded", "false");
+    body.hidden = true;
+
+    if (frame && frame.getAttribute("src")) {
+      frame.setAttribute("data-src", frame.getAttribute("src"));
+      frame.removeAttribute("src");
+    }
+  }
+
+  function abrirLeccion(head){
+    var body = head.nextElementSibling;
+    var frame = body.querySelector("iframe[data-src]");
+
+    head.setAttribute("aria-expanded", "true");
+    body.hidden = false;
+
+    if (frame) {
+      frame.src = frame.getAttribute("data-src");
+      frame.removeAttribute("data-src");
+    }
+  }
+
   document.querySelectorAll(".leccion-head").forEach(function(head){
     head.addEventListener("click", function(){
-      var body = head.nextElementSibling;
       var abierta = head.getAttribute("aria-expanded") === "true";
 
       if (abierta) {
-        head.setAttribute("aria-expanded", "false");
-        body.hidden = true;
+        cerrarLeccion(head);
         return;
       }
 
-      head.setAttribute("aria-expanded", "true");
-      body.hidden = false;
-
-      // El iframe no se carga hasta la primera vez que se abre la clase
-      var frame = body.querySelector("iframe[data-src]");
-      if (frame) {
-        frame.src = frame.getAttribute("data-src");
-        frame.removeAttribute("data-src");
-      }
+      document.querySelectorAll('.leccion-head[aria-expanded="true"]').forEach(cerrarLeccion);
+      abrirLeccion(head);
     });
   });
 
