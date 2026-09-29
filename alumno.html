@@ -1028,15 +1028,15 @@
           <div class="calc-datos">
             <div class="calc-campo">
               <label for="calc-precio">Precio del piso</label>
-              <div class="calc-input"><input type="number" id="calc-precio" value="150000" min="0" step="1000" inputmode="numeric"><span>€</span></div>
+              <div class="calc-input"><input type="text" id="calc-precio" value="150.000" inputmode="numeric" autocomplete="off"><span>€</span></div>
             </div>
             <div class="calc-campo">
               <label for="calc-alquiler">Alquiler mensual</label>
-              <div class="calc-input"><input type="number" id="calc-alquiler" value="800" min="0" step="10" inputmode="numeric"><span>€</span></div>
+              <div class="calc-input"><input type="text" id="calc-alquiler" value="800" inputmode="numeric" autocomplete="off"><span>€</span></div>
             </div>
             <div class="calc-campo">
               <label for="calc-hipoteca">Hipoteca que pides</label>
-              <div class="calc-input"><input type="number" id="calc-hipoteca" value="120000" min="0" step="1000" inputmode="numeric"><span>€</span></div>
+              <div class="calc-input"><input type="text" id="calc-hipoteca" value="120.000" inputmode="numeric" autocomplete="off"><span>€</span></div>
               <small>Pon 0 si lo pagas al contado</small>
             </div>
           </div>
@@ -2296,9 +2296,9 @@
     var cont = document.getElementById("calc-resultados");
     if(!cont) return;
 
-    var A = Number(document.getElementById("calc-precio").value) || 0;
-    var B = Number(document.getElementById("calc-alquiler").value) || 0;
-    var C = Number(document.getElementById("calc-hipoteca").value) || 0;
+    var A = leerImporte("calc-precio");
+    var B = leerImporte("calc-alquiler");
+    var C = leerImporte("calc-hipoteca");
     var r = calcularInmueble(A, B, C);
 
     // --- Avisos ---
@@ -2370,9 +2370,30 @@
     op.querySelector("#op-etf").textContent = fmt(capital * CALC.etf) + "/año";
   }
 
+  // Las casillas se escriben con puntos de millar (150.000), así que hay que
+  // quitarlos para calcular.
+  function leerImporte(id){
+    var el = document.getElementById(id);
+    if(!el) return 0;
+    return Number(String(el.value).replace(/\D/g, "")) || 0;
+  }
+
+  // Reformatea mientras se escribe, manteniendo el cursor donde estaba.
+  function formatearMiles(el){
+    var desdeElFinal = el.value.length - (el.selectionStart || 0);
+    var digitos = String(el.value).replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+    el.value = digitos ? Number(digitos).toLocaleString("es-ES") : "";
+    var pos = Math.max(0, el.value.length - desdeElFinal);
+    try { el.setSelectionRange(pos, pos); } catch(e) {}
+  }
+
   ["calc-precio", "calc-alquiler", "calc-hipoteca"].forEach(function(id){
     var el = document.getElementById(id);
-    if(el) el.addEventListener("input", renderCalc);
+    if(!el) return;
+    el.addEventListener("input", function(){
+      formatearMiles(el);
+      renderCalc();
+    });
   });
   renderCalc();
 
