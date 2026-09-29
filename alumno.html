@@ -479,6 +479,17 @@
   .calc-input input:focus { outline: none; }
   .calc-input span { color: var(--header-ink-dim); font-family:"IBM Plex Mono", monospace; font-size: 14px; }
 
+  .calc-tuyo {
+    margin-top: 18px; display:flex; flex-wrap: wrap; gap: 10px 28px;
+    background: rgba(169,131,46,0.16); border: 1px solid rgba(169,131,46,0.5);
+    border-radius: 9px; padding: 14px 18px;
+  }
+  .calc-tuyo .dato { display:flex; flex-direction:column; gap: 3px; }
+  .calc-tuyo .et { font-size: 11.5px; color: var(--header-ink-dim); }
+  .calc-tuyo .vl { font-family:"IBM Plex Mono", monospace; font-size: 15px; font-weight: 700; }
+  .calc-tuyo .dato.principal .et { color: var(--accent); }
+  .calc-tuyo .dato.principal .vl { font-size: 19px; color: var(--accent); }
+
   .calc-supuestos {
     margin-top: 18px; border: 1px solid rgba(255,255,255,0.18); border-radius: 9px;
     padding: 12px 16px; font-size: 13px;
@@ -1070,6 +1081,8 @@
             </div>
           </div>
 
+          <div class="calc-tuyo" id="calc-tuyo"></div>
+
           <details class="calc-supuestos">
             <summary>¿Qué estimamos por ti?</summary>
             <ul>
@@ -1081,7 +1094,7 @@
               <li><strong>Seguro de hogar</strong>: 200 €/año</li>
               <li><strong>Reparaciones y mantenimiento</strong>: 4% del alquiler cobrado</li>
               <li><strong>Revalorización del piso</strong>: 2% al año (en línea con la inflación). No es dinero que cobres: solo lo ves si vendes, y puede ser negativa si el mercado baja.</li>
-              <li><strong>Para comparar</strong>: Letras del Tesoro 2,7% · ETF indexado global 7% (media histórica)</li>
+              <li><strong>Para comparar</strong>: Letras del Tesoro 2,7% · ETF indexado global 12% anual</li>
               <li>Todo <strong>antes de impuestos</strong> (IRPF)</li>
             </ul>
           </details>
@@ -2256,7 +2269,7 @@
   var CALC = {
     gastosCompra: 0.10, interes: 0.025, anios: 30, mesesVacio: 1,
     ibi: 0.0025, comunidad: 600, seguro: 200, reparaciones: 0.04,
-    letras: 0.027, etf: 0.07, revalorizacion: 0.02
+    letras: 0.027, etf: 0.12, revalorizacion: 0.02
   };
 
   function pctTxt(x, dec){
@@ -2360,6 +2373,18 @@
       cajaAvisos.appendChild(a);
     });
 
+    // --- Lo que pone la alumna de su bolsillo (se usa para comparar abajo) ---
+    var tuyo = document.getElementById("calc-tuyo");
+    tuyo.innerHTML =
+      '<div class="dato"><span class="et">Gastos de compra (10%)</span><span class="vl" id="t-gastos"></span></div>' +
+      '<div class="dato"><span class="et">Inversión total (piso + gastos)</span><span class="vl" id="t-inv"></span></div>' +
+      '<div class="dato"><span class="et">Hipoteca</span><span class="vl" id="t-hip"></span></div>' +
+      '<div class="dato principal"><span class="et">Dinero que pones tú</span><span class="vl" id="t-propio"></span></div>';
+    tuyo.querySelector("#t-gastos").textContent = fmt(r.gastosCompra);
+    tuyo.querySelector("#t-inv").textContent = fmt(r.inversionTotal);
+    tuyo.querySelector("#t-hip").textContent = "−" + fmt(r.C);
+    tuyo.querySelector("#t-propio").textContent = fmt(Math.max(0, r.dineroPropio));
+
     // --- Semáforo, según la rentabilidad neta ---
     var sem = document.getElementById("calc-semaforo");
     var luz, txt;
@@ -2446,10 +2471,10 @@
     var capital = r.capitalPropio;
     var op = document.getElementById("calc-oportunidad");
     op.innerHTML =
-      '<h4>¿Y si pusieras ese dinero en otra cosa?</h4>' +
+      '<h4>¿Y si pusieras esos ' + fmt(capital) + ' en otra cosa?</h4>' +
       '<div class="fila"><span>Este piso (alquiler + revalorización)</span><span class="val" id="op-piso"></span></div>' +
-      '<div class="fila"><span>Letras del Tesoro (2,7%)</span><span class="val" id="op-letras"></span></div>' +
-      '<div class="fila"><span>ETF indexado global (7%)</span><span class="val" id="op-etf"></span></div>' +
+      '<div class="fila"><span>Letras del Tesoro (2,7%) poniendo ese dinero</span><span class="val" id="op-letras"></span></div>' +
+      '<div class="fila"><span>ETF indexado global (12%) poniendo ese dinero</span><span class="val" id="op-etf"></span></div>' +
       '<p class="cierre">¿Compensa? Recuerda que el piso te exige trabajo (inquilinos, averías), no puedes venderlo rápido y concentra tu dinero en un solo activo.</p>';
     op.querySelector("#op-piso").textContent = pctTxt(base) + " · " + fmt(capital * (isFinite(base) ? base : 0)) + "/año";
     op.querySelector("#op-letras").textContent = fmt(capital * CALC.letras) + "/año";
