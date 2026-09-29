@@ -522,6 +522,20 @@
   .calc-card .cifra.pos { color: #3f7a4f; }
   .calc-card .nota { font-size: 13px; line-height: 1.55; color: #48597D; margin: 0; }
 
+  .calc-desglose .desglose-filas { margin: 12px 0 12px; }
+  .calc-desglose .fila {
+    display:flex; justify-content:space-between; gap: 16px;
+    padding: 7px 0; border-bottom: 1px solid #ECE3CB; font-size: 13.5px; color: #1C2B42;
+  }
+  .calc-desglose .fila .val { font-family:"IBM Plex Mono", monospace; font-weight: 600; white-space: nowrap; }
+  .calc-desglose .fila .val.mas { color: #3f7a4f; }
+  .calc-desglose .fila .val.menos { color: #a9482f; }
+  .calc-desglose .fila.total {
+    border-bottom: 0; border-top: 2px solid #1C2B42; margin-top: 4px;
+    padding-top: 10px; font-weight: 700; font-size: 15px;
+  }
+  .calc-desglose .fila.total .val { font-size: 17px; font-weight: 700; }
+
   .calc-oportunidad {
     margin-top: 18px; background: rgba(255,255,255,0.07);
     border-radius: 10px; padding: 18px 20px; font-size: 13.5px; line-height: 1.6;
@@ -1051,6 +1065,7 @@
               <li><strong>Comunidad</strong>: 50 €/mes (600 €/año)</li>
               <li><strong>Seguro de hogar</strong>: 200 €/año</li>
               <li><strong>Reparaciones y mantenimiento</strong>: 4% del alquiler cobrado</li>
+              <li><strong>Revalorización del piso</strong>: 2% al año (en línea con la inflación). No es dinero que cobres: solo lo ves si vendes, y puede ser negativa si el mercado baja.</li>
               <li><strong>Para comparar</strong>: Letras del Tesoro 2,7% · ETF indexado global 7% (media histórica)</li>
               <li>Todo <strong>antes de impuestos</strong> (IRPF)</li>
             </ul>
@@ -2222,7 +2237,7 @@
   var CALC = {
     gastosCompra: 0.10, interes: 0.025, anios: 30, mesesVacio: 1,
     ibi: 0.0025, comunidad: 600, seguro: 200, reparaciones: 0.04,
-    letras: 0.027, etf: 0.07
+    letras: 0.027, etf: 0.07, revalorizacion: 0.02
   };
 
   function pctTxt(x, dec){
@@ -2260,13 +2275,23 @@
     var conHipoteca = (C > 0 && dineroPropio > 0)
       ? (beneficioPiso - interesesAnio1) / dineroPropio : null;
 
+    // La revalorización se calcula sobre el valor del piso entero, aunque tú
+    // solo hayas puesto una parte: por eso con hipoteca pesa tanto.
+    var revalorizacion = A * CALC.revalorizacion;
+    var capitalPropio = dineroPropio > 0 ? dineroPropio : inversionTotal;
+    var conRevalorizacion = (C > 0 && dineroPropio > 0)
+      ? (beneficioPiso - interesesAnio1 + revalorizacion) / dineroPropio
+      : (inversionTotal > 0 ? (beneficioPiso + revalorizacion) / inversionTotal : NaN);
+
     return {
       A: A, B: B, C: C,
       gastosCompra: gastosCompra, inversionTotal: inversionTotal, dineroPropio: dineroPropio,
       cuotaMensual: cuotaMensual, cuotaAnual: cuotaAnual,
       interesesAnio1: interesesAnio1, amortizacionAnio1: amortizacionAnio1,
       alquilerCobrado: alquilerCobrado, gastos: gastos, beneficioPiso: beneficioPiso,
-      bruta: bruta, neta: neta, alMes: alMes, conHipoteca: conHipoteca
+      bruta: bruta, neta: neta, alMes: alMes, conHipoteca: conHipoteca,
+      revalorizacion: revalorizacion, capitalPropio: capitalPropio,
+      conRevalorizacion: conRevalorizacion
     };
   }
 
@@ -2329,6 +2354,31 @@
 
     // --- Resultados ---
     cont.innerHTML = "";
+
+    // El beneficio del piso alimenta las tres fórmulas: se desglosa una vez.
+    var desglose = document.createElement("div");
+    desglose.className = "calc-card calc-desglose";
+    desglose.innerHTML =
+      '<div class="titulo">De dónde sale el beneficio del piso</div>' +
+      '<div class="desglose-filas">' +
+        '<div class="fila"><span>Alquiler cobrado (' + fmt(r.B) + ' × 11 meses)</span><span class="val mas"></span></div>' +
+        '<div class="fila"><span>IBI (0,25% del precio)</span><span class="val menos"></span></div>' +
+        '<div class="fila"><span>Comunidad (50 €/mes)</span><span class="val menos"></span></div>' +
+        '<div class="fila"><span>Seguro de hogar</span><span class="val menos"></span></div>' +
+        '<div class="fila"><span>Reparaciones (4% del alquiler)</span><span class="val menos"></span></div>' +
+        '<div class="fila total"><span>Beneficio del piso</span><span class="val"></span></div>' +
+      '</div>' +
+      '<p class="nota">Es lo que deja el piso en un año antes de pagar la hipoteca. Las tres fórmulas de abajo parten de este número.</p>';
+
+    var filas = desglose.querySelectorAll(".desglose-filas .val");
+    filas[0].textContent = "+" + fmt(r.alquilerCobrado);
+    filas[1].textContent = "−" + fmt(r.A * CALC.ibi);
+    filas[2].textContent = "−" + fmt(CALC.comunidad);
+    filas[3].textContent = "−" + fmt(CALC.seguro);
+    filas[4].textContent = "−" + fmt(r.alquilerCobrado * CALC.reparaciones);
+    filas[5].textContent = fmt(r.beneficioPiso);
+    cont.appendChild(desglose);
+
     cont.appendChild(tarjetaCalc("Rentabilidad neta (sin hipoteca)", pctTxt(r.neta),
       "Lo que rinde el piso de verdad si lo pagaras todo con tu dinero.", null,
       {
@@ -2355,13 +2405,30 @@
         }));
     }
 
+    var conHip = r.conHipoteca !== null;
+    cont.appendChild(tarjetaCalc("Rentabilidad total (con revalorización)", pctTxt(r.conRevalorizacion),
+      "Sumamos que el piso se revaloriza un 2% al año. Ojo: eso no lo cobras hasta que vendas, " +
+      "y si el mercado baja también resta." +
+      (conHip ? " Con hipoteca pesa mucho, porque el piso se revaloriza entero aunque tú solo hayas puesto una parte." : ""),
+      "pos",
+      conHip
+        ? {
+            palabras: "(Beneficio del piso − Intereses + Revalorización) ÷ Tu dinero",
+            numeros: "(" + fmt(r.beneficioPiso) + " − " + fmt(r.interesesAnio1) + " + " + fmt(r.revalorizacion) + ") ÷ " + fmt(r.dineroPropio)
+          }
+        : {
+            palabras: "(Beneficio del piso + Revalorización) ÷ Inversión total",
+            numeros: "(" + fmt(r.beneficioPiso) + " + " + fmt(r.revalorizacion) + ") ÷ " + fmt(r.inversionTotal)
+          }));
+
     // --- Coste de oportunidad ---
-    var base = r.conHipoteca !== null ? r.conHipoteca : r.neta;
-    var capital = r.dineroPropio > 0 ? r.dineroPropio : r.inversionTotal;
+    // Para comparar de tú a tú con el ETF hay que incluir la revalorización.
+    var base = r.conRevalorizacion;
+    var capital = r.capitalPropio;
     var op = document.getElementById("calc-oportunidad");
     op.innerHTML =
       '<h4>¿Y si pusieras ese dinero en otra cosa?</h4>' +
-      '<div class="fila"><span>Este piso te renta</span><span class="val" id="op-piso"></span></div>' +
+      '<div class="fila"><span>Este piso (alquiler + revalorización)</span><span class="val" id="op-piso"></span></div>' +
       '<div class="fila"><span>Letras del Tesoro (2,7%)</span><span class="val" id="op-letras"></span></div>' +
       '<div class="fila"><span>ETF indexado global (7%)</span><span class="val" id="op-etf"></span></div>' +
       '<p class="cierre">¿Compensa? Recuerda que el piso te exige trabajo (inquilinos, averías), no puedes venderlo rápido y concentra tu dinero en un solo activo.</p>';
