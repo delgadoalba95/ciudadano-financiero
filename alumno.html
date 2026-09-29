@@ -515,20 +515,17 @@
     background: #FFFFFF; color: var(--ink-fijo, #1C2B42); border-radius: 12px; padding: 18px 20px;
   }
   .calc-card .titulo { font-size: 12.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #48597D; }
-  .calc-toggle {
-    margin-top: 16px; display:inline-flex; align-items:center; gap: 9px;
-    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.22);
-    border-radius: 8px; padding: 9px 15px; cursor: pointer;
-    font: inherit; font-size: 13px; font-weight: 600; color: var(--header-ink);
+  /* Cada tarjeta abre su propio cálculo, de forma independiente */
+  .card-toggle {
+    margin-top: 12px; display:inline-flex; align-items:center; gap: 7px;
+    background: none; border: 1px solid #D9CEB0; border-radius: 7px;
+    padding: 6px 11px; cursor: pointer;
+    font: inherit; font-size: 12px; font-weight: 700; color: #6E5416;
   }
-  .calc-toggle:hover { background: rgba(255,255,255,0.16); }
-  .calc-toggle .flecha { font-size: 11px; transition: transform .18s ease; color: var(--accent); }
-  .calc-toggle[aria-expanded="true"] .flecha { transform: rotate(90deg); }
-
-  /* Los cálculos solo se ven si la alumna los pide */
-  .calc-formula, .calc-desglose { display: none; }
-  .calc.mostrar-calculos .calc-formula { display: block; }
-  .calc.mostrar-calculos .calc-desglose { display: block; }
+  .card-toggle:hover { background: #F5EFDC; border-color: #A9832E; }
+  .card-toggle .flecha { font-size: 10px; transition: transform .18s ease; }
+  .card-toggle[aria-expanded="true"] .flecha { transform: rotate(90deg); }
+  .calc-formula[hidden], .desglose-filas[hidden] { display: none; }
 
   .calc-formula {
     margin: 9px 0 2px; padding: 8px 12px; border-radius: 7px;
@@ -1102,10 +1099,6 @@
           <div class="calc-avisos" id="calc-avisos"></div>
 
           <div class="calc-semaforo" id="calc-semaforo"></div>
-
-          <button type="button" class="calc-toggle" id="calc-toggle" aria-expanded="false">
-            <span class="flecha">&#10095;</span> Ver cómo se calcula
-          </button>
 
           <div class="calc-resultados" id="calc-resultados"></div>
 
@@ -2327,25 +2320,52 @@
     };
   }
 
-  function tarjetaCalc(titulo, cifra, nota, signo, formula){
+  // Qué cálculos ha dejado abiertos la alumna (se conserva al recalcular).
+  var calcAbiertos = {};
+
+  function botonCalculo(clave, destino){
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "card-toggle";
+    btn.innerHTML = '<span class="flecha">&#10095;</span><span class="txt"></span>';
+
+    function pintar(){
+      var abierto = !!calcAbiertos[clave];
+      btn.setAttribute("aria-expanded", abierto ? "true" : "false");
+      btn.querySelector(".txt").textContent = abierto ? "Ocultar cálculo" : "Ver cómo se calcula";
+      destino.hidden = !abierto;
+    }
+
+    btn.addEventListener("click", function(){
+      calcAbiertos[clave] = !calcAbiertos[clave];
+      pintar();
+    });
+
+    pintar();
+    return btn;
+  }
+
+  function tarjetaCalc(clave, titulo, cifra, nota, signo, formula){
     var d = document.createElement("div");
     d.className = "calc-card";
     d.innerHTML = '<div class="titulo"></div>' +
-      '<div class="calc-formula"><span class="en-palabras"></span><span class="en-numeros"></span></div>' +
-      '<div class="cifra"></div><p class="nota"></p>';
+      '<div class="cifra"></div><p class="nota"></p>' +
+      '<div class="calc-formula" hidden><span class="en-palabras"></span><span class="en-numeros"></span></div>';
     d.querySelector(".titulo").textContent = titulo;
-
-    if(formula){
-      d.querySelector(".en-palabras").textContent = formula.palabras;
-      d.querySelector(".en-numeros").textContent = formula.numeros;
-    } else {
-      d.querySelector(".calc-formula").remove();
-    }
 
     var c = d.querySelector(".cifra");
     c.textContent = cifra;
     if(signo) c.classList.add(signo);
     d.querySelector(".nota").textContent = nota;
+
+    var caja = d.querySelector(".calc-formula");
+    if(formula){
+      d.querySelector(".en-palabras").textContent = formula.palabras;
+      d.querySelector(".en-numeros").textContent = formula.numeros;
+      d.insertBefore(botonCalculo(clave, caja), caja);
+    } else {
+      caja.remove();
+    }
     return d;
   }
 
@@ -2403,16 +2423,20 @@
     var desglose = document.createElement("div");
     desglose.className = "calc-card calc-desglose";
     desglose.innerHTML =
-      '<div class="titulo">De dónde sale el beneficio del piso</div>' +
-      '<div class="desglose-filas">' +
+      '<div class="titulo">Beneficio del piso</div>' +
+      '<div class="cifra">' + fmt(r.beneficioPiso) + '</div>' +
+      '<p class="nota">Es lo que deja el piso en un año antes de pagar la hipoteca. Las tres fórmulas de abajo parten de este número.</p>' +
+      '<div class="desglose-filas" hidden>' +
         '<div class="fila"><span>Alquiler cobrado (' + fmt(r.B) + ' × 11 meses)</span><span class="val mas"></span></div>' +
         '<div class="fila"><span>IBI (0,25% del precio)</span><span class="val menos"></span></div>' +
         '<div class="fila"><span>Comunidad (50 €/mes)</span><span class="val menos"></span></div>' +
         '<div class="fila"><span>Seguro de hogar</span><span class="val menos"></span></div>' +
         '<div class="fila"><span>Reparaciones (4% del alquiler)</span><span class="val menos"></span></div>' +
         '<div class="fila total"><span>Beneficio del piso</span><span class="val"></span></div>' +
-      '</div>' +
-      '<p class="nota">Es lo que deja el piso en un año antes de pagar la hipoteca. Las tres fórmulas de abajo parten de este número.</p>';
+      '</div>';
+
+    var cajaDesglose = desglose.querySelector(".desglose-filas");
+    desglose.insertBefore(botonCalculo("beneficio", cajaDesglose), cajaDesglose);
 
     var filas = desglose.querySelectorAll(".desglose-filas .val");
     filas[0].textContent = "+" + fmt(r.alquilerCobrado);
@@ -2423,14 +2447,14 @@
     filas[5].textContent = fmt(r.beneficioPiso);
     cont.appendChild(desglose);
 
-    cont.appendChild(tarjetaCalc("Rentabilidad neta (sin hipoteca)", pctTxt(r.neta),
+    cont.appendChild(tarjetaCalc("neta", "Rentabilidad neta (sin hipoteca)", pctTxt(r.neta),
       "Lo que rinde el piso de verdad si lo pagaras todo con tu dinero.", null,
       {
         palabras: "Beneficio del piso ÷ Inversión total",
         numeros: fmt(r.beneficioPiso) + " ÷ " + fmt(r.inversionTotal)
       }));
 
-    cont.appendChild(tarjetaCalc("Dinero que te queda cada mes",
+    cont.appendChild(tarjetaCalc("almes", "Dinero que te queda cada mes",
       (r.alMes >= 0 ? "+" : "") + fmt(r.alMes),
       "Lo que entra en tu bolsillo cada mes después de pagar la hipoteca.",
       r.alMes >= 0 ? "pos" : "neg",
@@ -2440,7 +2464,7 @@
       }));
 
     if(r.conHipoteca !== null){
-      cont.appendChild(tarjetaCalc("Rentabilidad sobre tu dinero (con hipoteca)", pctTxt(r.conHipoteca),
+      cont.appendChild(tarjetaCalc("tudinero", "Rentabilidad sobre tu dinero (con hipoteca)", pctTxt(r.conHipoteca),
         "Como el banco pone parte del dinero, tú inviertes menos pero cobras el alquiler entero. " +
         "La parte de la cuota que devuelve deuda no es un gasto: es patrimonio que ganas.", null,
         {
@@ -2450,7 +2474,7 @@
     }
 
     var conHip = r.conHipoteca !== null;
-    cont.appendChild(tarjetaCalc("Rentabilidad total (con revalorización)", pctTxt(r.conRevalorizacion),
+    cont.appendChild(tarjetaCalc("total", "Rentabilidad total (con revalorización)", pctTxt(r.conRevalorizacion),
       "Sumamos que el piso se revaloriza un 2% al año. Ojo: eso no lo cobras hasta que vendas, " +
       "y si el mercado baja también resta." +
       (conHip ? " Con hipoteca pesa mucho, porque el piso se revaloriza entero aunque tú solo hayas puesto una parte." : ""),
@@ -2506,17 +2530,6 @@
       renderCalc();
     });
   });
-
-  (function conectarToggleCalculos(){
-    var btn = document.getElementById("calc-toggle");
-    var caja = document.querySelector(".calc");
-    if(!btn || !caja) return;
-    btn.addEventListener("click", function(){
-      var abierto = caja.classList.toggle("mostrar-calculos");
-      btn.setAttribute("aria-expanded", abierto ? "true" : "false");
-      btn.lastChild.textContent = abierto ? " Ocultar cálculos" : " Ver cómo se calcula";
-    });
-  })();
 
   renderCalc();
 
