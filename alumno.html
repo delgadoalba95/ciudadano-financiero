@@ -459,6 +459,76 @@
   .flow-summary { grid-template-columns: 1fr 1fr 1fr; }
   @media (max-width: 780px){ .flow-summary { grid-template-columns: 1fr; } }
 
+  /* ---------- Calculadora inmobiliaria ---------- */
+  .calc {
+    background: var(--header-bg); color: var(--header-ink);
+    border-radius: 14px; padding: 28px;
+  }
+  .calc-datos { display:grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .calc-campo label { display:block; font-size: 12.5px; font-weight: 700; margin-bottom: 7px; color: var(--header-ink); }
+  .calc-campo small { display:block; margin-top: 6px; font-size: 11.5px; color: var(--header-ink-dim); }
+  .calc-input {
+    display:flex; align-items:center; gap: 8px; background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.22); border-radius: 9px; padding: 10px 13px;
+  }
+  .calc-input:focus-within { border-color: var(--accent); }
+  .calc-input input {
+    flex:1; width:100%; background: transparent; border:0; color: var(--header-ink);
+    font-family:"IBM Plex Mono", monospace; font-size: 16px; font-weight: 600; min-width: 0;
+  }
+  .calc-input input:focus { outline: none; }
+  .calc-input span { color: var(--header-ink-dim); font-family:"IBM Plex Mono", monospace; font-size: 14px; }
+
+  .calc-supuestos {
+    margin-top: 18px; border: 1px solid rgba(255,255,255,0.18); border-radius: 9px;
+    padding: 12px 16px; font-size: 13px;
+  }
+  .calc-supuestos summary { cursor: pointer; font-weight: 700; font-size: 13.5px; }
+  .calc-supuestos ul { margin: 12px 0 2px; padding-left: 18px; color: var(--header-ink-dim); line-height: 1.7; }
+  .calc-supuestos strong { color: var(--header-ink); }
+
+  .calc-avisos:not(:empty) { margin-top: 18px; display:flex; flex-direction:column; gap: 8px; }
+  .calc-aviso {
+    background: rgba(224,139,115,0.16); border-left: 3px solid var(--negative);
+    padding: 10px 14px; border-radius: 6px; font-size: 13px; line-height:1.5;
+  }
+
+  .calc-semaforo {
+    margin-top: 20px; display:flex; align-items:center; gap: 12px;
+    background: rgba(255,255,255,0.07); border-radius: 10px; padding: 14px 18px; font-size: 13.5px;
+  }
+  .calc-semaforo .luz { font-size: 20px; line-height:1; flex:none; }
+
+  .calc-resultados { margin-top: 18px; display:grid; gap: 12px; }
+  .calc-card {
+    background: #FFFFFF; color: var(--ink-fijo, #1C2B42); border-radius: 12px; padding: 18px 20px;
+  }
+  .calc-card .titulo { font-size: 12.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #48597D; }
+  .calc-card .cifra {
+    font-family:"IBM Plex Mono", monospace; font-size: 30px; font-weight: 700;
+    margin: 6px 0 4px; color: #1C2B42;
+  }
+  .calc-card .cifra.neg { color: #a9482f; }
+  .calc-card .cifra.pos { color: #3f7a4f; }
+  .calc-card .nota { font-size: 13px; line-height: 1.55; color: #48597D; margin: 0; }
+
+  .calc-oportunidad {
+    margin-top: 18px; background: rgba(255,255,255,0.07);
+    border-radius: 10px; padding: 18px 20px; font-size: 13.5px; line-height: 1.6;
+  }
+  .calc-oportunidad h4 { font-size: 14px; margin-bottom: 10px; }
+  .calc-oportunidad .fila { display:flex; justify-content:space-between; gap: 14px; padding: 6px 0; }
+  .calc-oportunidad .fila .val { font-family:"IBM Plex Mono", monospace; font-weight: 700; white-space: nowrap; }
+  .calc-oportunidad .cierre { margin: 12px 0 0; color: var(--header-ink-dim); font-size: 12.5px; }
+
+  .calc-pie { margin: 18px 0 0; font-size: 11.5px; color: var(--header-ink-dim); line-height: 1.5; }
+
+  @media (max-width: 720px){
+    .calc { padding: 20px 16px; }
+    .calc-datos { grid-template-columns: 1fr; gap: 14px; }
+    .calc-card .cifra { font-size: 26px; }
+  }
+
   /* ---------- Histórico por meses ---------- */
   .meses { margin-top: 34px; }
   .meses-head {
@@ -668,6 +738,7 @@
         <button class="nav-item" data-view="curso"><span class="ico">&#9679;</span> Curso</button>
         <button class="nav-item active" data-view="balance"><span class="ico">&#9633;</span> Balance</button>
         <button class="nav-item" data-view="flujo"><span class="ico">&#8646;</span> Flujo de caja</button>
+        <button class="nav-item" data-view="inmobiliaria"><span class="ico">&#8962;</span> Rentabilidad inmobiliaria</button>
       </nav>
       <div class="sidebar-foot">
         <span id="sidebar-email"></span>
@@ -934,6 +1005,56 @@
           </div>
           <p class="meses-aviso" id="mes-aviso" hidden></p>
           <div id="meses-lista"></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-inmobiliaria">
+        <div class="instructions">
+          <span class="mark">&#9432;</span>
+          <p><strong>Ejercicio:</strong> coge un piso real que te esté rondando la cabeza (o uno de un portal inmobiliario) y mete sus números aquí. Verás la diferencia entre la rentabilidad que anuncian y la que te queda de verdad.</p>
+        </div>
+
+        <div class="calc">
+          <div class="calc-datos">
+            <div class="calc-campo">
+              <label for="calc-precio">Precio del piso</label>
+              <div class="calc-input"><input type="number" id="calc-precio" value="150000" min="0" step="1000" inputmode="numeric"><span>€</span></div>
+            </div>
+            <div class="calc-campo">
+              <label for="calc-alquiler">Alquiler mensual</label>
+              <div class="calc-input"><input type="number" id="calc-alquiler" value="800" min="0" step="10" inputmode="numeric"><span>€</span></div>
+            </div>
+            <div class="calc-campo">
+              <label for="calc-hipoteca">Hipoteca que pides</label>
+              <div class="calc-input"><input type="number" id="calc-hipoteca" value="120000" min="0" step="1000" inputmode="numeric"><span>€</span></div>
+              <small>Pon 0 si lo pagas al contado</small>
+            </div>
+          </div>
+
+          <details class="calc-supuestos">
+            <summary>¿Qué estimamos por ti?</summary>
+            <ul>
+              <li><strong>Gastos de compra</strong> (impuestos, notaría, registro, gestoría): 10% del precio</li>
+              <li><strong>Hipoteca</strong>: 3% de interés anual a 25 años, cuota fija</li>
+              <li><strong>1 mes al año sin inquilino</strong></li>
+              <li><strong>IBI</strong>: 0,25% del precio al año</li>
+              <li><strong>Comunidad</strong>: 50 €/mes (600 €/año)</li>
+              <li><strong>Seguro de hogar</strong>: 200 €/año</li>
+              <li><strong>Reparaciones y mantenimiento</strong>: 4% del alquiler cobrado</li>
+              <li><strong>Para comparar</strong>: Letras del Tesoro 2,7% · ETF indexado global 7% (media histórica)</li>
+              <li>Todo <strong>antes de impuestos</strong> (IRPF)</li>
+            </ul>
+          </details>
+
+          <div class="calc-avisos" id="calc-avisos"></div>
+
+          <div class="calc-semaforo" id="calc-semaforo"></div>
+
+          <div class="calc-resultados" id="calc-resultados"></div>
+
+          <div class="calc-oportunidad" id="calc-oportunidad"></div>
+
+          <p class="calc-pie">Cálculos orientativos, antes de impuestos y con valores medios de España. No constituyen asesoramiento financiero.</p>
         </div>
       </section>
     </main>
@@ -2087,7 +2208,158 @@
     });
   });
 
-  var VIEWS = { curso: "Tu curso", balance: "Tu balance personal", flujo: "Flujo de caja" };
+  // ---------- Calculadora de rentabilidad inmobiliaria ----------
+  var CALC = {
+    gastosCompra: 0.10, interes: 0.03, anios: 25, mesesVacio: 1,
+    ibi: 0.0025, comunidad: 600, seguro: 200, reparaciones: 0.04,
+    letras: 0.027, etf: 0.07
+  };
+
+  function pctTxt(x, dec){
+    if(!isFinite(x)) return "—";
+    return (x * 100).toFixed(dec === undefined ? 1 : dec).replace(".", ",") + "%";
+  }
+
+  function calcularInmueble(A, B, C){
+    var gastosCompra = A * CALC.gastosCompra;
+    var inversionTotal = A + gastosCompra;
+    var dineroPropio = inversionTotal - C;
+
+    var i = CALC.interes / 12;
+    var n = CALC.anios * 12;
+    var cuotaMensual = C > 0 ? C * i / (1 - Math.pow(1 + i, -n)) : 0;
+    var cuotaAnual = cuotaMensual * 12;
+
+    // Primeras 12 cuotas, para separar intereses de deuda devuelta.
+    var deuda = C, interesesAnio1 = 0, amortizacionAnio1 = 0;
+    for(var m = 0; m < 12 && C > 0; m++){
+      var interesMes = deuda * i;
+      var amortMes = cuotaMensual - interesMes;
+      interesesAnio1 += interesMes;
+      amortizacionAnio1 += amortMes;
+      deuda -= amortMes;
+    }
+
+    var alquilerCobrado = B * (12 - CALC.mesesVacio);
+    var gastos = A * CALC.ibi + CALC.comunidad + CALC.seguro + alquilerCobrado * CALC.reparaciones;
+    var beneficioPiso = alquilerCobrado - gastos;
+
+    var bruta = A > 0 ? (B * 12) / A : NaN;
+    var neta = inversionTotal > 0 ? beneficioPiso / inversionTotal : NaN;
+    var alMes = (beneficioPiso - cuotaAnual) / 12;
+    var conHipoteca = (C > 0 && dineroPropio > 0)
+      ? (beneficioPiso - interesesAnio1) / dineroPropio : null;
+
+    return {
+      A: A, B: B, C: C,
+      gastosCompra: gastosCompra, inversionTotal: inversionTotal, dineroPropio: dineroPropio,
+      cuotaMensual: cuotaMensual, cuotaAnual: cuotaAnual,
+      interesesAnio1: interesesAnio1, amortizacionAnio1: amortizacionAnio1,
+      alquilerCobrado: alquilerCobrado, gastos: gastos, beneficioPiso: beneficioPiso,
+      bruta: bruta, neta: neta, alMes: alMes, conHipoteca: conHipoteca
+    };
+  }
+
+  function tarjetaCalc(titulo, cifra, nota, signo){
+    var d = document.createElement("div");
+    d.className = "calc-card";
+    d.innerHTML = '<div class="titulo"></div><div class="cifra"></div><p class="nota"></p>';
+    d.querySelector(".titulo").textContent = titulo;
+    var c = d.querySelector(".cifra");
+    c.textContent = cifra;
+    if(signo) c.classList.add(signo);
+    d.querySelector(".nota").textContent = nota;
+    return d;
+  }
+
+  function renderCalc(){
+    var cont = document.getElementById("calc-resultados");
+    if(!cont) return;
+
+    var A = Number(document.getElementById("calc-precio").value) || 0;
+    var B = Number(document.getElementById("calc-alquiler").value) || 0;
+    var C = Number(document.getElementById("calc-hipoteca").value) || 0;
+    var r = calcularInmueble(A, B, C);
+
+    // --- Avisos ---
+    var avisos = [];
+    if(C > 0.8 * A && A > 0) avisos.push("Los bancos suelen financiar como máximo el 80% (60–70% si no es tu vivienda habitual).");
+    if(r.alMes < 0) avisos.push("Tendrás que poner dinero de tu bolsillo cada mes para mantener el piso.");
+    if(C > 0 && r.dineroPropio <= 0) avisos.push("La hipoteca no puede cubrir más que el precio más los gastos.");
+
+    var cajaAvisos = document.getElementById("calc-avisos");
+    cajaAvisos.innerHTML = "";
+    avisos.forEach(function(t){
+      var a = document.createElement("div");
+      a.className = "calc-aviso";
+      a.textContent = t;
+      cajaAvisos.appendChild(a);
+    });
+
+    // --- Semáforo, según la rentabilidad neta ---
+    var sem = document.getElementById("calc-semaforo");
+    var luz, txt;
+    if(!isFinite(r.neta)){ luz = "⚪"; txt = "Introduce el precio y el alquiler para ver el resultado."; }
+    else if(r.neta < 0.03){ luz = "🔴"; txt = "Poco rentable: una Letra del Tesoro da algo parecido sin riesgo."; }
+    else if(r.neta <= 0.05){ luz = "🟡"; txt = "Normal en España. Tiene sentido si esperas que el piso se revalorice."; }
+    else { luz = "🟢"; txt = "Buena rentabilidad. Revisa bien la zona y el estado del piso."; }
+    sem.innerHTML = '<span class="luz"></span><span class="txt"></span>';
+    sem.querySelector(".luz").textContent = luz;
+    sem.querySelector(".txt").textContent = txt;
+
+    // --- Resultados ---
+    cont.innerHTML = "";
+    cont.appendChild(tarjetaCalc("Rentabilidad bruta", pctTxt(r.bruta),
+      "La que anuncian los portales. No resta ningún gasto."));
+
+    cont.appendChild(tarjetaCalc("Rentabilidad neta (sin hipoteca)", pctTxt(r.neta),
+      "Lo que rinde el piso de verdad si lo pagaras todo con tu dinero."));
+
+    cont.appendChild(tarjetaCalc("Dinero que te queda cada mes",
+      (r.alMes >= 0 ? "+" : "") + fmt(r.alMes),
+      "Lo que entra en tu bolsillo cada mes después de pagar la hipoteca.",
+      r.alMes >= 0 ? "pos" : "neg"));
+
+    if(r.conHipoteca !== null){
+      cont.appendChild(tarjetaCalc("Rentabilidad sobre tu dinero (con hipoteca)", pctTxt(r.conHipoteca),
+        "Como el banco pone parte del dinero, tú inviertes menos pero cobras el alquiler entero. " +
+        "La parte de la cuota que devuelve deuda no es un gasto: es patrimonio que ganas."));
+
+      var efecto = r.conHipoteca - r.neta;
+      var nota;
+      if(efecto >= 0){
+        var mult = r.neta > 0 ? (r.conHipoteca / r.neta) : 0;
+        nota = "La hipoteca multiplica tu rentabilidad ×" + mult.toFixed(1).replace(".", ",") +
+               ", porque el piso rinde " + pctTxt(r.neta) + " y la hipoteca solo cuesta 3%.";
+      } else {
+        nota = "Cuidado: la hipoteca cuesta más de lo que rinde el piso, así que te resta rentabilidad en lugar de sumarla.";
+      }
+      cont.appendChild(tarjetaCalc("Efecto de la hipoteca",
+        (efecto >= 0 ? "+" : "") + pctTxt(efecto), nota, efecto >= 0 ? "pos" : "neg"));
+    }
+
+    // --- Coste de oportunidad ---
+    var base = r.conHipoteca !== null ? r.conHipoteca : r.neta;
+    var capital = r.dineroPropio > 0 ? r.dineroPropio : r.inversionTotal;
+    var op = document.getElementById("calc-oportunidad");
+    op.innerHTML =
+      '<h4>¿Y si pusieras ese dinero en otra cosa?</h4>' +
+      '<div class="fila"><span>Este piso te renta</span><span class="val" id="op-piso"></span></div>' +
+      '<div class="fila"><span>Letras del Tesoro (2,7%)</span><span class="val" id="op-letras"></span></div>' +
+      '<div class="fila"><span>ETF indexado global (7%)</span><span class="val" id="op-etf"></span></div>' +
+      '<p class="cierre">¿Compensa? Recuerda que el piso te exige trabajo (inquilinos, averías), no puedes venderlo rápido y concentra tu dinero en un solo activo.</p>';
+    op.querySelector("#op-piso").textContent = pctTxt(base) + " · " + fmt(capital * (isFinite(base) ? base : 0)) + "/año";
+    op.querySelector("#op-letras").textContent = fmt(capital * CALC.letras) + "/año";
+    op.querySelector("#op-etf").textContent = fmt(capital * CALC.etf) + "/año";
+  }
+
+  ["calc-precio", "calc-alquiler", "calc-hipoteca"].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.addEventListener("input", renderCalc);
+  });
+  renderCalc();
+
+  var VIEWS = { curso: "Tu curso", balance: "Tu balance personal", flujo: "Flujo de caja", inmobiliaria: "Rentabilidad inmobiliaria" };
   document.querySelectorAll(".nav-item").forEach(function(btn){
     btn.addEventListener("click", function(){
       var target = btn.getAttribute("data-view");
