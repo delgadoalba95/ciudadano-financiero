@@ -504,6 +504,21 @@
     background: #FFFFFF; color: var(--ink-fijo, #1C2B42); border-radius: 12px; padding: 18px 20px;
   }
   .calc-card .titulo { font-size: 12.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #48597D; }
+  .calc-toggle {
+    margin-top: 16px; display:inline-flex; align-items:center; gap: 9px;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 8px; padding: 9px 15px; cursor: pointer;
+    font: inherit; font-size: 13px; font-weight: 600; color: var(--header-ink);
+  }
+  .calc-toggle:hover { background: rgba(255,255,255,0.16); }
+  .calc-toggle .flecha { font-size: 11px; transition: transform .18s ease; color: var(--accent); }
+  .calc-toggle[aria-expanded="true"] .flecha { transform: rotate(90deg); }
+
+  /* Los cálculos solo se ven si la alumna los pide */
+  .calc-formula, .calc-desglose { display: none; }
+  .calc.mostrar-calculos .calc-formula { display: block; }
+  .calc.mostrar-calculos .calc-desglose { display: block; }
+
   .calc-formula {
     margin: 9px 0 2px; padding: 8px 12px; border-radius: 7px;
     background: #F5EFDC; border: 1px solid #E4D9BA;
@@ -1074,6 +1089,10 @@
           <div class="calc-avisos" id="calc-avisos"></div>
 
           <div class="calc-semaforo" id="calc-semaforo"></div>
+
+          <button type="button" class="calc-toggle" id="calc-toggle" aria-expanded="false">
+            <span class="flecha">&#10095;</span> Ver cómo se calcula
+          </button>
 
           <div class="calc-resultados" id="calc-resultados"></div>
 
@@ -2462,6 +2481,18 @@
       renderCalc();
     });
   });
+
+  (function conectarToggleCalculos(){
+    var btn = document.getElementById("calc-toggle");
+    var caja = document.querySelector(".calc");
+    if(!btn || !caja) return;
+    btn.addEventListener("click", function(){
+      var abierto = caja.classList.toggle("mostrar-calculos");
+      btn.setAttribute("aria-expanded", abierto ? "true" : "false");
+      btn.lastChild.textContent = abierto ? " Ocultar cálculos" : " Ver cómo se calcula";
+    });
+  })();
+
   renderCalc();
 
   var VIEWS = { curso: "Tu curso", balance: "Tu balance personal", flujo: "Flujo de caja", inmobiliaria: "Rentabilidad inmobiliaria" };
