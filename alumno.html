@@ -423,12 +423,14 @@
   .flow-head .num, .flow-cat .num, .flow-row .num { text-align: right; }
 
   .flow-section {
-    grid-column: 1 / -1; padding: 14px 20px 6px;
-    font-family: "Public Sans", sans-serif; font-size: 11px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.09em; color: var(--ink-faint);
-    border-top: 1px solid var(--rule);
+    grid-column: 1 / -1; padding: 12px 20px;
+    font-family: "Public Sans", sans-serif; font-size: 12.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink);
+    border-top: 1px solid var(--rule); background: var(--surface);
   }
   .flow-section:first-child { border-top: none; }
+  .flow-section.pasivos { background: var(--negative-bg); color: var(--negative); }
+  .flow-section.activos { background: var(--positive-bg); color: var(--positive); }
 
   .flow-cat { background: var(--surface); border-top: 1px solid var(--rule); }
   .flow-cat .name { font-weight: 700; font-size: 14px; }
@@ -438,8 +440,8 @@
   /* Se aleja del porcentaje ideal: de más en pasivos, de menos en activos. */
   .flow-cat .pct.off { color: var(--negative); }
   .flow-ideal {
-    font-family: "IBM Plex Mono", monospace; font-size: 12.5px; font-weight: 600;
-    text-align: right; color: var(--ink-soft);
+    font-family: "IBM Plex Mono", monospace; font-size: 14px; font-weight: 700;
+    text-align: right; color: var(--ink);
   }
 
   .flow-row { border-top: 1px solid var(--hairline-faint); }
@@ -1543,7 +1545,7 @@
 
     LADOS.forEach(function(lado){
       var cab = document.createElement("div");
-      cab.className = "flow-section";
+      cab.className = "flow-section " + lado.key;
       cab.textContent = lado.titulo;
       body.appendChild(cab);
 
