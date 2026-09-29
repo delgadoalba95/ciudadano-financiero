@@ -2309,9 +2309,6 @@
 
     // --- Resultados ---
     cont.innerHTML = "";
-    cont.appendChild(tarjetaCalc("Rentabilidad bruta", pctTxt(r.bruta),
-      "La que anuncian los portales. No resta ningún gasto."));
-
     cont.appendChild(tarjetaCalc("Rentabilidad neta (sin hipoteca)", pctTxt(r.neta),
       "Lo que rinde el piso de verdad si lo pagaras todo con tu dinero."));
 
@@ -2324,18 +2321,6 @@
       cont.appendChild(tarjetaCalc("Rentabilidad sobre tu dinero (con hipoteca)", pctTxt(r.conHipoteca),
         "Como el banco pone parte del dinero, tú inviertes menos pero cobras el alquiler entero. " +
         "La parte de la cuota que devuelve deuda no es un gasto: es patrimonio que ganas."));
-
-      var efecto = r.conHipoteca - r.neta;
-      var nota;
-      if(efecto >= 0){
-        var mult = r.neta > 0 ? (r.conHipoteca / r.neta) : 0;
-        nota = "La hipoteca multiplica tu rentabilidad ×" + mult.toFixed(1).replace(".", ",") +
-               ", porque el piso rinde " + pctTxt(r.neta) + " y la hipoteca solo cuesta 3%.";
-      } else {
-        nota = "Cuidado: la hipoteca cuesta más de lo que rinde el piso, así que te resta rentabilidad en lugar de sumarla.";
-      }
-      cont.appendChild(tarjetaCalc("Efecto de la hipoteca",
-        (efecto >= 0 ? "+" : "") + pctTxt(efecto), nota, efecto >= 0 ? "pos" : "neg"));
     }
 
     // --- Coste de oportunidad ---
