@@ -504,6 +504,16 @@
     background: #FFFFFF; color: var(--ink-fijo, #1C2B42); border-radius: 12px; padding: 18px 20px;
   }
   .calc-card .titulo { font-size: 12.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #48597D; }
+  .calc-formula {
+    margin: 9px 0 2px; padding: 8px 12px; border-radius: 7px;
+    background: #F5EFDC; border: 1px solid #E4D9BA;
+  }
+  .calc-formula span { display:block; }
+  .calc-formula .en-palabras { font-size: 12px; color: #48597D; }
+  .calc-formula .en-numeros {
+    font-family:"IBM Plex Mono", monospace; font-size: 13px; font-weight: 700;
+    color: #1C2B42; margin-top: 3px;
+  }
   .calc-card .cifra {
     font-family:"IBM Plex Mono", monospace; font-size: 30px; font-weight: 700;
     margin: 6px 0 4px; color: #1C2B42;
@@ -2260,11 +2270,21 @@
     };
   }
 
-  function tarjetaCalc(titulo, cifra, nota, signo){
+  function tarjetaCalc(titulo, cifra, nota, signo, formula){
     var d = document.createElement("div");
     d.className = "calc-card";
-    d.innerHTML = '<div class="titulo"></div><div class="cifra"></div><p class="nota"></p>';
+    d.innerHTML = '<div class="titulo"></div>' +
+      '<div class="calc-formula"><span class="en-palabras"></span><span class="en-numeros"></span></div>' +
+      '<div class="cifra"></div><p class="nota"></p>';
     d.querySelector(".titulo").textContent = titulo;
+
+    if(formula){
+      d.querySelector(".en-palabras").textContent = formula.palabras;
+      d.querySelector(".en-numeros").textContent = formula.numeros;
+    } else {
+      d.querySelector(".calc-formula").remove();
+    }
+
     var c = d.querySelector(".cifra");
     c.textContent = cifra;
     if(signo) c.classList.add(signo);
@@ -2310,17 +2330,29 @@
     // --- Resultados ---
     cont.innerHTML = "";
     cont.appendChild(tarjetaCalc("Rentabilidad neta (sin hipoteca)", pctTxt(r.neta),
-      "Lo que rinde el piso de verdad si lo pagaras todo con tu dinero."));
+      "Lo que rinde el piso de verdad si lo pagaras todo con tu dinero.", null,
+      {
+        palabras: "Beneficio del piso ÷ Inversión total",
+        numeros: fmt(r.beneficioPiso) + " ÷ " + fmt(r.inversionTotal)
+      }));
 
     cont.appendChild(tarjetaCalc("Dinero que te queda cada mes",
       (r.alMes >= 0 ? "+" : "") + fmt(r.alMes),
       "Lo que entra en tu bolsillo cada mes después de pagar la hipoteca.",
-      r.alMes >= 0 ? "pos" : "neg"));
+      r.alMes >= 0 ? "pos" : "neg",
+      {
+        palabras: "(Beneficio del piso − Cuota de hipoteca al año) ÷ 12",
+        numeros: "(" + fmt(r.beneficioPiso) + " − " + fmt(r.cuotaAnual) + ") ÷ 12"
+      }));
 
     if(r.conHipoteca !== null){
       cont.appendChild(tarjetaCalc("Rentabilidad sobre tu dinero (con hipoteca)", pctTxt(r.conHipoteca),
         "Como el banco pone parte del dinero, tú inviertes menos pero cobras el alquiler entero. " +
-        "La parte de la cuota que devuelve deuda no es un gasto: es patrimonio que ganas."));
+        "La parte de la cuota que devuelve deuda no es un gasto: es patrimonio que ganas.", null,
+        {
+          palabras: "(Beneficio del piso − Intereses del año 1) ÷ Tu dinero",
+          numeros: "(" + fmt(r.beneficioPiso) + " − " + fmt(r.interesesAnio1) + ") ÷ " + fmt(r.dineroPropio)
+        }));
     }
 
     // --- Coste de oportunidad ---
