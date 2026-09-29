@@ -1356,8 +1356,9 @@
   }
 
   // Estado del botón de guardar: "limpio" = no hay nada pendiente.
+  // Solo afecta a los botones de autoguardado; el de "Guardar mes" es aparte.
   function setSaveBtn(label, disabled){
-    document.querySelectorAll(".btn-save").forEach(function(btn){
+    document.querySelectorAll(".save-row .btn-save").forEach(function(btn){
       btn.textContent = label;
       btn.disabled = !!disabled;
     });
@@ -2021,7 +2022,7 @@
     pintarParaCrecer("pasivo", sumaParaCrecer("pasivo", PASIVO_DEFAULTS, state.customPasivo), totalPasivo);
   }
 
-  document.querySelectorAll(".btn-save").forEach(function(btn){
+  document.querySelectorAll(".save-row .btn-save").forEach(function(btn){
     btn.addEventListener("click", function(){ saveNow(); });
   });
 
