@@ -459,6 +459,71 @@
   .flow-summary { grid-template-columns: 1fr 1fr 1fr; }
   @media (max-width: 780px){ .flow-summary { grid-template-columns: 1fr; } }
 
+  /* ---------- Histórico por meses ---------- */
+  .meses { margin-top: 34px; }
+  .meses-head {
+    display:flex; align-items:flex-end; justify-content:space-between;
+    gap: 20px; flex-wrap: wrap; margin-bottom: 16px;
+  }
+  .meses-head h2 { font-size: 18px; }
+  .meses-head p { margin: 4px 0 0; font-size: 13px; color: var(--ink-faint); max-width: 56ch; }
+  .meses-form { display:flex; align-items:center; gap: 10px; }
+
+  .mes-selector {
+    display:flex; align-items:center; gap: 12px; flex-wrap: wrap;
+    background: var(--surface-2); border: 1px solid var(--rule);
+    border-radius: 10px; padding: 14px 18px; margin-bottom: 20px;
+  }
+  .mes-selector label { font-size: 13.5px; font-weight: 700; }
+  .mes-selector input[type="month"] {
+    font: inherit; font-size: 13.5px; color: var(--ink);
+    background: var(--bg); border: 1px solid var(--rule);
+    border-radius: 8px; padding: 9px 12px;
+  }
+  .mes-selector-nota { font-size: 12.5px; color: var(--ink-faint); }
+  .meses-aviso { margin: 0 0 14px; font-size: 13px; color: var(--positive); font-weight: 600; }
+  .meses-aviso.error { color: var(--stamp); }
+
+  .mes { border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+  .mes-head {
+    width:100%; display:grid; grid-template-columns: 18px minmax(120px,1fr) auto auto;
+    align-items:center; gap: 14px; text-align:left; cursor:pointer;
+    background: var(--surface-2); border:0; padding: 14px 16px; font-family: inherit; color: var(--ink);
+  }
+  .mes-head:hover { background: var(--surface); }
+  .mes-chevron { color: var(--ink-faint); font-size: 13px; transition: transform .18s ease; }
+  .mes-head[aria-expanded="true"] .mes-chevron { transform: rotate(90deg); color: var(--accent-strong); }
+  .mes-nombre { font-weight: 700; font-size: 14px; text-transform: capitalize; }
+  .mes-reparto { display:flex; align-items:center; gap: 10px; font-family:"IBM Plex Mono", monospace; font-size: 12.5px; }
+  .mes-chip { padding: 3px 9px; border-radius: 999px; font-weight: 700; }
+  .mes-chip.activos { background: var(--positive-bg); color: var(--positive); }
+  .mes-chip.pasivos { background: var(--negative-bg); color: var(--negative); }
+  .mes-total { font-family:"IBM Plex Mono", monospace; font-weight:700; font-size: 13.5px; }
+  .mes-body { padding: 4px 0 10px; background: var(--surface-2); border-top: 1px solid var(--rule); }
+  .mes-body[hidden] { display:none; }
+  .mes-linea {
+    display:grid; grid-template-columns: minmax(160px,1fr) 110px 64px 96px;
+    gap: 12px; padding: 7px 18px; font-size: 13px; align-items:center;
+  }
+  .mes-linea .ideal { white-space: nowrap; }
+  .mes-linea .num { text-align: right; font-family:"IBM Plex Mono", monospace; }
+  .mes-linea.grupo { font-weight: 700; background: var(--surface); }
+  .mes-linea.grupo .ideal { color: var(--accent-strong); }
+  .mes-linea.detalle .name { padding-left: 14px; color: var(--ink-soft); }
+  .mes-linea.detalle .num { color: var(--ink-faint); }
+  .mes-lado { padding: 10px 18px 4px; font-size: 11.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint); }
+  .mes-borrar {
+    margin: 10px 18px 6px; background: none; border: 1px solid var(--rule); border-radius: 8px;
+    padding: 6px 12px; font: inherit; font-size: 12.5px; color: var(--ink-soft); cursor: pointer;
+  }
+  .mes-borrar:hover { color: var(--stamp); border-color: var(--stamp); }
+  .meses-vacio { font-size: 13px; color: var(--ink-faint); font-style: italic; }
+  @media (max-width: 640px){
+    .mes-head { grid-template-columns: 16px 1fr; row-gap: 8px; }
+    .mes-reparto, .mes-total { grid-column: 2; justify-self: start; }
+    .mes-linea { grid-template-columns: 1fr 90px 56px 56px; gap: 8px; padding: 7px 12px; font-size: 12.5px; }
+  }
+
   .summary {
     margin-top: 26px; background: var(--header-bg); color: var(--header-ink);
     border-radius: 12px; padding: 26px 30px; display:grid;
@@ -642,7 +707,7 @@
         </div>
 
         <div class="modulo">
-          <div class="modulo-head"><span class="modulo-num">III</span><h3>Gestión de las finanzas personales: organiza tu dinero</h3></div>
+          <div class="modulo-head"><span class="modulo-num">III</span><h3>Gestión de las finanzas personales</h3></div>
           <div class="modulo-body">
             <p class="modulo-desc">Tu balance personal, la deuda, activos y pasivos, cómo se relacionan las decisiones financieras con las personales y los riesgos.</p>
             <div class="lecciones">
@@ -668,6 +733,28 @@
                   </div>
                 </div>
               </div>
+              <div class="leccion">
+                <button class="leccion-head" type="button" aria-expanded="false">
+                  <span class="leccion-play" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10.25" stroke="currentColor" stroke-width="1.5"></circle>
+                      <path d="M10 8.4 16.2 12 10 15.6V8.4Z" fill="currentColor"></path>
+                    </svg>
+                  </span>
+                  <span class="leccion-name">Tu balance personal</span>
+                  <span class="leccion-meta">
+                    <span class="leccion-dur">06:44</span>
+                  </span>
+                </button>
+                <div class="leccion-body" hidden>
+                  <div class="video-wrap">
+                    <iframe data-src="https://www.loom.com/embed/7a4f719531384d1485f60e48d7535fba?hideEmbedTopBar=true&amp;hide_share=true&amp;hide_owner=true&amp;hide_title=true"
+                            title="Tu balance personal"
+                            allow="fullscreen"
+                            allowfullscreen></iframe>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -686,6 +773,14 @@
                 <svg viewBox="0 0 24 24" fill="none"><path d="M21 11.5l-8.8 8.8a5 5 0 0 1-7.1-7.1l9-9a3.5 3.5 0 1 1 5 5l-9 9a2 2 0 0 1-2.8-2.8l8.3-8.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
               </span>
             -->
+            <p class="modulo-soon">Próximamente</p>
+          </div>
+        </div>
+
+        <div class="modulo">
+          <div class="modulo-head"><span class="modulo-num">V</span><h3>La inversión en mercado bursátil</h3></div>
+          <div class="modulo-body">
+            <p class="modulo-desc">Análisis fundamental, técnico y todo lo que debes saber para multiplicar tu dinero.</p>
             <div class="lecciones">
               <div class="leccion">
                 <button class="leccion-head" type="button" aria-expanded="false">
@@ -710,14 +805,6 @@
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-
-        <div class="modulo">
-          <div class="modulo-head"><span class="modulo-num">V</span><h3>La inversión en mercado bursátil</h3></div>
-          <div class="modulo-body">
-            <p class="modulo-desc">Análisis fundamental, técnico y todo lo que debes saber para multiplicar tu dinero.</p>
-            <p class="modulo-soon">Próximamente</p>
           </div>
         </div>
       </section>
@@ -795,6 +882,12 @@
           <p>Reparte lo que te entra cada mes entre estas partidas. El <strong>porcentaje se calcula solo</strong> sobre el total que repartas, y al lado tienes la <strong>situación ideal</strong> para comparar.</p>
         </div>
 
+        <div class="mes-selector">
+          <label for="mes-input">¿Qué mes estás rellenando?</label>
+          <input type="month" id="mes-input">
+          <span class="mes-selector-nota">Puedes elegir un mes pasado si quieres registrar meses anteriores.</span>
+        </div>
+
         <div class="flow-wrap">
           <div class="flow-table">
             <div class="flow-head">
@@ -825,6 +918,20 @@
         <div class="save-row">
           <div class="autosave"><span class="dot"></span> <span class="autosave-text">Tus cifras se guardan en tu cuenta.</span></div>
           <button class="btn-save" disabled>Guardado</button>
+        </div>
+
+        <div class="meses">
+          <div class="meses-head">
+            <div>
+              <h2>Tu histórico por meses</h2>
+              <p>Guarda cómo has repartido este mes y ve comparándolo con los anteriores.</p>
+            </div>
+            <div class="meses-form">
+              <button class="btn-save" id="guardar-mes">Guardar <span id="guardar-mes-nombre">este mes</span></button>
+            </div>
+          </div>
+          <p class="meses-aviso" id="mes-aviso" hidden></p>
+          <div id="meses-lista"></div>
         </div>
       </section>
     </main>
@@ -1217,7 +1324,7 @@
   function tipoDe(item){ return item.tipo === "pasivos" ? "pasivos" : "activos"; }
 
   var session = null; // { access_token, refresh_token, user_id, email }
-  var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [], flujo: {} };
+  var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [], flujo: {}, meses: [] };
   var filasFlujo = [];
   var saveTimer = null;
 
@@ -1647,6 +1754,185 @@
     document.getElementById("flow-pasivos").textContent = fmt(pasivos) + " · " + pct(pasivos, total) + "%";
   }
 
+  // ---------- Histórico por meses ----------
+  var MESES_ES = ["enero","febrero","marzo","abril","mayo","junio",
+                  "julio","agosto","septiembre","octubre","noviembre","diciembre"];
+
+  function nombreMes(clave){
+    var p = String(clave).split("-");
+    var i = Number(p[1]) - 1;
+    return (MESES_ES[i] || clave) + " " + p[0];
+  }
+
+  function mesActual(){
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+  }
+
+  // Foto fija del reparto: guarda los importes tal cual, y los porcentajes
+  // ya calculados para no depender de que cambien los grupos en el futuro.
+  function fotoDelMes(clave){
+    var total = totalFlujo();
+    var lados = { activos: 0, pasivos: 0 };
+    var grupos = FLUJO.map(function(g){
+      var t = totalGrupo(g);
+      lados[g.lado] += t;
+      var datos = flujoGrupo(g.key);
+      return {
+        key: g.key, nombre: g.nombre, lado: g.lado, ideal: g.ideal,
+        importe: t, pct: pct(t, total),
+        items: g.items.map(function(it){
+          return { nombre: it[1], importe: Number(datos.items[it[0]]) || 0 };
+        }).concat((datos.custom || [])
+          .filter(function(c){ return (c.label || "").trim() || Number(c.value); })
+          .map(function(c){ return { nombre: c.label || "Sin nombre", importe: Number(c.value) || 0 }; }))
+      };
+    });
+
+    return {
+      mes: clave,
+      guardadoEn: new Date().toISOString(),
+      total: total,
+      activos: lados.activos, pasivos: lados.pasivos,
+      pctActivos: pct(lados.activos, total),
+      pctPasivos: pct(lados.pasivos, total),
+      grupos: grupos
+    };
+  }
+
+  function avisoMes(texto, esError){
+    var el = document.getElementById("mes-aviso");
+    if(!el) return;
+    el.textContent = texto;
+    el.className = "meses-aviso" + (esError ? " error" : "");
+    el.hidden = !texto;
+  }
+
+  function guardarMes(){
+    var input = document.getElementById("mes-input");
+    var clave = input.value;
+
+    if(!clave){ avisoMes("Elige primero el mes que quieres guardar.", true); return; }
+    if(totalFlujo() <= 0){ avisoMes("Rellena tu reparto antes de guardar el mes.", true); return; }
+
+    if(!Array.isArray(state.meses)) state.meses = [];
+    var yaEstaba = state.meses.some(function(m){ return m.mes === clave; });
+    state.meses = state.meses.filter(function(m){ return m.mes !== clave; });
+    state.meses.push(fotoDelMes(clave));
+    state.meses.sort(function(a, b){ return b.mes.localeCompare(a.mes); });
+
+    queueSave();
+    renderMeses();
+    avisoMes(yaEstaba
+      ? "Actualizado el reparto de " + nombreMes(clave) + "."
+      : "Guardado el reparto de " + nombreMes(clave) + ".", false);
+  }
+
+  function detalleMes(m){
+    var cont = document.createElement("div");
+    cont.className = "mes-body";
+    cont.hidden = true;
+
+    LADOS.forEach(function(lado){
+      var grupos = m.grupos.filter(function(g){ return g.lado === lado.key; });
+      if(!grupos.length) return;
+
+      var cab = document.createElement("div");
+      cab.className = "mes-lado";
+      cab.textContent = lado.titulo;
+      cont.appendChild(cab);
+
+      grupos.forEach(function(g){
+        var fila = document.createElement("div");
+        fila.className = "mes-linea grupo";
+        fila.innerHTML = '<div class="name"></div><div class="num importe"></div>' +
+                         '<div class="num real"></div><div class="num ideal"></div>';
+        fila.querySelector(".name").textContent = g.nombre;
+        fila.querySelector(".importe").textContent = fmt(g.importe);
+        fila.querySelector(".real").textContent = g.pct + "%";
+        fila.querySelector(".ideal").textContent = "ideal " + g.ideal + "%";
+        cont.appendChild(fila);
+
+        (g.items || []).forEach(function(it){
+          if(!it.importe) return;
+          var d = document.createElement("div");
+          d.className = "mes-linea detalle";
+          d.innerHTML = '<div class="name"></div><div class="num"></div><div></div><div></div>';
+          d.querySelector(".name").textContent = it.nombre;
+          d.querySelector(".num").textContent = fmt(it.importe);
+          cont.appendChild(d);
+        });
+      });
+    });
+
+    var borrar = document.createElement("button");
+    borrar.className = "mes-borrar";
+    borrar.textContent = "Borrar este mes";
+    borrar.addEventListener("click", function(){
+      if(!window.confirm("¿Seguro que quieres borrar el reparto guardado de " + nombreMes(m.mes) + "?")) return;
+      state.meses = (state.meses || []).filter(function(x){ return x.mes !== m.mes; });
+      queueSave();
+      renderMeses();
+      avisoMes("Borrado el reparto de " + nombreMes(m.mes) + ".", false);
+    });
+    cont.appendChild(borrar);
+
+    return cont;
+  }
+
+  function renderMeses(){
+    var lista = document.getElementById("meses-lista");
+    if(!lista) return;
+    lista.innerHTML = "";
+
+    var meses = Array.isArray(state.meses) ? state.meses : [];
+    if(!meses.length){
+      var vacio = document.createElement("p");
+      vacio.className = "meses-vacio";
+      vacio.textContent = "Todavía no has guardado ningún mes.";
+      lista.appendChild(vacio);
+      return;
+    }
+
+    meses.forEach(function(m){
+      var caja = document.createElement("div");
+      caja.className = "mes";
+
+      var head = document.createElement("button");
+      head.type = "button";
+      head.className = "mes-head";
+      head.setAttribute("aria-expanded", "false");
+      head.innerHTML =
+        '<span class="mes-chevron">&#10095;</span>' +
+        '<span class="mes-nombre"></span>' +
+        '<span class="mes-reparto">' +
+          '<span class="mes-chip activos"></span><span class="mes-chip pasivos"></span>' +
+        '</span>' +
+        '<span class="mes-total"></span>';
+      head.querySelector(".mes-nombre").textContent = nombreMes(m.mes);
+      head.querySelector(".mes-chip.activos").textContent = "Activos " + m.pctActivos + "%";
+      head.querySelector(".mes-chip.pasivos").textContent = "Pasivos " + m.pctPasivos + "%";
+      head.querySelector(".mes-total").textContent = fmt(m.total);
+
+      var cuerpo = detalleMes(m);
+      head.addEventListener("click", function(){
+        var abierto = head.getAttribute("aria-expanded") === "true";
+        caja.parentNode.querySelectorAll('.mes-head[aria-expanded="true"]').forEach(function(h){
+          h.setAttribute("aria-expanded", "false");
+          h.nextElementSibling.hidden = true;
+        });
+        if(!abierto){
+          head.setAttribute("aria-expanded", "true");
+          cuerpo.hidden = false;
+        }
+      });
+
+      caja.appendChild(head);
+      caja.appendChild(cuerpo);
+      lista.appendChild(caja);
+    });
+  }
+
   function render(){
     var listActivo = document.getElementById("list-activo");
     var listPasivo = document.getElementById("list-pasivo");
@@ -1656,8 +1942,30 @@
     PASIVO_DEFAULTS.forEach(function(p){ listPasivo.appendChild(buildFixedRow(p[0], p[1], "pasivo", p[2])); });
     state.customPasivo.forEach(function(item, i){ listPasivo.appendChild(buildCustomRow(item, "pasivo", i)); });
     renderFlujo();
+    renderMeses();
     recalc();
   }
+
+  // El botón de abajo siempre nombra el mes elegido arriba, para que quede
+  // claro qué se va a guardar (y se puedan registrar meses ya vencidos).
+  function refrescarNombreBoton(){
+    var input = document.getElementById("mes-input");
+    var etiqueta = document.getElementById("guardar-mes-nombre");
+    if(!input || !etiqueta) return;
+    etiqueta.textContent = input.value ? nombreMes(input.value) : "este mes";
+  }
+
+  (function conectarMeses(){
+    var input = document.getElementById("mes-input");
+    if(input && !input.value) input.value = mesActual();
+    if(input) input.addEventListener("change", function(){
+      refrescarNombreBoton();
+      avisoMes("", false);
+    });
+    refrescarNombreBoton();
+    var btn = document.getElementById("guardar-mes");
+    if(btn) btn.addEventListener("click", guardarMes);
+  })();
 
   // Un concepto repartido suma sus dos cifras; el resto, la suya.
   function valorConcepto(group, p){
@@ -1802,6 +2110,7 @@
         state.customActivo = data.customActivo || [];
         state.customPasivo = data.customPasivo || [];
         state.flujo = data.flujo || {};
+        state.meses = Array.isArray(data.meses) ? data.meses : [];
         migrarRepartidos();
       }
     }catch(e){
