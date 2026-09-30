@@ -782,10 +782,10 @@
         <div class="brand-text">Ciudadano<span>Financiero</span></div>
       </div>
       <nav>
-        <button class="nav-item" data-view="curso"><span class="ico">&#9679;</span> Curso</button>
-        <button class="nav-item active" data-view="balance"><span class="ico">&#9633;</span> Balance</button>
+        <button class="nav-item" data-view="curso"><span class="ico">&#9679;</span> CURSO</button>
         <button class="nav-item" data-view="flujo"><span class="ico">&#8646;</span> Flujo de caja</button>
-        <button class="nav-item" data-view="inmobiliaria"><span class="ico">&#8962;</span> Rentabilidad inmobiliaria</button>
+        <button class="nav-item active" data-view="balance"><span class="ico">&#9633;</span> Balance</button>
+        <button class="nav-item" data-view="inmobiliaria"><span class="ico">&#8962;</span> Inmuebles</button>
       </nav>
       <div class="sidebar-foot">
         <span id="sidebar-email"></span>
@@ -2556,7 +2556,7 @@
 
   renderCalc();
 
-  var VIEWS = { curso: "Tu curso", balance: "Tu balance personal", flujo: "Flujo de caja", inmobiliaria: "Rentabilidad inmobiliaria" };
+  var VIEWS = { curso: "Tu curso", balance: "Tu balance personal", flujo: "Flujo de caja", inmobiliaria: "Inmuebles" };
   document.querySelectorAll(".nav-item").forEach(function(btn){
     btn.addEventListener("click", function(){
       var target = btn.getAttribute("data-view");
