@@ -217,6 +217,15 @@
   }
   .nav-item.active .tag { background: rgba(36,27,8,0.18); color: #3a2c0d; }
 
+  /* El curso es el contenido principal: va enmarcado para que destaque. */
+  .nav-item.destacado {
+    border: 1.5px solid var(--accent);
+    color: var(--header-ink);
+    margin-bottom: 4px;
+  }
+  .nav-item.destacado:hover { background: rgba(169,131,46,0.18); }
+  .nav-item.destacado.active { border-color: var(--accent); }
+
   .sidebar-foot {
     margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08);
     font-size: 12px; color: var(--header-ink-dim); line-height: 1.5;
@@ -458,6 +467,116 @@
   .flow-add .add-line { margin: 0; width: auto; padding: 8px 14px; }
   .flow-summary { grid-template-columns: 1fr 1fr 1fr; }
   @media (max-width: 780px){ .flow-summary { grid-template-columns: 1fr; } }
+
+  /* ---------- Test: tu relación con el dinero ---------- */
+  .pregunta {
+    background: var(--surface-2); border: 1px solid var(--rule);
+    border-radius: 10px; padding: 20px 22px 18px; margin-bottom: 12px;
+  }
+  .pregunta .q-num {
+    font-family:"IBM Plex Mono", monospace; font-size: 11.5px; font-weight: 700;
+    letter-spacing: .06em; color: var(--accent-strong); margin-bottom: 10px;
+  }
+  .pregunta .q-text { font-size: 15px; line-height: 1.45; margin-bottom: 18px; max-width: 62ch; }
+
+  .test-slider { position: relative; }
+  .test-slider input[type="range"] {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 20px;
+    background: transparent; margin: 6px 0; cursor: pointer;
+  }
+  .test-slider input[type="range"]::-webkit-slider-runnable-track {
+    height: 3px; background: var(--rule); border-radius: 999px;
+  }
+  .test-slider input[type="range"]::-moz-range-track {
+    height: 3px; background: var(--rule); border-radius: 999px;
+  }
+  .test-slider input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 18px; height: 18px;
+    border-radius: 50%; margin-top: -8px; background: transparent;
+    border: 2px solid var(--ink-faint); cursor: pointer;
+  }
+  .test-slider input[type="range"]::-moz-range-thumb {
+    width: 18px; height: 18px; border-radius: 50%; background: transparent;
+    border: 2px solid var(--ink-faint); cursor: pointer;
+  }
+  .test-slider input[type="range"].touched::-webkit-slider-thumb {
+    background: var(--accent); border: 3px solid var(--surface-2);
+    box-shadow: 0 0 0 1.5px var(--accent);
+  }
+  .test-slider input[type="range"].touched::-moz-range-thumb {
+    background: var(--accent); border: 3px solid var(--surface-2);
+    box-shadow: 0 0 0 1.5px var(--accent);
+  }
+  .test-ticks {
+    position:absolute; top:50%; left:9px; right:9px; height:9px;
+    transform: translateY(-50%); display:flex; justify-content:space-between;
+    align-items:stretch; pointer-events:none;
+  }
+  .test-ticks span { width:2px; background: var(--ink-faint); border-radius:1px; opacity:.55; }
+  .test-numeros { display:flex; justify-content:space-between; padding: 0 8px; margin-top: 2px; }
+  .test-numeros span {
+    font-family:"IBM Plex Mono", monospace; font-size: 12px; font-weight: 700;
+    color: var(--ink-soft); width: 18px; text-align:center; transition: color .15s ease;
+  }
+  .test-numeros span.activo { color: var(--accent-strong); }
+  .test-extremos {
+    display:flex; justify-content:space-between; gap: 8px; margin-top: 6px;
+    font-family:"IBM Plex Mono", monospace; font-size: 10.5px;
+    letter-spacing: .03em; text-transform: uppercase; color: var(--ink-faint);
+  }
+  .test-extremos span:last-child { text-align: right; }
+  .test-valor { text-align:center; font-size: 13px; color: var(--ink-faint); margin-top: 10px; }
+  .test-valor strong { color: var(--accent-strong); }
+
+  .test-pie { display:flex; align-items:center; gap: 16px; flex-wrap: wrap; margin: 20px 0 6px; }
+  .test-aviso { font-size: 13px; color: var(--ink-faint); }
+  .test-guardado {
+    margin-bottom: 18px; background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 10px; padding: 14px 18px; font-size: 13.5px;
+    display:flex; align-items:center; justify-content:space-between; gap: 16px; flex-wrap: wrap;
+  }
+  .test-guardado .fecha { color: var(--ink-faint); font-size: 12.5px; }
+
+  .resultado-card {
+    background: var(--surface-2); border: 1px solid var(--rule);
+    border-radius: 12px; padding: 26px; margin-top: 22px;
+  }
+  .resultado-card h2 { font-size: 20px; margin-bottom: 18px; }
+  .perfil { display:flex; gap: 18px; align-items:flex-start; }
+  .perfil .emblema {
+    width: 56px; height: 56px; border-radius: 50%; flex:none;
+    border: 2px solid var(--rule); display:flex; align-items:center;
+    justify-content:center; font-size: 24px; background: var(--bg);
+  }
+  .perfil .cuerpo { flex:1; min-width: 0; }
+  .perfil .kicker {
+    font-family:"IBM Plex Mono", monospace; font-size: 11px; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint);
+  }
+  .perfil .nombre { font-size: 21px; font-weight: 700; margin: 2px 0 10px; }
+  .barra { height: 8px; background: var(--rule); border-radius: 999px; overflow: hidden; }
+  .barra > div { height: 100%; border-radius: 999px; }
+  .intensidad {
+    display:inline-block; margin-top: 12px; padding: 3px 10px; border-radius: 999px;
+    font-size: 11.5px; font-weight: 700;
+  }
+  .perfil-lista { list-style:none; margin: 12px 0 0; padding: 0; display:flex; flex-direction:column; gap: 7px; }
+  .perfil-lista li { font-size: 13.5px; color: var(--ink-soft); line-height: 1.5; }
+  .perfil-lista strong { color: var(--ink); }
+  .estrategia {
+    margin-top: 20px; background: var(--surface); border: 1px dashed var(--rule);
+    border-radius: 10px; padding: 16px 18px;
+  }
+  .estrategia .et {
+    font-family:"IBM Plex Mono", monospace; font-size: 11px; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--accent-strong);
+  }
+  .estrategia p { margin: 8px 0 0; font-size: 14px; line-height: 1.55; }
+
+  @media (max-width: 640px){
+    .perfil { gap: 12px; }
+    .perfil .emblema { width: 44px; height: 44px; font-size: 19px; }
+  }
 
   /* ---------- Calculadora inmobiliaria ---------- */
   .calc {
@@ -782,7 +901,8 @@
         <div class="brand-text">Ciudadano<span>Financiero</span></div>
       </div>
       <nav>
-        <button class="nav-item" data-view="curso"><span class="ico">&#9679;</span> CURSO</button>
+        <button class="nav-item destacado" data-view="curso"><span class="ico">&#9679;</span> Curso</button>
+        <button class="nav-item" data-view="test"><span class="ico">&#9678;</span> Tu relación con el dinero</button>
         <button class="nav-item" data-view="flujo"><span class="ico">&#8646;</span> Flujo de caja</button>
         <button class="nav-item active" data-view="balance"><span class="ico">&#9633;</span> Balance</button>
         <button class="nav-item" data-view="inmobiliaria"><span class="ico">&#8962;</span> Inmuebles</button>
@@ -950,6 +1070,27 @@
             </div>
           </div>
         </div>
+      </section>
+
+      <section class="view" id="view-test">
+        <div class="instructions">
+          <span class="mark">&#9432;</span>
+          <p>Mueve cada barra según cuánto te identifique la frase: el centro es neutral y los extremos son <strong>totalmente en desacuerdo</strong> o <strong>totalmente de acuerdo</strong>. Tu respuesta se guarda en tu cuenta, así que puedes volver a verla cuando quieras.</p>
+        </div>
+
+        <div class="test-guardado" id="test-guardado" hidden>
+          <span id="test-guardado-txt"></span>
+          <button type="button" class="mes-accion editar" id="test-rehacer">Volver a hacer el test</button>
+        </div>
+
+        <div id="test-preguntas"></div>
+
+        <div class="test-pie">
+          <button type="button" class="btn-save" id="test-calcular" disabled>Ver mi resultado</button>
+          <span class="test-aviso" id="test-aviso"></span>
+        </div>
+
+        <div id="test-resultado"></div>
       </section>
 
       <section class="view active" id="view-balance">
@@ -1520,7 +1661,7 @@
   function tipoDe(item){ return item.tipo === "pasivos" ? "pasivos" : "activos"; }
 
   var session = null; // { access_token, refresh_token, user_id, email }
-  var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [], flujo: {}, meses: [] };
+  var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [], flujo: {}, meses: [], test: null };
   var filasFlujo = [];
   var saveTimer = null;
 
@@ -2188,6 +2329,7 @@
     state.customPasivo.forEach(function(item, i){ listPasivo.appendChild(buildCustomRow(item, "pasivo", i)); });
     renderFlujo();
     renderMeses();
+    cargarTestGuardado();
     recalc();
   }
 
@@ -2280,6 +2422,248 @@
       render();
     });
   });
+
+  // ---------- Test: tu relación con el dinero ----------
+  var TEST_PREGUNTAS = [
+    { texto: "Tener un buen colchón económico me hace sentir segura, incluso aunque no tenga intención de utilizarlo.", perfil: "vigilante" },
+    { texto: "Cuando alcanzo un objetivo económico, rápidamente aparece otro que quiero conseguir.", perfil: "obsesivo" },
+    { texto: "Me importa que los demás perciban que me va bien económicamente.", perfil: "estatus" },
+    { texto: "A veces siento que preocuparse demasiado por el dinero es algo superficial o materialista.", perfil: "evitativo" },
+    { texto: "Me cuesta disfrutar del dinero presente porque pienso demasiado en posibles problemas futuros.", perfil: "vigilante" },
+    { texto: "Tengo la sensación de que todavía no he llegado al nivel económico que debería tener.", perfil: "obsesivo" },
+    { texto: "Me comparo económicamente con otras personas, aunque no quiera hacerlo.", perfil: "estatus" },
+    { texto: "Cuando pienso en tener muchísimo dinero, una parte de mí siente cierto rechazo o incomodidad.", perfil: "evitativo" },
+    { texto: "Me resulta difícil gastar una cantidad importante de dinero incluso cuando sé que puedo permitírmelo.", perfil: "vigilante" },
+    { texto: "Una parte de mí piensa: “Cuando consiga suficiente dinero, entonces podré relajarme y disfrutar de verdad.”", perfil: "obsesivo" },
+    { texto: "Me gusta que mi entorno pueda reconocer que he conseguido cosas importantes económicamente.", perfil: "estatus" },
+    { texto: "A veces prefiero no mirar demasiado mi cuenta bancaria o mis finanzas.", perfil: "evitativo" }
+  ];
+
+  var TEST_PERFILES = {
+    vigilante: {
+      icono: "🛡️", nombre: "Vigilante", color: "#3d6e8a",
+      creencia: "Inseguridad. “Si no tengo suficiente margen, no estoy segur@.”",
+      siente: "Necesidad de control.",
+      quehace: "Protege el dinero.",
+      estrategia: "Utilizar la prudencia como escudo. Guarda 6 meses de sueldo completo como seguridad y a partir de ahí empieza a invertir en activos que te hagan crecer."
+    },
+    obsesivo: {
+      icono: "🎯", nombre: "Obsesivo", color: "#b2552f",
+      creencia: "No ser suficiente. “Cuando tenga más, estaré bien.”",
+      siente: "Que nunca es bastante.",
+      quehace: "Persigue el dinero.",
+      estrategia: "Utilizar la ambición como motor. Cada vez que subas de sueldo o ingresos, invierte automáticamente el 50% de esa subida anual en una inversión que te permita tener más tiempo para ti."
+    },
+    estatus: {
+      icono: "👑", nombre: "Estatus", color: "#7c5ea3",
+      creencia: "No ser vist@ ni valorad@. “Si se nota mi éxito, valgo más.”",
+      siente: "Necesidad de reconocimiento.",
+      quehace: "Usa el dinero para demostrar.",
+      estrategia: "Utilizar el reconocimiento como impulso. Antes de una compra pensada para que la vean, espera 48 horas y, si no es necesaria, cambia el destino: compra un activo que aumente tu capacidad de producir más."
+    },
+    evitativo: {
+      icono: "🏃", nombre: "Evitativo", color: "#4f8b5e",
+      creencia: "Rechazo. “El dinero me convierte en alguien que no quiero ser.”",
+      siente: "Culpa por tener.",
+      quehace: "Se aleja del dinero.",
+      estrategia: "Utilizar tu calma como ventaja. Revisa tu cuenta una vez a la semana y anota tus 3 gastos más grandes de la semana, hasta que tus finanzas dejen de intimidarte."
+    }
+  };
+
+  var TEST_ETIQUETAS = { 1:"Totalmente en desacuerdo", 2:"Bastante en desacuerdo", 3:"Neutral", 4:"Bastante de acuerdo", 5:"Totalmente de acuerdo" };
+
+  var testRespuestas = new Array(TEST_PREGUNTAS.length).fill(3);
+  var testTocadas = new Array(TEST_PREGUNTAS.length).fill(false);
+
+  // Las respuestas extremas (1 o 5) pesan más que las tibias: revelan más convicción.
+  function pesoRespuesta(v){
+    var distancia = Math.abs(v - 3);
+    return 3 + (v - 3) * (1 + distancia);
+  }
+
+  function testPuntuaciones(){
+    var bruto = { vigilante:0, obsesivo:0, estatus:0, evitativo:0 };
+    TEST_PREGUNTAS.forEach(function(q, i){ bruto[q.perfil] += pesoRespuesta(testRespuestas[i]); });
+
+    // Por perfil (3 preguntas): todo "1" = -9, todo neutro = 9, todo "5" = 27.
+    var MIN = -9, MAX = 27, escala = {};
+    Object.keys(bruto).forEach(function(p){
+      var v = Math.max(MIN, Math.min(MAX, bruto[p]));
+      escala[p] = Math.round(((v - MIN) / (MAX - MIN)) * 100) / 10;
+    });
+    var orden = Object.keys(escala).sort(function(a,b){ return escala[b] - escala[a]; });
+    return { escala: escala, orden: orden };
+  }
+
+  function testIntensidad(p){
+    if(p >= 6.75) return { etiqueta:"Alta", color:"#c0472e", fondo:"#f6d9d1" };
+    if(p >= 5.5) return { etiqueta:"Moderada-alta", color:"#b5762a", fondo:"#f3e2c8" };
+    if(p >= 3.75) return { etiqueta:"Media", color:"#9a8a2a", fondo:"#f0edc9" };
+    return { etiqueta:"Baja", color:"#3f8a4c", fondo:"#d9efdc" };
+  }
+
+  function testActualizarBoton(){
+    var hechas = testTocadas.filter(Boolean).length;
+    var btn = document.getElementById("test-calcular");
+    var aviso = document.getElementById("test-aviso");
+    if(!btn) return;
+    var completo = hechas === TEST_PREGUNTAS.length;
+    btn.disabled = !completo;
+    aviso.textContent = completo ? "" : "Has movido " + hechas + " de " + TEST_PREGUNTAS.length + " barras.";
+  }
+
+  function renderTestPreguntas(){
+    var cont = document.getElementById("test-preguntas");
+    if(!cont) return;
+    cont.innerHTML = "";
+
+    TEST_PREGUNTAS.forEach(function(q, i){
+      var d = document.createElement("div");
+      d.className = "pregunta";
+      d.innerHTML =
+        '<div class="q-num">Pregunta ' + (i+1) + ' de ' + TEST_PREGUNTAS.length + '</div>' +
+        '<div class="q-text"></div>' +
+        '<div class="test-slider">' +
+          '<input type="range" min="1" max="5" step="1">' +
+          '<div class="test-ticks" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>' +
+        '</div>' +
+        '<div class="test-numeros"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>' +
+        '<div class="test-extremos"><span>Totalmente en desacuerdo</span><span>Totalmente de acuerdo</span></div>' +
+        '<div class="test-valor"></div>';
+      d.querySelector(".q-text").textContent = q.texto;
+
+      var slider = d.querySelector("input");
+      var valor = d.querySelector(".test-valor");
+      var numeros = d.querySelectorAll(".test-numeros span");
+      slider.value = testRespuestas[i];
+
+      function pintar(){
+        var v = parseInt(slider.value, 10);
+        if(testTocadas[i]){
+          slider.classList.add("touched");
+          valor.innerHTML = "Tu respuesta: <strong>" + v + " · " + TEST_ETIQUETAS[v] + "</strong>";
+        } else {
+          valor.textContent = "Todavía no has movido la barra";
+        }
+        numeros.forEach(function(s, idx){ s.classList.toggle("activo", testTocadas[i] && idx + 1 === v); });
+      }
+
+      function marcar(){
+        testRespuestas[i] = parseInt(slider.value, 10);
+        testTocadas[i] = true;
+        pintar();
+        testActualizarBoton();
+      }
+
+      slider.addEventListener("input", marcar);
+      slider.addEventListener("keydown", marcar);
+      pintar();
+      cont.appendChild(d);
+    });
+
+    testActualizarBoton();
+  }
+
+  function renderTestResultado(guardar){
+    var caja = document.getElementById("test-resultado");
+    if(!caja) return;
+
+    var r = testPuntuaciones();
+    var top = r.orden[0];
+    var meta = TEST_PERFILES[top];
+    var banda = testIntensidad(r.escala[top]);
+    var ancho = Math.min(100, (r.escala[top] / 10) * 100);
+
+    caja.innerHTML =
+      '<div class="resultado-card">' +
+        '<h2>Tu resultado</h2>' +
+        '<div class="perfil">' +
+          '<div class="emblema"></div>' +
+          '<div class="cuerpo">' +
+            '<div class="kicker">Tu perfil más marcado</div>' +
+            '<div class="nombre"></div>' +
+            '<div class="barra"><div></div></div>' +
+            '<span class="intensidad"></span>' +
+            '<ul class="perfil-lista">' +
+              '<li><strong>Creencia:</strong> <span class="c1"></span></li>' +
+              '<li><strong>Siente:</strong> <span class="c2"></span></li>' +
+              '<li><strong>¿Qué hace?:</strong> <span class="c3"></span></li>' +
+            '</ul>' +
+          '</div>' +
+        '</div>' +
+        '<div class="estrategia"><div class="et">Estrategia a seguir</div><p></p></div>' +
+      '</div>';
+
+    caja.querySelector(".emblema").textContent = meta.icono;
+    caja.querySelector(".nombre").textContent = meta.nombre;
+    var barra = caja.querySelector(".barra > div");
+    barra.style.width = ancho + "%";
+    barra.style.background = meta.color;
+    var chip = caja.querySelector(".intensidad");
+    chip.textContent = banda.etiqueta;
+    chip.style.background = banda.fondo;
+    chip.style.color = banda.color;
+    caja.querySelector(".c1").textContent = meta.creencia;
+    caja.querySelector(".c2").textContent = meta.siente;
+    caja.querySelector(".c3").textContent = meta.quehace;
+    caja.querySelector(".estrategia p").textContent = meta.estrategia;
+
+    if(guardar){
+      state.test = {
+        respuestas: testRespuestas.slice(),
+        puntuaciones: r.escala,
+        perfil: top,
+        segundo: r.orden[1],
+        fecha: new Date().toISOString()
+      };
+      queueSave();
+      pintarTestGuardado();
+    }
+  }
+
+  function pintarTestGuardado(){
+    var caja = document.getElementById("test-guardado");
+    if(!caja) return;
+    var t = state.test;
+    if(!t || !t.perfil){ caja.hidden = true; return; }
+
+    var f = new Date(t.fecha);
+    var cuando = isNaN(f) ? "" : " · " + f.getDate() + " de " + MESES_ES[f.getMonth()] + " de " + f.getFullYear();
+    caja.hidden = false;
+    caja.querySelector("#test-guardado-txt").innerHTML =
+      "Tu resultado guardado: <strong>" + TEST_PERFILES[t.perfil].nombre + "</strong>" +
+      '<span class="fecha">' + cuando + "</span>";
+  }
+
+  function cargarTestGuardado(){
+    var t = state.test;
+    if(t && Array.isArray(t.respuestas) && t.respuestas.length === TEST_PREGUNTAS.length){
+      testRespuestas = t.respuestas.slice();
+      testTocadas = new Array(TEST_PREGUNTAS.length).fill(true);
+      renderTestPreguntas();
+      renderTestResultado(false);
+    } else {
+      renderTestPreguntas();
+    }
+    pintarTestGuardado();
+  }
+
+  (function conectarTest(){
+    var btn = document.getElementById("test-calcular");
+    if(btn) btn.addEventListener("click", function(){
+      renderTestResultado(true);
+      document.getElementById("test-resultado").scrollIntoView({ behavior:"smooth", block:"start" });
+    });
+
+    var rehacer = document.getElementById("test-rehacer");
+    if(rehacer) rehacer.addEventListener("click", function(){
+      testRespuestas = new Array(TEST_PREGUNTAS.length).fill(3);
+      testTocadas = new Array(TEST_PREGUNTAS.length).fill(false);
+      document.getElementById("test-resultado").innerHTML = "";
+      renderTestPreguntas();
+      document.getElementById("test-preguntas").scrollIntoView({ behavior:"smooth", block:"start" });
+    });
+  })();
 
   // ---------- Calculadora de rentabilidad inmobiliaria ----------
   var CALC = {
@@ -2556,7 +2940,7 @@
 
   renderCalc();
 
-  var VIEWS = { curso: "Tu curso", balance: "Tu balance personal", flujo: "Flujo de caja", inmobiliaria: "Inmuebles" };
+  var VIEWS = { curso: "Tu curso", test: "Tu relación con el dinero", balance: "Tu balance personal", flujo: "Flujo de caja", inmobiliaria: "Inmuebles" };
   document.querySelectorAll(".nav-item").forEach(function(btn){
     btn.addEventListener("click", function(){
       var target = btn.getAttribute("data-view");
@@ -2631,6 +3015,7 @@
         state.customPasivo = data.customPasivo || [];
         state.flujo = data.flujo || {};
         state.meses = Array.isArray(data.meses) ? data.meses : [];
+        state.test = data.test || null;
         migrarRepartidos();
       }
     }catch(e){
