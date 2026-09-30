@@ -143,12 +143,20 @@
     gap: 28px;
   }
 
+  /* Apuntarse es la acción principal de la web: va como botón dorado, por
+     delante del acceso de alumnas, que es lo secundario. */
   nav.links a {
     text-decoration: none;
     font-size: 0.94rem;
-    color: #D7DEE8;
+    font-weight: 700;
+    color: var(--accent-ink);
+    background: var(--accent);
+    padding: 9px 16px;
+    border-radius: 3px;
+    white-space: nowrap;
+    transition: background 0.15s ease;
   }
-  nav.links a:hover { color: #FFFFFF; }
+  nav.links a:hover { background: var(--accent-strong); color: var(--accent-ink); }
 
   .btn {
     display: inline-flex;
@@ -200,7 +208,7 @@
     header.site .btn-outline.acceso { padding: 8px 10px; }
     .nav-row { padding: 14px 18px; gap: 12px; }
     nav.links { gap: 18px; }
-    nav.links a { font-size: 0.9rem; }
+    nav.links a { font-size: 0.86rem; padding: 8px 13px; }
   }
 
   /* ---------- Hero ---------- */
