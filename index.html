@@ -108,6 +108,9 @@
   header.site {
     border-bottom: none;
     background: #122641;
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
 
   .nav-row {
@@ -186,8 +189,18 @@
   }
   header.site .btn-outline:hover { border-color: #A9832E; color: #F0EAD8; }
 
+  .icono-alumno { width: 19px; height: 19px; flex: none; display: none; }
+
   @media (max-width: 640px) {
-    nav.links { display: none; }
+    /* En móvil prima que se vea "Lista de espera": el acceso de alumnas se
+       queda en el icono y la marca, solo en el símbolo. */
+    .logo-texto { display: none; }
+    .acceso-texto { display: none; }
+    .icono-alumno { display: block; }
+    header.site .btn-outline.acceso { padding: 8px 10px; }
+    .nav-row { padding: 14px 18px; gap: 12px; }
+    nav.links { gap: 18px; }
+    nav.links a { font-size: 0.9rem; }
   }
 
   /* ---------- Hero ---------- */
@@ -827,12 +840,18 @@
           <path d="M170 72 H150 V110 H127 V130 H150 V168 H170 V72 Z"/>
         </g>
       </svg>
-      CIUDADANO FINANCIERO
+      <span class="logo-texto">CIUDADANO FINANCIERO</span>
     </a>
     <nav class="links">
       <a href="#lista-espera">Lista de espera</a>
     </nav>
-    <a class="btn btn-outline" href="/alumno.html">Acceso alumnos</a>
+    <a class="btn btn-outline acceso" href="/alumno.html" aria-label="Acceso alumnos" title="Acceso alumnos">
+      <svg class="icono-alumno" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.7"/>
+        <path d="M4.8 20c0-3.6 3.2-5.6 7.2-5.6s7.2 2 7.2 5.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      </svg>
+      <span class="acceso-texto">Acceso alumnos</span>
+    </a>
   </div>
 </header>
 
