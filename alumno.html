@@ -579,6 +579,26 @@
     .perfil .emblema { width: 44px; height: 44px; font-size: 19px; }
   }
 
+  /* ---------- Selector inmueble / vehículo ---------- */
+  .selector-activo { display:flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+  .opcion-activo {
+    background: var(--surface-2); border: 1px solid var(--rule); border-radius: 999px;
+    padding: 9px 20px; font: inherit; font-size: 13.5px; font-weight: 700;
+    color: var(--ink-soft); cursor: pointer; transition: background .15s ease, color .15s ease;
+  }
+  .opcion-activo:hover { background: var(--surface); }
+  .opcion-activo.activa { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .calc[hidden], .instructions[hidden] { display: none; }
+
+  .veh-select {
+    width: 100%; font: inherit; font-size: 13.5px; color: var(--header-ink);
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 9px; padding: 10px 12px;
+  }
+  .veh-select option { color: #1C2B42; }
+  .veh-propio { margin-top: 8px; }
+  .veh-propio[hidden] { display: none; }
+
   /* ---------- Calculadora inmobiliaria ---------- */
   .calc {
     background: var(--header-bg); color: var(--header-ink);
@@ -908,7 +928,7 @@
       </div>
       <nav>
         <button class="nav-item destacado" data-view="curso"><span class="ico">&#9679;</span> Curso</button>
-        <button class="nav-item" data-view="test"><span class="ico">&#9678;</span> Tu relación con el dinero</button>
+        <button class="nav-item" data-view="test"><span class="ico">&#9678;</span> Test</button>
         <button class="nav-item" data-view="flujo"><span class="ico">&#8646;</span> Flujo de caja</button>
         <button class="nav-item active" data-view="balance"><span class="ico">&#9633;</span> Balance</button>
         <button class="nav-item" data-view="inmobiliaria"><span class="ico">&#8962;</span> Inmuebles</button>
@@ -1226,12 +1246,22 @@
       </section>
 
       <section class="view" id="view-inmobiliaria">
-        <div class="instructions">
+        <div class="selector-activo">
+          <button type="button" class="opcion-activo activa" data-activo="inmueble">Inmueble</button>
+          <button type="button" class="opcion-activo" data-activo="vehiculo">Vehículo</button>
+        </div>
+
+        <div class="instructions" id="intro-inmueble">
           <span class="mark">&#9432;</span>
           <p><strong>Ejercicio:</strong> coge un piso real que te esté rondando la cabeza (o uno de un portal inmobiliario) y mete sus números aquí. Verás la diferencia entre la rentabilidad que anuncian y la que te queda de verdad.</p>
         </div>
 
-        <div class="calc">
+        <div class="instructions" id="intro-vehiculo" hidden>
+          <span class="mark">&#9432;</span>
+          <p><strong>Ejercicio:</strong> mete aquí un coche o una camper que estés pensando comprar. Verás lo que te cuesta de verdad al año contando lo que pierde de valor, y si te sale activo o pasivo.</p>
+        </div>
+
+        <div class="calc" id="calc-inmueble">
           <div class="calc-datos">
             <div class="calc-campo">
               <label for="calc-precio">Precio del piso</label>
@@ -1275,6 +1305,55 @@
           <div class="calc-oportunidad" id="calc-oportunidad"></div>
 
           <p class="calc-pie">Cálculos orientativos, antes de impuestos y con valores medios de España. No constituyen asesoramiento financiero.</p>
+        </div>
+
+        <div class="calc" id="calc-vehiculo" hidden>
+          <div class="calc-datos">
+            <div class="calc-campo">
+              <label for="veh-precio">Precio del vehículo</label>
+              <div class="calc-input"><input type="text" id="veh-precio" value="30.000" inputmode="numeric" autocomplete="off"><span>€</span></div>
+            </div>
+            <div class="calc-campo">
+              <label for="veh-alquiler">Lo alquilas (al mes)</label>
+              <div class="calc-input"><input type="text" id="veh-alquiler" value="0" inputmode="numeric" autocomplete="off"><span>€</span></div>
+              <small>Pon 0 si es solo para ti. Una camper se suele alquilar algunos meses al año.</small>
+            </div>
+            <div class="calc-campo">
+              <label for="veh-tipo">¿Cuánto valor pierde al año?</label>
+              <select id="veh-tipo" class="veh-select">
+                <option value="18">Coche nuevo · pierde 18% al año</option>
+                <option value="10" selected>Coche de segunda mano · pierde 10% al año</option>
+                <option value="6">Camper o furgoneta · pierde 6% al año</option>
+                <option value="0">Mantiene su valor · 0%</option>
+                <option value="-3">Clásico de colección · gana 3% al año</option>
+                <option value="otro">Lo pongo yo…</option>
+              </select>
+              <div class="calc-input veh-propio" id="veh-propio" hidden>
+                <input type="text" id="veh-tasa" value="10" inputmode="numeric" autocomplete="off">
+                <span>% al año</span>
+              </div>
+              <small id="veh-pista">Si se revaloriza, elige la opción de clásico o escribe un número negativo.</small>
+            </div>
+          </div>
+
+          <div class="calc-tuyo" id="veh-resumen"></div>
+
+          <details class="calc-supuestos">
+            <summary>¿Qué estimamos por ti?</summary>
+            <ul>
+              <li><strong>Seguro</strong>: 450 €/año</li>
+              <li><strong>Mantenimiento y reparaciones</strong>: 600 €/año</li>
+              <li><strong>Impuesto de circulación e ITV</strong>: 150 €/año</li>
+              <li><strong>Pérdida de valor</strong>: la que elijas arriba. De orientación: un coche nuevo pierde en torno a un <strong>18% el primer año</strong>, uno de segunda mano ronda el <strong>10%</strong>, y una camper se deprecia menos, sobre un <strong>6%</strong>. Solo algunos clásicos de colección se revalorizan.</li>
+              <li>No incluimos combustible ni peajes: dependen demasiado de cuánto conduzcas</li>
+            </ul>
+          </details>
+
+          <div class="calc-avisos" id="veh-avisos"></div>
+          <div class="calc-semaforo" id="veh-veredicto"></div>
+          <div class="calc-resultados" id="veh-resultados"></div>
+
+          <p class="calc-pie">Cálculos orientativos y con valores medios de España. No constituyen asesoramiento financiero.</p>
         </div>
       </section>
     </main>
@@ -2934,6 +3013,134 @@
     var pos = Math.max(0, el.value.length - desdeElFinal);
     try { el.setSelectionRange(pos, pos); } catch(e) {}
   }
+
+  // ---------- Calculadora de vehículo ----------
+  var VEH = { seguro: 450, mantenimiento: 600, impuestos: 150 };
+
+  function vehTasa(){
+    var sel = document.getElementById("veh-tipo");
+    if(!sel) return 0;
+    if(sel.value === "otro"){
+      var txt = String(document.getElementById("veh-tasa").value).replace(",", ".");
+      var n = parseFloat(txt.replace(/[^\d.\-]/g, ""));
+      return isNaN(n) ? 0 : n / 100;
+    }
+    return Number(sel.value) / 100;
+  }
+
+  function renderVehiculo(){
+    var cont = document.getElementById("veh-resultados");
+    if(!cont) return;
+
+    var precio = leerImporte("veh-precio");
+    var alquilerMes = leerImporte("veh-alquiler");
+    var tasa = vehTasa();
+
+    var ingresos = alquilerMes * 12;
+    var gastos = VEH.seguro + VEH.mantenimiento + VEH.impuestos;
+    // Tasa positiva = pierde valor; negativa = se revaloriza.
+    var perdidaValor = precio * tasa;
+    var costeReal = gastos - ingresos + perdidaValor;
+
+    // --- Lo que pasa con tu dinero ---
+    var resumen = document.getElementById("veh-resumen");
+    resumen.innerHTML =
+      '<div class="dato"><span class="et">Gastos fijos al año</span><span class="vl" id="v1"></span></div>' +
+      '<div class="dato"><span class="et">' + (ingresos > 0 ? "Te entra por alquiler" : "No lo alquilas") + '</span><span class="vl" id="v2"></span></div>' +
+      '<div class="dato"><span class="et">' + (perdidaValor >= 0 ? "Pierde de valor al año" : "Gana de valor al año") + '</span><span class="vl" id="v3"></span></div>' +
+      '<div class="dato principal"><span class="et">' + (costeReal >= 0 ? "Te cuesta al año" : "Te deja al año") + '</span><span class="vl" id="v4"></span></div>';
+    resumen.querySelector("#v1").textContent = "−" + fmt(gastos);
+    resumen.querySelector("#v2").textContent = ingresos > 0 ? "+" + fmt(ingresos) : fmt(0);
+    resumen.querySelector("#v3").textContent = (perdidaValor >= 0 ? "−" : "+") + fmt(Math.abs(perdidaValor));
+    resumen.querySelector("#v4").textContent = (costeReal >= 0 ? "−" : "+") + fmt(Math.abs(costeReal));
+
+    // --- Avisos ---
+    var avisos = [];
+    if(tasa < 0) avisos.push("Muy pocos vehículos se revalorizan: suelen ser clásicos concretos y bien conservados. Si no es el caso, lo normal es que pierda valor.");
+    if(ingresos > 0 && ingresos < gastos) avisos.push("Lo que sacas alquilándolo no cubre ni los gastos fijos del vehículo.");
+    var cajaAvisos = document.getElementById("veh-avisos");
+    cajaAvisos.innerHTML = "";
+    avisos.forEach(function(t){
+      var a = document.createElement("div"); a.className = "calc-aviso"; a.textContent = t; cajaAvisos.appendChild(a);
+    });
+
+    // --- Veredicto: activo o pasivo (el lenguaje del curso) ---
+    var ver = document.getElementById("veh-veredicto");
+    var luz, txt;
+    if(precio <= 0){ luz = "⚪"; txt = "Pon el precio del vehículo para ver el resultado."; }
+    else if(costeReal > 0){
+      luz = "🔴";
+      txt = "Es un pasivo: te saca " + fmt(costeReal) + " de tu bolsillo cada año.";
+    } else {
+      luz = "🟢";
+      txt = "Es un activo: te deja " + fmt(Math.abs(costeReal)) + " al año después de gastos y de lo que pierde de valor.";
+    }
+    ver.innerHTML = '<span class="luz"></span><span class="txt"></span>';
+    ver.querySelector(".luz").textContent = luz;
+    ver.querySelector(".txt").textContent = txt;
+
+    // --- Resultados ---
+    cont.innerHTML = "";
+    cont.appendChild(tarjetaCalc("veh-coste",
+      costeReal >= 0 ? "Lo que te cuesta de verdad al año" : "Lo que te deja de verdad al año",
+      (costeReal >= 0 ? "−" : "+") + fmt(Math.abs(costeReal)),
+      "Suma los gastos fijos y lo que pierde de valor, y resta lo que ingreses alquilándolo. Es el coste real, no solo lo que pagas de seguro y taller.",
+      costeReal >= 0 ? "neg" : "pos",
+      {
+        palabras: "Gastos fijos − Alquiler + Pérdida de valor",
+        numeros: fmt(gastos) + " − " + fmt(ingresos) + " + " + fmt(perdidaValor)
+      }));
+
+    cont.appendChild(tarjetaCalc("veh-mes",
+      "Al mes",
+      (costeReal >= 0 ? "−" : "+") + fmt(Math.abs(costeReal) / 12),
+      "Lo mismo repartido entre los doce meses, para que lo compares con tu flujo de caja.",
+      costeReal >= 0 ? "neg" : "pos",
+      { palabras: "Coste real del año ÷ 12", numeros: fmt(Math.abs(costeReal)) + " ÷ 12" }));
+
+    cont.appendChild(tarjetaCalc("veh-valor",
+      "Lo que valdrá en 5 años",
+      fmt(precio * Math.pow(1 - tasa, 5)),
+      tasa >= 0
+        ? "Si lo vendieras dentro de 5 años, esto es lo que te darían aproximadamente manteniendo ese ritmo de depreciación."
+        : "Manteniendo esa revalorización, esto es lo que podría valer dentro de 5 años.",
+      null,
+      {
+        palabras: "Precio × (1 − depreciación) elevado a 5 años",
+        numeros: fmt(precio) + " × (1 − " + (tasa * 100).toFixed(0).replace("-", "−") + "%)⁵"
+      }));
+  }
+
+  (function conectarVehiculo(){
+    var sel = document.getElementById("veh-tipo");
+    var propio = document.getElementById("veh-propio");
+    if(sel) sel.addEventListener("change", function(){
+      propio.hidden = sel.value !== "otro";
+      renderVehiculo();
+    });
+
+    ["veh-precio", "veh-alquiler"].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.addEventListener("input", function(){ formatearMiles(el); renderVehiculo(); });
+    });
+
+    var tasa = document.getElementById("veh-tasa");
+    if(tasa) tasa.addEventListener("input", renderVehiculo);
+
+    // Cambiar entre inmueble y vehículo
+    document.querySelectorAll(".opcion-activo").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var cual = btn.getAttribute("data-activo");
+        document.querySelectorAll(".opcion-activo").forEach(function(b){ b.classList.toggle("activa", b === btn); });
+        document.getElementById("calc-inmueble").hidden = cual !== "inmueble";
+        document.getElementById("calc-vehiculo").hidden = cual !== "vehiculo";
+        document.getElementById("intro-inmueble").hidden = cual !== "inmueble";
+        document.getElementById("intro-vehiculo").hidden = cual !== "vehiculo";
+      });
+    });
+  })();
+
+  renderVehiculo();
 
   ["calc-precio", "calc-alquiler", "calc-hipoteca"].forEach(function(id){
     var el = document.getElementById(id);
