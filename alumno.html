@@ -667,6 +667,13 @@
   .card-toggle[aria-expanded="true"] .flecha { transform: rotate(90deg); }
   .calc-formula[hidden], .desglose-filas[hidden] { display: none; }
 
+  .elige-reval { margin-top: 14px; padding-top: 14px; border-top: 1px solid #ECE3CB; }
+  .elige-reval label { display:block; font-size: 12px; font-weight: 700; color: #48597D; margin-bottom: 6px; }
+  .elige-reval select {
+    width: 100%; font: inherit; font-size: 13px; color: #1C2B42;
+    background: #F5EFDC; border: 1px solid #D9CEB0; border-radius: 7px; padding: 8px 10px;
+  }
+
   .calc-formula {
     margin: 9px 0 2px; padding: 8px 12px; border-radius: 7px;
     background: #F5EFDC; border: 1px solid #E4D9BA;
@@ -1290,7 +1297,7 @@
               <li><strong>Comunidad</strong>: 50 €/mes (600 €/año)</li>
               <li><strong>Seguro de hogar</strong>: 200 €/año</li>
               <li><strong>Reparaciones y mantenimiento</strong>: 4% del alquiler cobrado</li>
-              <li><strong>Revalorización del piso</strong>: 2% al año (en línea con la inflación). No es dinero que cobres: solo lo ves si vendes, y puede ser negativa si el mercado baja.</li>
+              <li><strong>Revalorización del piso</strong>: 2% al año por defecto, y puedes cambiarla abajo. No es dinero que cobres: solo lo ves si vendes, y puede ser negativa si el mercado baja.</li>
               <li><strong>Para comparar</strong>: Letras del Tesoro 2,7% · ETF indexado global 12% anual</li>
               <li>Todo <strong>antes de impuestos</strong> (IRPF)</li>
             </ul>
@@ -2757,6 +2764,9 @@
     letras: 0.027, etf: 0.12, revalorizacion: 0.02
   };
 
+  // Revalorización que se está suponiendo ahora mismo (la cambia la alumna).
+  var revalElegida = CALC.revalorizacion;
+
   function pctTxt(x, dec){
     if(!isFinite(x)) return "—";
     return (x * 100).toFixed(dec === undefined ? 1 : dec).replace(".", ",") + "%";
@@ -2794,7 +2804,7 @@
 
     // La revalorización se calcula sobre el valor del piso entero, aunque tú
     // solo hayas puesto una parte: por eso con hipoteca pesa tanto.
-    var revalorizacion = A * CALC.revalorizacion;
+    var revalorizacion = A * revalElegida;
     var capitalPropio = dineroPropio > 0 ? dineroPropio : inversionTotal;
     var conRevalorizacion = (C > 0 && dineroPropio > 0)
       ? (beneficioPiso - interesesAnio1 + revalorizacion) / dineroPropio
@@ -2966,11 +2976,11 @@
     }
 
     var conHip = r.conHipoteca !== null;
-    cont.appendChild(tarjetaCalc("total", "Rentabilidad total (con revalorización)", pctTxt(r.conRevalorizacion),
-      "Sumamos que el piso se revaloriza un 2% al año. Ojo: eso no lo cobras hasta que vendas, " +
-      "y si el mercado baja también resta." +
-      (conHip ? " Con hipoteca pesa mucho, porque el piso se revaloriza entero aunque tú solo hayas puesto una parte." : ""),
-      "pos",
+    var tarjetaTotal = tarjetaCalc("total", "Rentabilidad total (con revalorización)", pctTxt(r.conRevalorizacion),
+      "Contamos que el piso " + (revalElegida >= 0 ? "se revaloriza" : "pierde") + " un " +
+      Math.abs(revalElegida * 100).toFixed(0) + "% al año. Ojo: eso no lo cobras hasta que vendas." +
+      (conHip && revalElegida > 0 ? " Con hipoteca pesa mucho, porque el piso se revaloriza entero aunque tú solo hayas puesto una parte." : ""),
+      r.conRevalorizacion >= 0 ? "pos" : "neg",
       conHip
         ? {
             palabras: "(Beneficio del piso − Intereses + Revalorización) ÷ Tu dinero",
@@ -2979,7 +2989,26 @@
         : {
             palabras: "(Beneficio del piso + Revalorización) ÷ Inversión total",
             numeros: "(" + fmt(r.beneficioPiso) + " + " + fmt(r.revalorizacion) + ") ÷ " + fmt(r.inversionTotal)
-          }));
+          });
+
+    // La alumna puede cambiar la revalorización que se está suponiendo.
+    var elector = document.createElement("div");
+    elector.className = "elige-reval";
+    elector.innerHTML = '<label for="sel-reval">¿Cuánto crees que se revalorizará?</label>' +
+      '<select id="sel-reval">' +
+        '<option value="0.04">Sube un 4% al año (zona con demanda)</option>' +
+        '<option value="0.02">Sube un 2% al año (como la inflación)</option>' +
+        '<option value="0">Se queda igual · 0%</option>' +
+        '<option value="-0.02">Baja un 2% al año (zona a la baja)</option>' +
+      '</select>';
+    elector.querySelector("select").value = String(revalElegida);
+    elector.querySelector("select").addEventListener("change", function(){
+      revalElegida = Number(this.value);
+      renderCalc();
+    });
+    tarjetaTotal.appendChild(elector);
+
+    cont.appendChild(tarjetaTotal);
 
     // --- Coste de oportunidad ---
     // Para comparar de tú a tú con el ETF hay que incluir la revalorización.
