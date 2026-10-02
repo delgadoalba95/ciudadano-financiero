@@ -3293,28 +3293,24 @@
         numeros: "(" + fmt(v.ingresos) + " − " + fmt(v.gastosFijos) + " − " + fmt(v.cuotaAnual) + ") ÷ 12"
       }));
 
-    if(v.sobreTuDinero !== null){
-      cont.appendChild(tarjetaCalc("veh-tudinero", "Rentabilidad sobre tu dinero (con préstamo)", pctTxt(v.sobreTuDinero),
-        "Como el banco pone parte del dinero, tú inviertes menos pero cobras el alquiler entero y asumes toda la pérdida de valor. " +
-        "Los intereses sí se restan; la parte de la cuota que devuelve deuda no, porque es patrimonio que recuperas.",
-        v.sobreTuDinero >= 0 ? "pos" : "neg",
-        {
-          palabras: "(Resultado del vehículo − Intereses del año 1) ÷ Tu dinero",
-          numeros: "(" + fmt(v.resultadoAnual) + " − " + fmt(v.interesesAnio1) + ") ÷ " + fmt(v.dineroPropio)
-        }));
-    }
-
-    cont.appendChild(tarjetaCalc("veh-valor",
-      "Lo que valdrá en 5 años",
-      fmt(precio * Math.pow(1 - tasa, 5)),
-      tasa >= 0
-        ? "Si lo vendieras dentro de 5 años, esto es lo que te darían aproximadamente manteniendo ese ritmo de depreciación."
-        : "Manteniendo esa revalorización, esto es lo que podría valer dentro de 5 años.",
-      null,
-      {
-        palabras: "Precio × (1 − depreciación) elevado a 5 años",
-        numeros: fmt(precio) + " × (1 − " + (tasa * 100).toFixed(0).replace("-", "−") + "%)⁵"
-      }));
+    // Sin préstamo la cifra es la misma que la de arriba, pero la tarjeta se
+    // queda igualmente para que se vea qué cambia al financiar.
+    var rentPrestamo = v.conCredito ? v.sobreTuDinero : v.normal;
+    cont.appendChild(tarjetaCalc("veh-tudinero", "Rentabilidad sobre tu dinero (con préstamo)", pctTxt(rentPrestamo),
+      v.conCredito
+        ? "Como el banco pone parte del dinero, tú inviertes menos pero cobras el alquiler entero y asumes toda la pérdida de valor. " +
+          "Los intereses sí se restan; la parte de la cuota que devuelve deuda no, porque es patrimonio que recuperas."
+        : "Sin préstamo sale igual que la de arriba: el dinero lo pones tú entero. Escribe un préstamo arriba y verás cómo cambia.",
+      rentPrestamo >= 0 ? "pos" : "neg",
+      v.conCredito
+        ? {
+            palabras: "(Resultado del vehículo − Intereses del año 1) ÷ Tu dinero",
+            numeros: "(" + fmt(v.resultadoAnual) + " − " + fmt(v.interesesAnio1) + ") ÷ " + fmt(v.dineroPropio)
+          }
+        : {
+            palabras: "Resultado del vehículo ÷ Tu dinero",
+            numeros: fmt(v.resultadoAnual) + " ÷ " + fmt(v.capitalPropio)
+          }));
 
     // --- Coste de oportunidad ---
     var base = v.conCredito ? v.sobreTuDinero : v.normal;
