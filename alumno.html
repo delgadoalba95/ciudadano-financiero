@@ -1138,7 +1138,7 @@
       <section class="view active" id="view-balance">
         <div class="instructions">
           <span class="mark">&#9432;</span>
-          <p>Rellena el <strong>valor aproximado de mercado actual</strong> de cada partida — no hace falta exactitud, una estimación realista es suficiente. Si algo no aparece en la lista, usa <strong>"+ Añadir otro"</strong> al final de cada bloque y escribe tú el concepto.</p>
+          <p>Rellena el <strong>valor aproximado de mercado actual</strong> de cada partida — no hace falta exactitud, una estimación realista es suficiente. Si algo no aparece en la lista, usa <strong>"+ Añadir otro"</strong> al final de cada bloque y escribe tú el concepto seleccionando si es un activo o un pasivo.</p>
         </div>
 
         <div class="balance-grid">
@@ -2887,6 +2887,18 @@
     var A = leerImporte("calc-precio");
     var B = leerImporte("calc-alquiler");
     var C = leerImporte("calc-hipoteca");
+    // Sin precio no hay piso: si no, se mostrarían la comunidad y el seguro de
+    // un inmueble que no existe y salía un beneficio negativo sin haber escrito nada.
+    if(A <= 0){
+      document.getElementById("calc-tuyo").innerHTML = "";
+      document.getElementById("calc-avisos").innerHTML = "";
+      document.getElementById("calc-oportunidad").innerHTML = "";
+      cont.innerHTML = "";
+      var vacio = document.getElementById("calc-semaforo");
+      vacio.innerHTML = '<span class="luz">⚪</span><span class="txt">Escribe el precio del piso y el alquiler para ver el resultado.</span>';
+      return;
+    }
+
     var r = calcularInmueble(A, B, C);
 
     // --- Avisos ---
@@ -3047,7 +3059,7 @@
   function formatearMiles(el){
     var desdeElFinal = el.value.length - (el.selectionStart || 0);
     var digitos = String(el.value).replace(/\D/g, "").replace(/^0+(?=\d)/, "");
-    el.value = digitos ? Number(digitos).toLocaleString("es-ES") : "";
+    el.value = digitos ? formatThousands(Number(digitos)) : "";
     var pos = Math.max(0, el.value.length - desdeElFinal);
     try { el.setSelectionRange(pos, pos); } catch(e) {}
   }
@@ -3073,6 +3085,16 @@
     var precio = leerImporte("veh-precio");
     var alquilerMes = leerImporte("veh-alquiler");
     var tasa = vehTasa();
+
+    // Igual que en inmuebles: sin precio no hay vehículo que mantener.
+    if(precio <= 0){
+      document.getElementById("veh-resumen").innerHTML = "";
+      document.getElementById("veh-avisos").innerHTML = "";
+      cont.innerHTML = "";
+      document.getElementById("veh-veredicto").innerHTML =
+        '<span class="luz">⚪</span><span class="txt">Escribe el precio del vehículo para ver el resultado.</span>';
+      return;
+    }
 
     var ingresos = alquilerMes * 12;
     var gastos = VEH.seguro + VEH.mantenimiento + VEH.impuestos;
