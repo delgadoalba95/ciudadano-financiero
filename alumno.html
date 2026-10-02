@@ -1291,8 +1291,8 @@
 
       <section class="view" id="view-inmobiliaria">
         <div class="selector-activo">
-          <button type="button" class="opcion-activo activa" data-activo="inmueble">Inmueble</button>
-          <button type="button" class="opcion-activo" data-activo="vehiculo">Vehículo</button>
+          <button type="button" class="opcion-activo activa" data-activo="inmueble" data-titulo="Rentabilidad inmobiliaria">Inmuebles</button>
+          <button type="button" class="opcion-activo" data-activo="vehiculo" data-titulo="Rentabilidad por alquiler">Vehículos</button>
         </div>
 
         <div class="instructions" id="intro-inmueble">
@@ -3227,6 +3227,7 @@
         document.getElementById("calc-vehiculo").hidden = cual !== "vehiculo";
         document.getElementById("intro-inmueble").hidden = cual !== "inmueble";
         document.getElementById("intro-vehiculo").hidden = cual !== "vehiculo";
+        document.getElementById("page-title").textContent = btn.getAttribute("data-titulo");
       });
     });
   })();
@@ -3252,7 +3253,13 @@
       btn.classList.add("active");
       document.querySelectorAll(".view").forEach(function(v){ v.classList.remove("active"); });
       document.getElementById("view-" + target).classList.add("active");
-      document.getElementById("page-title").textContent = VIEWS[target];
+      var titulo = VIEWS[target];
+      if(target === "inmobiliaria"){
+        // Dentro hay dos calculadoras: el título es el de la que esté abierta.
+        var activa = document.querySelector(".opcion-activo.activa");
+        if(activa) titulo = activa.getAttribute("data-titulo");
+      }
+      document.getElementById("page-title").textContent = titulo;
     });
   });
 
