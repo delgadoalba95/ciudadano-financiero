@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://www.loom.com">
+<link rel="preconnect" href="https://cdn.loom.com" crossorigin>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Área de alumnos — Ciudadano Financiero</title>
 <meta name="robots" content="noindex, nofollow">
@@ -304,7 +306,14 @@
   .leccion-body[hidden] { display:none; }
   .video-wrap {
     position:relative; padding-bottom:56.25%; height:0; overflow:hidden;
-    border-radius:8px; border:1px solid var(--rule); background:#000;
+    border-radius:8px; border:1px solid var(--rule);
+    background:#000 center/cover no-repeat;
+  }
+  /* Mientras el reproductor carga se ve la miniatura, no un recuadro negro */
+  .video-wrap.cargando::after {
+    content:"Cargando el vídeo…"; position:absolute; left:50%; top:50%;
+    transform:translate(-50%,-50%); background:rgba(18,38,65,.82); color:#F5F1E6;
+    font-size:13px; font-weight:600; padding:9px 16px; border-radius:999px;
   }
   .video-wrap iframe { position:absolute; top:0; left:0; width:100%; height:100%; border:0; }
   @media (max-width: 640px) {
@@ -998,7 +1007,7 @@
                   </span>
                 </button>
                 <div class="leccion-body" hidden>
-                  <div class="video-wrap">
+                  <div class="video-wrap" style="background-image:url(https://cdn.loom.com/sessions/thumbnails/4ba7c7bed3d44206a370d7bf81cfe929-7fd7766fe0d07333.gif)">
                     <iframe data-src="https://www.loom.com/embed/4ba7c7bed3d44206a370d7bf81cfe929?hideEmbedTopBar=true&amp;hide_share=true&amp;hide_owner=true&amp;hide_title=true"
                             title="Activos y Pasivos en tus finanzas personales"
                             allow="fullscreen"
@@ -1020,7 +1029,7 @@
                   </span>
                 </button>
                 <div class="leccion-body" hidden>
-                  <div class="video-wrap">
+                  <div class="video-wrap" style="background-image:url(https://cdn.loom.com/sessions/thumbnails/7a4f719531384d1485f60e48d7535fba-6134868876538274.gif)">
                     <iframe data-src="https://www.loom.com/embed/7a4f719531384d1485f60e48d7535fba?hideEmbedTopBar=true&amp;hide_share=true&amp;hide_owner=true&amp;hide_title=true"
                             title="Tu balance personal"
                             allow="fullscreen"
@@ -1061,7 +1070,7 @@
                   </span>
                 </button>
                 <div class="leccion-body" hidden>
-                  <div class="video-wrap">
+                  <div class="video-wrap" style="background-image:url(https://cdn.loom.com/sessions/thumbnails/32c4786a487b480782a0532c2ab54fa7-a215101caf4a9701.gif)">
                     <iframe data-src="https://www.loom.com/embed/32c4786a487b480782a0532c2ab54fa7?hideEmbedTopBar=true&amp;hide_share=true&amp;hide_owner=true&amp;hide_title=true"
                             title="Productos financieros de alta rentabilidad"
                             allow="fullscreen"
@@ -1092,7 +1101,7 @@
                   </span>
                 </button>
                 <div class="leccion-body" hidden>
-                  <div class="video-wrap">
+                  <div class="video-wrap" style="background-image:url(https://cdn.loom.com/sessions/thumbnails/dd3a1b36fa6547c482b74ff9013cba0b-d11d9f2ddc1696ec.gif)">
                     <iframe data-src="https://www.loom.com/embed/dd3a1b36fa6547c482b74ff9013cba0b?hideEmbedTopBar=true&amp;hide_share=true&amp;hide_owner=true&amp;hide_title=true"
                             title="Análisis Técnico"
                             allow="fullscreen"
@@ -3198,12 +3207,9 @@
   // Los vídeos se cargan al abrir la página para que al pulsar una clase se vea
   // al instante. Al cerrar una clase se recarga su iframe: ocultarlo no detiene
   // la reproducción (se seguiría oyendo), y recargarlo lo deja listo otra vez.
-  function precargarVideos(){
-    document.querySelectorAll(".leccion-body iframe[data-src]").forEach(function(frame){
-      if (!frame.getAttribute("src")) frame.src = frame.getAttribute("data-src");
-    });
-  }
-
+  // Un vídeo de Loom tarda unos 5 s en cargar si va solo, pero si se cargan
+  // varios a la vez se estorban y cada uno pasa de un minuto. Por eso se carga
+  // únicamente el de la clase que se abre, y mientras tanto se ve la miniatura.
   function cerrarLeccion(head){
     var body = head.nextElementSibling;
     var frame = body.querySelector("iframe");
@@ -3211,8 +3217,12 @@
     head.setAttribute("aria-expanded", "false");
     body.hidden = true;
 
-    // Recargar corta el audio y deja el vídeo preparado para la próxima vez
-    if (frame) frame.src = frame.getAttribute("data-src");
+    // Descargarlo corta el audio: ocultarlo no lo detiene.
+    if (frame && frame.getAttribute("src")) {
+      frame.removeAttribute("src");
+      var caja = body.querySelector(".video-wrap");
+      if (caja) caja.classList.remove("cargando");
+    }
   }
 
   function abrirLeccion(head){
@@ -3222,8 +3232,14 @@
     head.setAttribute("aria-expanded", "true");
     body.hidden = false;
 
-    // Red de seguridad por si la precarga no llegó a ejecutarse
-    if (frame && !frame.getAttribute("src")) frame.src = frame.getAttribute("data-src");
+    if (frame && !frame.getAttribute("src")) {
+      var caja = body.querySelector(".video-wrap");
+      if (caja) caja.classList.add("cargando");
+      frame.addEventListener("load", function(){
+        if (caja) caja.classList.remove("cargando");
+      }, { once: true });
+      frame.src = frame.getAttribute("data-src");
+    }
   }
 
   document.querySelectorAll(".leccion-head").forEach(function(head){
@@ -3240,7 +3256,6 @@
     });
   });
 
-  precargarVideos();
 
   // ---------- Boot ----------
   async function enterApp(){
