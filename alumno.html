@@ -638,6 +638,11 @@
   .calc-tuyo .vl { font-family:"IBM Plex Mono", monospace; font-size: 15px; font-weight: 700; }
   .calc-tuyo .dato.principal .et { color: var(--accent); }
   .calc-tuyo .dato.principal .vl { font-size: 19px; color: var(--accent); }
+  .calc-tuyo-nota {
+    flex-basis: 100%; margin: 4px 0 0; font-size: 12.5px; line-height: 1.55;
+    color: var(--header-ink-dim); border-top: 1px solid rgba(169,131,46,0.35); padding-top: 11px;
+  }
+  .calc-tuyo-nota strong { color: var(--header-ink); }
 
   .calc-supuestos {
     margin-top: 18px; border: 1px solid rgba(255,255,255,0.18); border-radius: 9px;
@@ -2942,10 +2947,13 @@
     // --- Lo que pone la alumna de su bolsillo (se usa para comparar abajo) ---
     var tuyo = document.getElementById("calc-tuyo");
     tuyo.innerHTML =
-      '<div class="dato"><span class="et">Gastos de compra (10%)</span><span class="vl" id="t-gastos"></span></div>' +
+      '<div class="dato"><span class="et">Gastos de compra · 10% del precio</span><span class="vl" id="t-gastos"></span></div>' +
       '<div class="dato"><span class="et">Inversión total (piso + gastos)</span><span class="vl" id="t-inv"></span></div>' +
       '<div class="dato"><span class="et">Hipoteca</span><span class="vl" id="t-hip"></span></div>' +
-      '<div class="dato principal"><span class="et">Dinero que pones tú</span><span class="vl" id="t-propio"></span></div>';
+      '<div class="dato principal"><span class="et">Dinero que pones tú</span><span class="vl" id="t-propio"></span></div>' +
+      '<p class="calc-tuyo-nota">Los <strong>gastos de compra</strong> son los impuestos (ITP o IVA), la notaría, el registro y la gestoría. ' +
+      'En España rondan el 10% del precio, los pagas de tu bolsillo al comprar y el banco no los financia: por eso se suman al precio del piso ' +
+      'para saber cuánto dinero tuyo necesitas de verdad.</p>';
     tuyo.querySelector("#t-gastos").textContent = fmt(r.gastosCompra);
     tuyo.querySelector("#t-inv").textContent = fmt(r.inversionTotal);
     tuyo.querySelector("#t-hip").textContent = "−" + fmt(r.C);
