@@ -2826,7 +2826,8 @@
 
   function pctTxt(x, dec){
     if(!isFinite(x)) return "—";
-    return (x * 100).toFixed(dec === undefined ? 1 : dec).replace(".", ",") + "%";
+    // El menos tipográfico, para que combine con el resto de cifras.
+    return (x * 100).toFixed(dec === undefined ? 1 : dec).replace(".", ",").replace("-", "−") + "%";
   }
 
   function calcularInmueble(A, B, C){
