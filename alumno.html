@@ -1362,7 +1362,12 @@
             <div class="calc-campo">
               <label for="veh-alquiler">Lo alquilas (al mes)</label>
               <div class="calc-input"><input type="text" id="veh-alquiler" value="0" inputmode="numeric" autocomplete="off"><span>€</span></div>
-              <small>Pon 0 si es solo para ti. Una camper se suele alquilar algunos meses al año.</small>
+              <small>Pon 0 si es solo para ti. Contamos <strong>11 meses al año como máximo</strong>: el mes que falta se va en huecos entre alquileres, limpieza y taller.</small>
+            </div>
+            <div class="calc-campo">
+              <label for="veh-credito">Préstamo que pides</label>
+              <div class="calc-input"><input type="text" id="veh-credito" value="0" inputmode="numeric" autocomplete="off"><span>€</span></div>
+              <small>Pon 0 si lo pagas entero con tu dinero.</small>
             </div>
             <div class="calc-campo">
               <label for="veh-tipo">¿Cuánto valor pierde al año?</label>
@@ -1390,6 +1395,8 @@
               <li><strong>Seguro</strong>: 450 €/año</li>
               <li><strong>Mantenimiento y reparaciones</strong>: 600 €/año</li>
               <li><strong>Impuesto de circulación e ITV</strong>: 150 €/año</li>
+              <li><strong>Préstamo</strong>: 6% fijo a 7 años (lo habitual en un crédito de coche o camper)</li>
+              <li><strong>Alquiler</strong>: como mucho 11 meses al año, nunca los 12</li>
               <li><strong>Pérdida de valor</strong>: la que elijas arriba. De orientación: un coche nuevo pierde en torno a un <strong>18% el primer año</strong>, uno de segunda mano ronda el <strong>10%</strong>, y una camper se deprecia menos, sobre un <strong>6%</strong>. Solo algunos clásicos de colección se revalorizan.</li>
               <li>No incluimos combustible ni peajes: dependen demasiado de cuánto conduzcas</li>
             </ul>
@@ -1398,6 +1405,7 @@
           <div class="calc-avisos" id="veh-avisos"></div>
           <div class="calc-semaforo" id="veh-veredicto"></div>
           <div class="calc-resultados" id="veh-resultados"></div>
+          <div class="calc-oportunidad" id="veh-oportunidad"></div>
 
           <p class="calc-pie">Cálculos orientativos y con valores medios de España. No constituyen asesoramiento financiero.</p>
         </div>
@@ -3108,7 +3116,11 @@
   }
 
   // ---------- Calculadora de vehículo ----------
-  var VEH = { seguro: 450, mantenimiento: 600, impuestos: 150 };
+  var VEH = {
+    seguro: 450, mantenimiento: 600, impuestos: 150,
+    mesesVacio: 1,          // como mucho se alquila 11 meses al año
+    interes: 0.06, anios: 7 // crédito de coche o camper
+  };
 
   function vehTasa(){
     var sel = document.getElementById("veh-tipo");
@@ -3121,46 +3133,94 @@
     return Number(sel.value) / 100;
   }
 
+  // Mismo planteamiento que en inmuebles: primero qué deja el vehículo por sí
+  // solo, y después qué pasa cuando parte del dinero lo pone el banco.
+  function calcularVehiculo(precio, alquilerMes, credito, tasa){
+    var mesesAlquiler = 12 - VEH.mesesVacio;
+    var ingresos = alquilerMes * mesesAlquiler;
+    var gastosFijos = VEH.seguro + VEH.mantenimiento + VEH.impuestos;
+    // Tasa positiva = pierde valor; negativa = se revaloriza.
+    var perdidaValor = precio * tasa;
+    var resultadoAnual = ingresos - gastosFijos - perdidaValor;
+
+    var i = VEH.interes / 12;
+    var n = VEH.anios * 12;
+    var cuotaMensual = credito > 0 ? credito * i / (1 - Math.pow(1 + i, -n)) : 0;
+    var cuotaAnual = cuotaMensual * 12;
+
+    // Primeras 12 cuotas, para separar intereses de deuda devuelta.
+    var deuda = credito, interesesAnio1 = 0;
+    for(var m = 0; m < 12 && credito > 0; m++){
+      var interesMes = deuda * i;
+      interesesAnio1 += interesMes;
+      deuda -= (cuotaMensual - interesMes);
+    }
+
+    var dineroPropio = precio - credito;
+    var conCredito = (credito > 0 && dineroPropio > 0);
+
+    return {
+      mesesAlquiler: mesesAlquiler, ingresos: ingresos, gastosFijos: gastosFijos,
+      perdidaValor: perdidaValor, resultadoAnual: resultadoAnual,
+      cuotaMensual: cuotaMensual, cuotaAnual: cuotaAnual, interesesAnio1: interesesAnio1,
+      dineroPropio: dineroPropio, conCredito: conCredito,
+      capitalPropio: dineroPropio > 0 ? dineroPropio : precio,
+      // Rentabilidad "normal": lo que da el vehículo sobre lo que cuesta.
+      normal: precio > 0 ? resultadoAnual / precio : NaN,
+      // Sobre tu dinero: el banco pone una parte, pero sus intereses son gasto.
+      sobreTuDinero: conCredito ? (resultadoAnual - interesesAnio1) / dineroPropio : null,
+      // Lo que de verdad te deja o te cuesta al año, intereses incluidos.
+      neto: resultadoAnual - interesesAnio1,
+      // Caja pura: la pérdida de valor no se paga cada mes, la cuota sí.
+      alMes: (ingresos - gastosFijos - cuotaAnual) / 12
+    };
+  }
+
   function renderVehiculo(){
     var cont = document.getElementById("veh-resultados");
     if(!cont) return;
 
     var precio = leerImporte("veh-precio");
     var alquilerMes = leerImporte("veh-alquiler");
+    var credito = leerImporte("veh-credito");
     var tasa = vehTasa();
 
     // Igual que en inmuebles: sin precio no hay vehículo que mantener.
     if(precio <= 0){
       document.getElementById("veh-resumen").innerHTML = "";
       document.getElementById("veh-avisos").innerHTML = "";
+      document.getElementById("veh-oportunidad").innerHTML = "";
       cont.innerHTML = "";
       document.getElementById("veh-veredicto").innerHTML =
         '<span class="luz">⚪</span><span class="txt">Escribe el precio del vehículo para ver el resultado.</span>';
       return;
     }
 
-    var ingresos = alquilerMes * 12;
-    var gastos = VEH.seguro + VEH.mantenimiento + VEH.impuestos;
-    // Tasa positiva = pierde valor; negativa = se revaloriza.
-    var perdidaValor = precio * tasa;
-    var costeReal = gastos - ingresos + perdidaValor;
+    var v = calcularVehiculo(precio, alquilerMes, credito, tasa);
 
-    // --- Lo que pasa con tu dinero ---
+    // --- Lo que pones tú y lo que pone el banco ---
     var resumen = document.getElementById("veh-resumen");
     resumen.innerHTML =
-      '<div class="dato"><span class="et">Gastos fijos al año</span><span class="vl" id="v1"></span></div>' +
-      '<div class="dato"><span class="et">' + (ingresos > 0 ? "Te entra por alquiler" : "No lo alquilas") + '</span><span class="vl" id="v2"></span></div>' +
-      '<div class="dato"><span class="et">' + (perdidaValor >= 0 ? "Pierde de valor al año" : "Gana de valor al año") + '</span><span class="vl" id="v3"></span></div>' +
-      '<div class="dato principal"><span class="et">' + (costeReal >= 0 ? "Te cuesta al año" : "Te deja al año") + '</span><span class="vl" id="v4"></span></div>';
-    resumen.querySelector("#v1").textContent = "−" + fmt(gastos);
-    resumen.querySelector("#v2").textContent = ingresos > 0 ? "+" + fmt(ingresos) : fmt(0);
-    resumen.querySelector("#v3").textContent = (perdidaValor >= 0 ? "−" : "+") + fmt(Math.abs(perdidaValor));
-    resumen.querySelector("#v4").textContent = (costeReal >= 0 ? "−" : "+") + fmt(Math.abs(costeReal));
+      '<div class="dato"><span class="et">Precio del vehículo</span><span class="vl" id="v-precio"></span></div>' +
+      (credito > 0 ? '<div class="dato"><span class="et">Préstamo</span><span class="vl" id="v-credito"></span></div>' : '') +
+      '<div class="dato principal"><span class="et">Dinero que pones tú</span><span class="vl" id="v-propio"></span></div>' +
+      (credito > 0 ? '<div class="dato"><span class="et">Cuota del préstamo (al mes)</span><span class="vl" id="v-cuota"></span></div>' : '') +
+      (credito > 0
+        ? '<p class="calc-tuyo-nota">Calculamos la cuota con un <strong>6% fijo a 7 años</strong>, que es lo habitual en un crédito de coche o camper. ' +
+          'Los intereses del primer año son ' + fmt(v.interesesAnio1) + ': eso sí es gasto. La parte de la cuota que devuelve deuda no lo es, ' +
+          'porque va reduciendo lo que debes.</p>'
+        : '<p class="calc-tuyo-nota">Lo pagas entero con tu dinero. Si pidieras un préstamo, escríbelo arriba y verás cuánto cambia.</p>');
+    resumen.querySelector("#v-precio").textContent = fmt(precio);
+    if(credito > 0) resumen.querySelector("#v-credito").textContent = "−" + fmt(credito);
+    resumen.querySelector("#v-propio").textContent = fmt(Math.max(0, v.dineroPropio));
+    if(credito > 0) resumen.querySelector("#v-cuota").textContent = "−" + fmt(v.cuotaMensual);
 
     // --- Avisos ---
     var avisos = [];
     if(tasa < 0) avisos.push("Muy pocos vehículos se revalorizan: suelen ser clásicos concretos y bien conservados. Si no es el caso, lo normal es que pierda valor.");
-    if(ingresos > 0 && ingresos < gastos) avisos.push("Lo que sacas alquilándolo no cubre ni los gastos fijos del vehículo.");
+    if(v.ingresos > 0 && v.ingresos < v.gastosFijos) avisos.push("Lo que sacas alquilándolo no cubre ni los gastos fijos del vehículo.");
+    if(credito >= precio) avisos.push("Estás financiando el vehículo entero. Lo normal es que el banco te pida una entrada, y así los intereses se comen buena parte del alquiler.");
+    if(credito > 0 && v.alMes < 0) avisos.push("Con la cuota del préstamo tendrás que poner dinero de tu bolsillo cada mes.");
     var cajaAvisos = document.getElementById("veh-avisos");
     cajaAvisos.innerHTML = "";
     avisos.forEach(function(t){
@@ -3170,13 +3230,13 @@
     // --- Veredicto: activo o pasivo (el lenguaje del curso) ---
     var ver = document.getElementById("veh-veredicto");
     var luz, txt;
-    if(precio <= 0){ luz = "⚪"; txt = "Pon el precio del vehículo para ver el resultado."; }
-    else if(costeReal > 0){
+    if(v.neto < 0){
       luz = "🔴";
-      txt = "Es un pasivo: te saca " + fmt(costeReal) + " de tu bolsillo cada año.";
+      txt = "Es un pasivo: te saca " + fmt(Math.abs(v.neto)) + " de tu bolsillo cada año.";
     } else {
       luz = "🟢";
-      txt = "Es un activo: te deja " + fmt(Math.abs(costeReal)) + " al año después de gastos y de lo que pierde de valor.";
+      txt = "Es un activo: te deja " + fmt(v.neto) + " al año después de gastos" +
+            (credito > 0 ? ", intereses" : "") + " y de lo que pierde de valor.";
     }
     ver.innerHTML = '<span class="luz"></span><span class="txt"></span>';
     ver.querySelector(".luz").textContent = luz;
@@ -3184,22 +3244,64 @@
 
     // --- Resultados ---
     cont.innerHTML = "";
-    cont.appendChild(tarjetaCalc("veh-coste",
-      costeReal >= 0 ? "Lo que te cuesta de verdad al año" : "Lo que te deja de verdad al año",
-      (costeReal >= 0 ? "−" : "+") + fmt(Math.abs(costeReal)),
-      "Suma los gastos fijos y lo que pierde de valor, y resta lo que ingreses alquilándolo. Es el coste real, no solo lo que pagas de seguro y taller.",
-      costeReal >= 0 ? "neg" : "pos",
+
+    // El resultado del vehículo alimenta las fórmulas de abajo: se desglosa una vez.
+    var desglose = document.createElement("div");
+    desglose.className = "calc-card calc-desglose";
+    desglose.innerHTML =
+      '<div class="titulo">' + (v.resultadoAnual >= 0 ? "Lo que deja el vehículo al año" : "Lo que cuesta el vehículo al año") + '</div>' +
+      '<div class="cifra">' + (v.resultadoAnual >= 0 ? "+" : "−") + fmt(Math.abs(v.resultadoAnual)) + '</div>' +
+      '<p class="nota">Es lo que deja (o cuesta) el vehículo en un año antes de pagar el préstamo. Las fórmulas de abajo parten de este número.</p>' +
+      '<div class="desglose-filas" hidden>' +
+        '<div class="fila"><span>Alquiler cobrado (' + fmt(alquilerMes) + ' × ' + v.mesesAlquiler + ' meses)</span><span class="val mas"></span></div>' +
+        '<div class="fila"><span>Seguro</span><span class="val menos"></span></div>' +
+        '<div class="fila"><span>Mantenimiento y reparaciones</span><span class="val menos"></span></div>' +
+        '<div class="fila"><span>Impuesto de circulación e ITV</span><span class="val menos"></span></div>' +
+        '<div class="fila"><span>' + (v.perdidaValor >= 0 ? "Pérdida de valor" : "Revalorización") + '</span><span class="val"></span></div>' +
+        '<div class="fila total"><span>Resultado del vehículo</span><span class="val"></span></div>' +
+      '</div>';
+
+    var cajaDesglose = desglose.querySelector(".desglose-filas");
+    desglose.insertBefore(botonCalculo("veh-beneficio", cajaDesglose), cajaDesglose);
+
+    var filas = desglose.querySelectorAll(".desglose-filas .val");
+    filas[0].textContent = "+" + fmt(v.ingresos);
+    filas[1].textContent = "−" + fmt(VEH.seguro);
+    filas[2].textContent = "−" + fmt(VEH.mantenimiento);
+    filas[3].textContent = "−" + fmt(VEH.impuestos);
+    filas[4].textContent = (v.perdidaValor >= 0 ? "−" : "+") + fmt(Math.abs(v.perdidaValor));
+    filas[5].textContent = (v.resultadoAnual >= 0 ? "+" : "−") + fmt(Math.abs(v.resultadoAnual));
+    cont.appendChild(desglose);
+
+    cont.appendChild(tarjetaCalc("veh-normal", "Rentabilidad normal (sin préstamo)", pctTxt(v.normal),
+      "Lo que rinde el vehículo si lo pagaras entero con tu dinero. En negativo significa que te cuesta dinero tenerlo.",
+      v.normal >= 0 ? "pos" : "neg",
       {
-        palabras: "Gastos fijos − Alquiler + Pérdida de valor",
-        numeros: fmt(gastos) + " − " + fmt(ingresos) + " + " + fmt(perdidaValor)
+        palabras: "Resultado del vehículo ÷ Precio",
+        numeros: fmt(v.resultadoAnual) + " ÷ " + fmt(precio)
       }));
 
-    cont.appendChild(tarjetaCalc("veh-mes",
-      "Al mes",
-      (costeReal >= 0 ? "−" : "+") + fmt(Math.abs(costeReal) / 12),
-      "Lo mismo repartido entre los doce meses, para que lo compares con tu flujo de caja.",
-      costeReal >= 0 ? "neg" : "pos",
-      { palabras: "Coste real del año ÷ 12", numeros: fmt(Math.abs(costeReal)) + " ÷ 12" }));
+    cont.appendChild(tarjetaCalc("veh-mes", "Dinero que te queda cada mes",
+      (v.alMes >= 0 ? "+" : "−") + fmt(Math.abs(v.alMes)),
+      credito > 0
+        ? "Lo que entra (o sale) de tu bolsillo cada mes después de pagar la cuota del préstamo. La pérdida de valor no está aquí porque no se paga cada mes: se nota el día que lo vendes."
+        : "Lo que entra (o sale) de tu bolsillo cada mes. La pérdida de valor no está aquí porque no se paga cada mes: se nota el día que lo vendes.",
+      v.alMes >= 0 ? "pos" : "neg",
+      {
+        palabras: "(Alquiler del año − Gastos fijos − Cuotas del préstamo del año) ÷ 12",
+        numeros: "(" + fmt(v.ingresos) + " − " + fmt(v.gastosFijos) + " − " + fmt(v.cuotaAnual) + ") ÷ 12"
+      }));
+
+    if(v.sobreTuDinero !== null){
+      cont.appendChild(tarjetaCalc("veh-tudinero", "Rentabilidad sobre tu dinero (con préstamo)", pctTxt(v.sobreTuDinero),
+        "Como el banco pone parte del dinero, tú inviertes menos pero cobras el alquiler entero y asumes toda la pérdida de valor. " +
+        "Los intereses sí se restan; la parte de la cuota que devuelve deuda no, porque es patrimonio que recuperas.",
+        v.sobreTuDinero >= 0 ? "pos" : "neg",
+        {
+          palabras: "(Resultado del vehículo − Intereses del año 1) ÷ Tu dinero",
+          numeros: "(" + fmt(v.resultadoAnual) + " − " + fmt(v.interesesAnio1) + ") ÷ " + fmt(v.dineroPropio)
+        }));
+    }
 
     cont.appendChild(tarjetaCalc("veh-valor",
       "Lo que valdrá en 5 años",
@@ -3212,6 +3314,20 @@
         palabras: "Precio × (1 − depreciación) elevado a 5 años",
         numeros: fmt(precio) + " × (1 − " + (tasa * 100).toFixed(0).replace("-", "−") + "%)⁵"
       }));
+
+    // --- Coste de oportunidad ---
+    var base = v.conCredito ? v.sobreTuDinero : v.normal;
+    var capital = v.capitalPropio;
+    var op = document.getElementById("veh-oportunidad");
+    op.innerHTML =
+      '<h4>¿Y si pusieras esos ' + fmt(capital) + ' en otra cosa?</h4>' +
+      '<div class="fila"><span>Este vehículo' + (v.conCredito ? " (con el préstamo)" : "") + '</span><span class="val" id="vop-veh"></span></div>' +
+      '<div class="fila"><span>Letras del Tesoro (2,7%) poniendo ese dinero</span><span class="val" id="vop-letras"></span></div>' +
+      '<div class="fila"><span>ETF indexado global (12%) poniendo ese dinero</span><span class="val" id="vop-etf"></span></div>' +
+      '<p class="cierre">Un vehículo casi nunca compite con una inversión: se usa, se disfruta y pierde valor. Lo que mide esta tabla es cuánto te está costando esa decisión al año.</p>';
+    op.querySelector("#vop-veh").textContent = pctTxt(base) + " · " + fmt(capital * (isFinite(base) ? base : 0)) + "/año";
+    op.querySelector("#vop-letras").textContent = fmt(capital * CALC.letras) + "/año";
+    op.querySelector("#vop-etf").textContent = fmt(capital * CALC.etf) + "/año";
   }
 
   (function conectarVehiculo(){
@@ -3222,7 +3338,7 @@
       renderVehiculo();
     });
 
-    ["veh-precio", "veh-alquiler"].forEach(function(id){
+    ["veh-precio", "veh-alquiler", "veh-credito"].forEach(function(id){
       var el = document.getElementById(id);
       if(el) el.addEventListener("input", function(){ formatearMiles(el); renderVehiculo(); });
     });
