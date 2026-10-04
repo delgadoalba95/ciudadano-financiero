@@ -312,6 +312,33 @@
   .leccion-pendiente .pendiente-tag {
     flex:none; font-size:11.5px; font-style:italic; color: var(--ink-faint);
   }
+  .checklist {
+    margin-top: 16px; padding: 14px 16px;
+    border: 1px solid var(--rule); border-radius: 10px;
+    background: rgba(255,255,255,0.3);
+  }
+  .checklist h4 {
+    margin: 0 0 3px; font-size: 11.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .09em; color: var(--accent-strong);
+  }
+  .checklist-nota { margin: 0 0 11px; font-size: 12px; color: var(--ink-faint); line-height: 1.4; }
+  .checklist-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+  .checklist-items label {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 13px; line-height: 1.4; cursor: pointer;
+  }
+  .checklist-items input {
+    margin: 1px 0 0; width: 15px; height: 15px; flex: none;
+    accent-color: var(--accent-strong); cursor: pointer;
+  }
+  .checklist-items li.hecha label { color: var(--ink-faint); text-decoration: line-through; }
+  .checklist-items li.pendiente label,
+  .checklist-items li.pendiente input { color: var(--ink-faint); cursor: default; }
+  .checklist-items em { font-style: italic; font-size: 11.5px; color: var(--ink-faint); }
+  .checklist-progreso {
+    margin: 12px 0 0; font-family: "IBM Plex Mono", monospace;
+    font-size: 11.5px; letter-spacing: .04em; color: var(--ink-faint);
+  }
   .leccion-body { padding: 16px; background: rgba(255,255,255,0.5); }
   .leccion-body[hidden] { display:none; }
   .video-wrap {
@@ -1144,6 +1171,12 @@
                   <span class="pendiente-tag">Vídeo pendiente</span>
                 </div>
               </div>
+              <div class="leccion">
+                <div class="leccion-pendiente">
+                  <span class="leccion-name">ETFs</span>
+                  <span class="pendiente-tag">Vídeo pendiente</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1842,7 +1875,7 @@
   function tipoDe(item){ return item.tipo === "pasivos" ? "pasivos" : "activos"; }
 
   var session = null; // { access_token, refresh_token, user_id, email }
-  var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [], flujo: {}, meses: [], test: null };
+  var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [], flujo: {}, meses: [], test: null, tareas: {} };
   var filasFlujo = [];
   var saveTimer = null;
 
@@ -2518,6 +2551,7 @@
     renderFlujo();
     renderMeses();
     cargarTestGuardado();
+    pintarTareas();
     recalc();
   }
 
@@ -3479,6 +3513,137 @@
     }
   }
 
+  // ---------- Tareas de cada módulo ----------
+  // Se construyen a partir de las clases que hay en el módulo, así que al
+  // añadir una clase nueva su tarea aparece sola.
+  function idDeLeccion(leccion){
+    var frame = leccion.querySelector("iframe[data-src]");
+    if(!frame) return null;
+    var m = String(frame.getAttribute("data-src")).match(/embed\/([0-9a-f]+)/);
+    return m ? "video:" + m[1] : null;
+  }
+
+  function construirChecklists(){
+    document.querySelectorAll("#view-curso .modulo").forEach(function(modulo, i){
+      var cuerpo = modulo.querySelector(".modulo-body");
+      if(!cuerpo) return;
+      var num = i + 1;
+
+      var caja = document.createElement("div");
+      caja.className = "checklist";
+      caja.innerHTML =
+        '<h4>Tareas de este módulo</h4>' +
+        '<p class="checklist-nota">Las de ver clase se marcan solas cuando llegas al final del vídeo. ' +
+        'También puedes marcarlas tú.</p>' +
+        '<ul class="checklist-items"></ul>' +
+        '<p class="checklist-progreso"></p>';
+      var lista = caja.querySelector(".checklist-items");
+
+      modulo.querySelectorAll(".leccion").forEach(function(leccion){
+        var nombre = leccion.querySelector(".leccion-name");
+        if(!nombre) return;
+        var id = idDeLeccion(leccion);
+        var li = document.createElement("li");
+        var label = document.createElement("label");
+        var box = document.createElement("input");
+        box.type = "checkbox";
+        var txt = document.createElement("span");
+        txt.textContent = "Ver «" + nombre.textContent.trim() + "»";
+        label.appendChild(box);
+        label.appendChild(txt);
+        if(id){
+          box.setAttribute("data-tarea", id);
+        }else{
+          // Todavía no hay vídeo que ver: la tarea se queda a la vista pero apagada.
+          box.disabled = true;
+          li.className = "pendiente";
+          var em = document.createElement("em");
+          em.textContent = "vídeo pendiente";
+          label.appendChild(em);
+        }
+        li.appendChild(label);
+        lista.appendChild(li);
+      });
+
+      // Hueco para la tarea que Alba decida para cada módulo.
+      var liExtra = document.createElement("li");
+      var labelExtra = document.createElement("label");
+      var boxExtra = document.createElement("input");
+      boxExtra.type = "checkbox";
+      boxExtra.setAttribute("data-tarea", "mod" + num + ":extra1");
+      var txtExtra = document.createElement("span");
+      txtExtra.textContent = "Tarea 1";
+      labelExtra.appendChild(boxExtra);
+      labelExtra.appendChild(txtExtra);
+      liExtra.appendChild(labelExtra);
+      lista.appendChild(liExtra);
+
+      cuerpo.appendChild(caja);
+    });
+
+    document.querySelectorAll(".checklist-items input[data-tarea]").forEach(function(box){
+      box.addEventListener("change", function(){
+        marcarTarea(box.getAttribute("data-tarea"), box.checked);
+      });
+    });
+  }
+
+  function marcarTarea(id, hecha){
+    if(!id) return;
+    if(hecha) state.tareas[id] = true; else delete state.tareas[id];
+    pintarTareas();
+    queueSave();
+  }
+
+  function pintarTareas(){
+    document.querySelectorAll(".checklist-items input[data-tarea]").forEach(function(box){
+      box.checked = !!state.tareas[box.getAttribute("data-tarea")];
+      box.closest("li").classList.toggle("hecha", box.checked);
+    });
+    document.querySelectorAll("#view-curso .checklist").forEach(function(caja){
+      var activas = caja.querySelectorAll(".checklist-items input[data-tarea]");
+      var hechas = caja.querySelectorAll(".checklist-items input[data-tarea]:checked");
+      caja.querySelector(".checklist-progreso").textContent =
+        hechas.length + " de " + activas.length + " hechas";
+    });
+  }
+
+  construirChecklists();
+
+  // Loom habla el protocolo player.js: le pedimos que nos avise al terminar
+  // el vídeo y así la tarea se marca sola.
+  function suscribirFinal(ventana){
+    try{
+      ventana.postMessage(JSON.stringify({
+        context: "player.js", version: "0.0.11", method: "addEventListener", value: "ended"
+      }), "*");
+    }catch(e){ /* el iframe aún no está listo: llegará otro ready */ }
+  }
+
+  function tareaDelFrame(ventana){
+    var frames = document.querySelectorAll(".leccion-body iframe");
+    for(var i = 0; i < frames.length; i++){
+      if(frames[i].contentWindow === ventana) return idDeLeccion(frames[i].closest(".leccion"));
+    }
+    return null;
+  }
+
+  window.addEventListener("message", function(e){
+    if(String(e.origin).indexOf("loom.com") < 0) return;
+    var d;
+    try{ d = typeof e.data === "string" ? JSON.parse(e.data) : e.data; }catch(err){ return; }
+    if(!d || d.context !== "player.js") return;
+
+    if(d.event === "ready"){ suscribirFinal(e.source); return; }
+    if(d.event !== "ended") return;
+
+    var id = tareaDelFrame(e.source);
+    if(!id || state.tareas[id]) return;
+    var box = document.querySelector('.checklist-items input[data-tarea="' + id + '"]');
+    if(box) box.checked = true;
+    marcarTarea(id, true);
+  });
+
   document.querySelectorAll(".leccion-head").forEach(function(head){
     head.addEventListener("click", function(){
       var abierta = head.getAttribute("aria-expanded") === "true";
@@ -3510,6 +3675,7 @@
         state.flujo = data.flujo || {};
         state.meses = Array.isArray(data.meses) ? data.meses : [];
         state.test = data.test || null;
+        state.tareas = data.tareas || {};
         migrarRepartidos();
       }
     }catch(e){
