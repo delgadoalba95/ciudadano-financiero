@@ -3207,6 +3207,8 @@
       perdidaValor: perdidaValor, resultadoAnual: resultadoAnual,
       cuotaMensual: cuotaMensual, cuotaAnual: cuotaAnual, interesesAnio1: interesesAnio1,
       dineroPropio: dineroPropio, conCredito: conCredito,
+      // Lo que cuestan de verdad los intereses del primer año sobre lo prestado.
+      costeDeuda: credito > 0 ? interesesAnio1 / credito : 0,
       capitalPropio: dineroPropio > 0 ? dineroPropio : precio,
       // Rentabilidad "normal": lo que da el vehículo sobre lo que cuesta.
       normal: precio > 0 ? resultadoAnual / precio : NaN,
@@ -3264,6 +3266,9 @@
     if(v.ingresos > 0 && v.ingresos < v.gastosFijos) avisos.push("Lo que sacas alquilándolo no cubre ni los gastos fijos del vehículo.");
     if(credito >= precio) avisos.push("Estás financiando el vehículo entero. Lo normal es que el banco te pida una entrada, y así los intereses se comen buena parte del alquiler.");
     if(credito > 0 && v.alMes < 0) avisos.push("Con la cuota del préstamo tendrás que poner dinero de tu bolsillo cada mes.");
+    if(v.conCredito && v.sobreTuDinero < v.normal) avisos.push(
+      "El préstamo está empeorando la rentabilidad: el vehículo rinde un " + pctTxt(v.normal) +
+      " y la deuda te cuesta un " + pctTxt(v.costeDeuda) + ". Financiar solo compensa cuando lo que compras rinde más que el crédito.");
     var cajaAvisos = document.getElementById("veh-avisos");
     cajaAvisos.innerHTML = "";
     avisos.forEach(function(t){
@@ -3341,7 +3346,12 @@
     cont.appendChild(tarjetaCalc("veh-tudinero", "Rentabilidad sobre tu dinero (con préstamo)", pctTxt(rentPrestamo),
       v.conCredito
         ? "Como el banco pone parte del dinero, tú inviertes menos pero cobras el alquiler entero y asumes toda la pérdida de valor. " +
-          "Los intereses sí se restan; la parte de la cuota que devuelve deuda no, porque es patrimonio que recuperas."
+          "Los intereses sí se restan; la parte de la cuota que devuelve deuda no, porque es patrimonio que recuperas. " +
+          (v.sobreTuDinero >= v.normal
+            ? "Aquí el préstamo te suma: el vehículo rinde más de lo que te cuesta la deuda."
+            : "Aquí el préstamo te resta: el vehículo rinde un " + pctTxt(v.normal) + " y el crédito te cuesta un " +
+              pctTxt(v.costeDeuda) + " el primer año. Pedir prestado solo mejora la rentabilidad cuando lo que compras rinde " +
+              "más de lo que cuesta la deuda; si rinde menos, la deuda amplifica la pérdida.")
         : "Sin préstamo sale igual que la de arriba: el dinero lo pones tú entero. Escribe un préstamo arriba y verás cómo cambia.",
       rentPrestamo >= 0 ? "pos" : "neg",
       v.conCredito
