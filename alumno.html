@@ -298,6 +298,10 @@
   .leccion-meta { flex:none; display:flex; align-items:center; gap:14px; }
   .leccion-clip { display:inline-flex; color: var(--ink-faint); }
   .leccion-clip svg { width:15px; height:15px; }
+  /* Tik de "ya la has visto": se enciende solo al llegar al final del vídeo. */
+  .leccion-visto { display:inline-flex; color: var(--ink-faint); opacity:.4; }
+  .leccion-visto svg { width:17px; height:17px; }
+  .leccion-visto.visto { color: var(--positive); opacity:1; }
   .leccion-dur {
     font-family:"IBM Plex Mono", monospace; font-size:12px; font-weight:500;
     color: var(--ink-faint); letter-spacing:.04em;
@@ -330,7 +334,7 @@
   }
   .checklist[open] summary::before { transform: rotate(90deg); }
   .checklist-nota { margin: 11px 0; font-size: 12px; color: var(--ink-faint); line-height: 1.4; }
-  .checklist-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+  .checklist-items { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 9px; }
   .checklist-items label {
     display: flex; align-items: flex-start; gap: 10px;
     font-size: 13px; line-height: 1.4; cursor: pointer;
@@ -3531,47 +3535,39 @@
     return m ? "video:" + m[1] : null;
   }
 
+  var SVG_TIK = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+    '<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"></circle>' +
+    '<path d="M7.8 12.3 10.6 15l5.6-6" stroke="currentColor" stroke-width="2" ' +
+    'stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+
+  function construirTiks(){
+    document.querySelectorAll("#view-curso .leccion").forEach(function(leccion){
+      var id = idDeLeccion(leccion);
+      var meta = leccion.querySelector(".leccion-meta");
+      if(!id || !meta) return;
+      var tik = document.createElement("span");
+      tik.className = "leccion-visto";
+      tik.setAttribute("data-visto", id);
+      tik.innerHTML = SVG_TIK;
+      meta.appendChild(tik);
+    });
+  }
+
   function construirChecklists(){
     document.querySelectorAll("#view-curso .modulo").forEach(function(modulo, i){
       var cuerpo = modulo.querySelector(".modulo-body");
       if(!cuerpo) return;
       var num = i + 1;
+      // La introducción no lleva tareas.
+      if(num === 1) return;
 
       var caja = document.createElement("details");
       caja.className = "checklist";
       caja.innerHTML =
         '<summary>Tareas de este módulo</summary>' +
-        '<p class="checklist-nota">Las de ver clase se marcan solas cuando llegas al final del vídeo. ' +
-        'También puedes marcarlas tú.</p>' +
         '<ul class="checklist-items"></ul>' +
         '<p class="checklist-progreso"></p>';
       var lista = caja.querySelector(".checklist-items");
-
-      modulo.querySelectorAll(".leccion").forEach(function(leccion){
-        var nombre = leccion.querySelector(".leccion-name");
-        if(!nombre) return;
-        var id = idDeLeccion(leccion);
-        var li = document.createElement("li");
-        var label = document.createElement("label");
-        var box = document.createElement("input");
-        box.type = "checkbox";
-        var txt = document.createElement("span");
-        txt.textContent = "Ver «" + nombre.textContent.trim() + "»";
-        label.appendChild(box);
-        label.appendChild(txt);
-        if(id){
-          box.setAttribute("data-tarea", id);
-        }else{
-          // Todavía no hay vídeo que ver: la tarea se queda a la vista pero apagada.
-          box.disabled = true;
-          li.className = "pendiente";
-          var em = document.createElement("em");
-          em.textContent = "vídeo pendiente";
-          label.appendChild(em);
-        }
-        li.appendChild(label);
-        lista.appendChild(li);
-      });
 
       // Hueco para la tarea que Alba decida para cada módulo.
       var liExtra = document.createElement("li");
@@ -3604,6 +3600,11 @@
   }
 
   function pintarTareas(){
+    document.querySelectorAll(".leccion-visto[data-visto]").forEach(function(tik){
+      var visto = !!state.tareas[tik.getAttribute("data-visto")];
+      tik.classList.toggle("visto", visto);
+      tik.setAttribute("title", visto ? "Ya la has visto" : "Todavía sin ver");
+    });
     document.querySelectorAll(".checklist-items input[data-tarea]").forEach(function(box){
       box.checked = !!state.tareas[box.getAttribute("data-tarea")];
       box.closest("li").classList.toggle("hecha", box.checked);
@@ -3616,16 +3617,19 @@
     });
   }
 
+  construirTiks();
   construirChecklists();
 
   // Loom habla el protocolo player.js: le pedimos que nos avise al terminar
   // el vídeo y así la tarea se marca sola.
   function suscribirFinal(ventana){
-    try{
-      ventana.postMessage(JSON.stringify({
-        context: "player.js", version: "0.0.11", method: "addEventListener", value: "ended"
-      }), "*");
-    }catch(e){ /* el iframe aún no está listo: llegará otro ready */ }
+    ["ended", "timeupdate"].forEach(function(ev){
+      try{
+        ventana.postMessage(JSON.stringify({
+          context: "player.js", version: "0.0.11", method: "addEventListener", value: ev
+        }), "*");
+      }catch(e){ /* el iframe aún no está listo: llegará otro ready */ }
+    });
   }
 
   function tareaDelFrame(ventana){
@@ -3643,12 +3647,16 @@
     if(!d || d.context !== "player.js") return;
 
     if(d.event === "ready"){ suscribirFinal(e.source); return; }
-    if(d.event !== "ended") return;
+    if(d.event !== "ended" && d.event !== "timeupdate") return;
+
+    // Se da por vista en los últimos 5 segundos: nadie se queda a los créditos.
+    if(d.event === "timeupdate"){
+      var v = d.value || {};
+      if(!(v.duration > 0 && v.seconds >= v.duration - 5)) return;
+    }
 
     var id = tareaDelFrame(e.source);
     if(!id || state.tareas[id]) return;
-    var box = document.querySelector('.checklist-items input[data-tarea="' + id + '"]');
-    if(box) box.checked = true;
     marcarTarea(id, true);
   });
 
