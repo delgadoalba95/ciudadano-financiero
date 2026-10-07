@@ -261,7 +261,7 @@
     border: 1px solid var(--rule);
     border-radius: 4px;
     padding: 26px 28px;
-    max-width: 560px;
+    max-width: 680px;
     width: 100%;
     max-height: 88vh;
     overflow-y: auto;
@@ -277,6 +277,96 @@
     font-size: 1.1rem;
     font-weight: 700;
   }
+  /* Adjuntos: lo que se puede meter dentro del email. */
+  .adjuntos {
+    margin: 18px 0 16px;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 14px 16px;
+    background: var(--bg);
+  }
+  .adjuntos h4 {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent-strong);
+    margin-bottom: 3px;
+  }
+  .adjuntos .pie {
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    margin-bottom: 11px;
+  }
+  .adjuntos-botones { display: flex; flex-wrap: wrap; gap: 8px; }
+  .adjunto-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: "Public Sans", sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 7px 12px;
+    cursor: pointer;
+  }
+  .adjunto-btn:hover { border-color: var(--accent); color: var(--accent-strong); }
+  .adjunto-btn .code {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.74rem;
+    color: var(--ink-faint);
+  }
+  .adjuntos-fotos { margin-top: 11px; display: grid; gap: 7px; }
+  .foto-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+  }
+  .foto-chip img {
+    width: 38px; height: 38px; object-fit: cover;
+    border: 1px solid var(--rule); border-radius: 3px;
+  }
+  .foto-chip .nombre { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .adjuntos-aviso { margin-top: 10px; font-size: 0.8rem; color: var(--stamp); line-height: 1.45; }
+
+  /* Vista previa: el email tal y como va a llegar. */
+  .previa { margin-bottom: 16px; }
+  .previa-cabecera {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+    font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 5px;
+  }
+  .previa-marco {
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: #ffffff;
+    padding: 0;
+    overflow: hidden;
+  }
+  .previa-asunto {
+    padding: 11px 16px;
+    border-bottom: 1px solid #e6e6e6;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #1C2B42;
+    background: #f7f7f7;
+  }
+  .previa-cuerpo {
+    padding: 16px;
+    font-family: "Public Sans", Arial, sans-serif;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: #1C2B42;
+    max-height: 320px;
+    overflow-y: auto;
+    word-break: break-word;
+  }
+  .previa-cuerpo img { max-width: 100%; height: auto; }
+  .previa-vacia { color: #8a8a8a; font-style: italic; }
+
   .compose-field { margin-bottom: 14px; }
   .compose-field label {
     display: block;
@@ -572,9 +662,38 @@
       <input type="text" id="compose-subject" placeholder="Asunto del email">
     </div>
     <div class="compose-field">
-      <label for="compose-body">Mensaje (HTML permitido, usa {{nombre}} para el nombre de cada persona)</label>
-      <textarea id="compose-body" rows="10" placeholder="Hola {{nombre}},&#10;&#10;..."></textarea>
+      <label for="compose-body">Mensaje</label>
+      <textarea id="compose-body" rows="9" placeholder="Hola {{nombre}},&#10;&#10;..."></textarea>
     </div>
+
+    <div class="adjuntos">
+      <h4>Adjuntos</h4>
+      <p class="pie">Lo que puedes meter dentro del email. Se inserta donde tengas el cursor.</p>
+      <div class="adjuntos-botones">
+        <button type="button" class="adjunto-btn" id="adj-nombre">
+          Nombre de la persona <span class="code">{{nombre}}</span>
+        </button>
+        <button type="button" class="adjunto-btn" id="adj-enlace">Enlace</button>
+        <button type="button" class="adjunto-btn" id="adj-boton">Botón para pinchar</button>
+        <button type="button" class="adjunto-btn" id="adj-foto">Foto</button>
+        <button type="button" class="adjunto-btn" id="adj-negrita">Negrita</button>
+      </div>
+      <input type="file" id="adj-foto-input" accept="image/*" style="display:none;">
+      <div class="adjuntos-fotos" id="adjuntos-fotos"></div>
+      <div class="adjuntos-aviso" id="adjuntos-aviso" style="display:none;"></div>
+    </div>
+
+    <div class="previa">
+      <div class="previa-cabecera">
+        <span>Vista previa — así le llega</span>
+        <span id="previa-quien"></span>
+      </div>
+      <div class="previa-marco">
+        <div class="previa-asunto" id="previa-asunto">(sin asunto)</div>
+        <div class="previa-cuerpo" id="previa-cuerpo"><span class="previa-vacia">Escribe el mensaje y lo verás aquí tal cual.</span></div>
+      </div>
+    </div>
+
     <div id="compose-error" style="display:none;"></div>
     <div id="compose-success" style="display:none;"></div>
     <button class="btn" id="compose-send-btn">Enviar</button>
@@ -1066,10 +1185,167 @@
     document.getElementById("compose-error").style.display = "none";
     document.getElementById("compose-success").style.display = "none";
     composeBackdrop.classList.add("open");
+    pintarPrevia();
   });
   document.getElementById("compose-close-btn").addEventListener("click", () => {
     composeBackdrop.classList.remove("open");
   });
+
+
+  // ---------- Adjuntos y vista previa del email ----------
+  const BUCKET_FOTOS = "email-fotos";
+  const cuerpoEl = document.getElementById("compose-body");
+  const asuntoEl = document.getElementById("compose-subject");
+
+  // El cuerpo se manda tal cual, cambiando solo los saltos de línea por <br>.
+  // La previa usa esta misma función para que no haya sorpresas al enviar.
+  function cuerpoAHtml(texto) {
+    return texto.replace(/\n/g, "<br>");
+  }
+
+  function primerDestinatario() {
+    const c = allContacts.find(c => selectedContactIds.has(c.id));
+    return (c && c.name) ? c.name : "Nombre";
+  }
+
+  function pintarPrevia() {
+    const asunto = asuntoEl.value.trim();
+    const cuerpo = cuerpoEl.value.trim();
+    const quien = primerDestinatario();
+
+    document.getElementById("previa-asunto").textContent = asunto || "(sin asunto)";
+    document.getElementById("previa-quien").textContent =
+      selectedContactIds.size > 1 ? "con los datos de " + quien : "";
+
+    const caja = document.getElementById("previa-cuerpo");
+    if (!cuerpo) {
+      caja.innerHTML = '<span class="previa-vacia">Escribe el mensaje y lo verás aquí tal cual.</span>';
+      return;
+    }
+    caja.innerHTML = cuerpoAHtml(cuerpo).replace(/\{\{\s*nombre\s*\}\}/g, escapeHtml(quien));
+  }
+
+  // Mete texto donde esté el cursor, no al final.
+  function insertarEnCuerpo(texto, seleccionarDesde) {
+    const ini = cuerpoEl.selectionStart || 0;
+    const fin = cuerpoEl.selectionEnd || 0;
+    const antes = cuerpoEl.value.slice(0, ini);
+    const despues = cuerpoEl.value.slice(fin);
+    cuerpoEl.value = antes + texto + despues;
+    const cursor = seleccionarDesde === undefined ? ini + texto.length : ini + seleccionarDesde;
+    cuerpoEl.focus();
+    cuerpoEl.setSelectionRange(cursor, cursor);
+    pintarPrevia();
+  }
+
+  function avisoAdjuntos(texto, esError) {
+    const el = document.getElementById("adjuntos-aviso");
+    el.textContent = texto || "";
+    el.style.color = esError ? "var(--stamp)" : "var(--ink-soft)";
+    el.style.display = texto ? "block" : "none";
+  }
+
+  asuntoEl.addEventListener("input", pintarPrevia);
+  cuerpoEl.addEventListener("input", pintarPrevia);
+
+  document.getElementById("adj-nombre").addEventListener("click", () => {
+    insertarEnCuerpo("{{nombre}}");
+  });
+
+  document.getElementById("adj-negrita").addEventListener("click", () => {
+    const sel = cuerpoEl.value.slice(cuerpoEl.selectionStart, cuerpoEl.selectionEnd);
+    insertarEnCuerpo("<b>" + (sel || "texto en negrita") + "</b>", sel ? undefined : 3);
+  });
+
+  document.getElementById("adj-enlace").addEventListener("click", () => {
+    const url = prompt("¿A qué dirección lleva el enlace?", "https://ciudadanofinanciero.com");
+    if (!url) return;
+    const texto = prompt("¿Qué texto se ve?", "Entra aquí") || url;
+    insertarEnCuerpo('<a href="' + url + '">' + texto + '</a>');
+  });
+
+  document.getElementById("adj-boton").addEventListener("click", () => {
+    const url = prompt("¿A qué dirección lleva el botón?", "https://ciudadanofinanciero.com");
+    if (!url) return;
+    const texto = prompt("¿Qué pone en el botón?", "Quiero verlo") || "Quiero verlo";
+    // Estilos en línea: los clientes de email ignoran las hojas de estilo.
+    insertarEnCuerpo(
+      '<a href="' + url + '" style="display:inline-block;background:#8C6A1E;color:#FBF6E8;' +
+      'text-decoration:none;padding:12px 22px;border-radius:4px;font-weight:700;">' + texto + '</a>'
+    );
+  });
+
+  document.getElementById("adj-foto").addEventListener("click", () => {
+    document.getElementById("adj-foto-input").click();
+  });
+
+  document.getElementById("adj-foto-input").addEventListener("change", async (ev) => {
+    const file = ev.target.files && ev.target.files[0];
+    ev.target.value = "";
+    if (!file) return;
+
+    if (file.size > 3 * 1024 * 1024) {
+      avisoAdjuntos("Esa foto pesa " + Math.round(file.size / 1024 / 1024) +
+        " MB. Para un email conviene que no pase de 3 MB.", true);
+      return;
+    }
+    if (!currentAccessToken) {
+      avisoAdjuntos("Tu sesión no está lista todavía, recarga la página.", true);
+      return;
+    }
+
+    avisoAdjuntos("Subiendo la foto...", false);
+    try {
+      const url = await subirFoto(file);
+      insertarEnCuerpo('<img src="' + url + '" alt="" style="max-width:100%;height:auto;">');
+      anadirChipFoto(file, url);
+      avisoAdjuntos("", false);
+    } catch (e) {
+      avisoAdjuntos(e.message || "No se pudo subir la foto.", true);
+    }
+  });
+
+  // La foto se guarda en Supabase y se mete en el email como enlace: así se ve
+  // dentro del mensaje y no hay que adjuntar un archivo pesado.
+  async function subirFoto(file) {
+    const limpio = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-");
+    const ruta = Date.now() + "-" + limpio;
+    const res = await fetch(
+      window.SUPABASE_URL + "/storage/v1/object/" + BUCKET_FOTOS + "/" + encodeURIComponent(ruta), {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + currentAccessToken,
+          "apikey": window.SUPABASE_ANON_KEY,
+          "Content-Type": file.type || "application/octet-stream",
+          "x-upsert": "true"
+        },
+        body: file
+      });
+    if (!res.ok) {
+      let detalle = "";
+      try { detalle = (await res.json()).message || ""; } catch (e) {}
+      if (res.status === 404) {
+        throw new Error('Falta crear el almacén "' + BUCKET_FOTOS +
+          '" en Supabase (Storage → New bucket, marcándolo como público).');
+      }
+      throw new Error("No se pudo subir la foto. " + detalle);
+    }
+    return window.SUPABASE_URL + "/storage/v1/object/public/" + BUCKET_FOTOS + "/" + encodeURIComponent(ruta);
+  }
+
+  function anadirChipFoto(file, url) {
+    const caja = document.getElementById("adjuntos-fotos");
+    const fila = document.createElement("div");
+    fila.className = "foto-chip";
+    fila.innerHTML = '<img alt=""><span class="nombre"></span>' +
+      '<button type="button" class="adjunto-btn" style="padding:4px 9px;">Volver a insertar</button>';
+    fila.querySelector("img").src = url;
+    fila.querySelector(".nombre").textContent = file.name;
+    fila.querySelector("button").addEventListener("click", () => {
+      insertarEnCuerpo('<img src="' + url + '" alt="" style="max-width:100%;height:auto;">');
+    });
+    caja.appendChild(fila);
+  }
 
   document.getElementById("compose-send-btn").addEventListener("click", async () => {
     const subject = document.getElementById("compose-subject").value.trim();
@@ -1110,7 +1386,7 @@
           "Authorization": `Bearer ${currentAccessToken}`,
           "apikey": window.SUPABASE_ANON_KEY
         },
-        body: JSON.stringify({ contacts: recipients, subject, html: body.replace(/\n/g, "<br>") })
+        body: JSON.stringify({ contacts: recipients, subject, html: cuerpoAHtml(body) })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "No se pudo enviar.");
