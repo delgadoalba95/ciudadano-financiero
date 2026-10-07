@@ -451,6 +451,52 @@
     padding: 10px 12px;
   }
 
+  /* Comportamiento en la web */
+  .comp-bloque { margin-bottom: 26px; }
+  .comp-bloque h3 {
+    font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--accent-strong); margin-bottom: 4px;
+  }
+  .comp-bloque .pie { font-size: 0.8rem; color: var(--ink-faint); margin-bottom: 11px; }
+  .barras { display: grid; gap: 7px; }
+  .barra-fila { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+  .barra-et { font-size: 0.86rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .barra-et small { color: var(--ink-faint); }
+  .barra-val { font-family: "IBM Plex Mono", monospace; font-size: 0.8rem; color: var(--ink-soft); }
+  .barra-pista {
+    grid-column: 1 / -1; height: 7px; border-radius: 99px;
+    background: var(--surface); overflow: hidden;
+  }
+  .barra-relleno { height: 100%; background: var(--accent); border-radius: 99px; }
+  .barra-relleno.flojo { background: var(--stamp); }
+  .visita-row {
+    border: 1px solid var(--rule); border-radius: 4px;
+    padding: 12px 14px; margin-bottom: 8px; background: var(--surface-2);
+  }
+  .visita-cab {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline;
+    cursor: pointer; font-size: 0.86rem;
+  }
+  .visita-cab .cuando { font-weight: 600; }
+  .visita-cab .dato { color: var(--ink-faint); font-size: 0.8rem; }
+  .visita-detalle { margin-top: 11px; border-top: 1px solid var(--rule); padding-top: 11px; font-size: 0.84rem; }
+  .visita-detalle[hidden] { display: none; }
+  .visita-detalle ol { margin: 6px 0 0 18px; display: grid; gap: 4px; }
+  .visita-detalle .seg { font-family: "IBM Plex Mono", monospace; color: var(--ink-faint); font-size: 0.78rem; }
+  .comp-vacio { color: var(--ink-faint); font-size: 0.88rem; }
+
+  /* Emojis del redactor */
+  .emoji-caja {
+    margin-top: 10px; display: none; flex-wrap: wrap; gap: 4px;
+    border: 1px solid var(--rule); border-radius: 4px; padding: 9px; background: var(--surface-2);
+  }
+  .emoji-caja.open { display: flex; }
+  .emoji-caja button {
+    font-size: 1.15rem; line-height: 1; background: none; border: 0;
+    cursor: pointer; padding: 5px 6px; border-radius: 4px;
+  }
+  .emoji-caja button:hover { background: var(--bg); }
+
   .contact-list {
     display: flex;
     flex-direction: column;
@@ -563,6 +609,7 @@
     <div class="panel-tabs">
       <button class="panel-tab active" id="tab-btn-contacts">Contactos</button>
       <button class="panel-tab" id="tab-btn-emails">Emails enviados</button>
+      <button class="panel-tab" id="tab-btn-comportamiento">Comportamiento</button>
       <button class="panel-tab" id="tab-btn-alumnos">Alumnos</button>
     </div>
 
@@ -621,6 +668,55 @@
       <div class="contact-list" id="email-list"></div>
     </div>
 
+    <div id="tab-comportamiento" style="display:none;">
+      <div class="stats-row">
+        <div class="stat-card"><div class="num" id="comp-visitas">0</div><div class="label">Visitas</div></div>
+        <div class="stat-card"><div class="num" id="comp-tiempo">0s</div><div class="label">Tiempo medio</div></div>
+        <div class="stat-card"><div class="num" id="comp-scroll">0%</div><div class="label">Hasta dónde bajan</div></div>
+        <div class="stat-card"><div class="num" id="comp-apuntados">0</div><div class="label">Llegan al formulario</div></div>
+      </div>
+
+      <div id="comp-error" style="display:none;"></div>
+      <div id="comp-vacio" class="comp-vacio" style="display:none;">
+        Todavía no hay visitas medidas. Aparecerán aquí en cuanto alguien entre en la web.
+      </div>
+
+      <div id="comp-contenido" style="display:none;">
+        <div class="comp-bloque">
+          <h3>Hasta dónde bajan</h3>
+          <p class="pie">De cada 100 personas que entran, cuántas llegan a ver cada parte.</p>
+          <div class="barras" id="comp-secciones"></div>
+        </div>
+
+        <div class="comp-bloque">
+          <h3>Dónde hacen clic</h3>
+          <p class="pie">Lo que de verdad pulsan, ordenado de más a menos.</p>
+          <div class="barras" id="comp-clics"></div>
+        </div>
+
+        <div class="comp-bloque">
+          <h3>De dónde vienen</h3>
+          <div class="barras" id="comp-origen"></div>
+        </div>
+
+        <div class="comp-bloque">
+          <h3>Con qué entran</h3>
+          <div class="barras" id="comp-dispositivo"></div>
+        </div>
+
+        <div class="comp-bloque">
+          <h3>Visita a visita</h3>
+          <p class="pie">Las últimas 40. Pincha en una para ver qué hizo esa persona, en orden.</p>
+          <div id="comp-visitas-lista"></div>
+        </div>
+      </div>
+
+      <div class="comp-bloque" style="margin-top:8px;">
+        <button class="btn-outline" id="comp-no-medir">No medir mis propias visitas en este navegador</button>
+        <span id="comp-no-medir-estado" class="pie" style="margin-left:10px;"></span>
+      </div>
+    </div>
+
     <div id="tab-alumnos" style="display:none;">
       <div class="stats-row">
         <div class="stat-card">
@@ -677,7 +773,9 @@
         <button type="button" class="adjunto-btn" id="adj-boton">Botón para pinchar</button>
         <button type="button" class="adjunto-btn" id="adj-foto">Foto</button>
         <button type="button" class="adjunto-btn" id="adj-negrita">Negrita</button>
+        <button type="button" class="adjunto-btn" id="adj-emoji">Emoji</button>
       </div>
+      <div class="emoji-caja" id="emoji-caja"></div>
       <input type="file" id="adj-foto-input" accept="image/*" style="display:none;">
       <div class="adjuntos-fotos" id="adjuntos-fotos"></div>
       <div class="adjuntos-aviso" id="adjuntos-aviso" style="display:none;"></div>
@@ -831,16 +929,19 @@
   const tabBtnContacts = document.getElementById("tab-btn-contacts");
   const tabBtnEmails = document.getElementById("tab-btn-emails");
   const tabBtnAlumnos = document.getElementById("tab-btn-alumnos");
-  const allTabBtns = [tabBtnContacts, tabBtnEmails, tabBtnAlumnos];
+  const tabBtnComportamiento = document.getElementById("tab-btn-comportamiento");
+  const allTabBtns = [tabBtnContacts, tabBtnEmails, tabBtnComportamiento, tabBtnAlumnos];
   const allTabPanes = {
     contacts: document.getElementById("tab-contacts"),
     emails: document.getElementById("tab-emails"),
+    comportamiento: document.getElementById("tab-comportamiento"),
     alumnos: document.getElementById("tab-alumnos")
   };
   function activateTab(name) {
     allTabBtns.forEach(b => b.classList.remove("active"));
     Object.values(allTabPanes).forEach(p => p.style.display = "none");
-    ({ contacts: tabBtnContacts, emails: tabBtnEmails, alumnos: tabBtnAlumnos })[name].classList.add("active");
+    ({ contacts: tabBtnContacts, emails: tabBtnEmails, comportamiento: tabBtnComportamiento,
+       alumnos: tabBtnAlumnos })[name].classList.add("active");
     allTabPanes[name].style.display = "block";
   }
   tabBtnContacts.addEventListener("click", () => activateTab("contacts"));
@@ -848,6 +949,12 @@
     activateTab("emails");
     if (!emailsLoaded && currentAccessToken) {
       await loadEmailLogIntoDashboard(currentAccessToken);
+    }
+  });
+  tabBtnComportamiento.addEventListener("click", async () => {
+    activateTab("comportamiento");
+    if (!visitasCargadas && currentAccessToken) {
+      await cargarComportamiento(currentAccessToken);
     }
   });
   tabBtnAlumnos.addEventListener("click", async () => {
@@ -1192,6 +1299,191 @@
   });
 
 
+
+  // ---------- Comportamiento en la web ----------
+  let visitasCargadas = false;
+  let todasLasVisitas = [];
+
+  const SECCIONES_ORDEN = ["Portada", "Lista de espera", "El problema", "Programa",
+                           "Para quién es", "Precio", "Preguntas frecuentes", "Acceso alumnos"];
+
+  async function cargarComportamiento(access_token) {
+    const errorEl = document.getElementById("comp-error");
+    errorEl.style.display = "none";
+    try {
+      const res = await fetch(
+        `${window.SUPABASE_URL}/rest/v1/web_visitas?select=*&order=creado_en.desc&limit=2000`, {
+          headers: {
+            "apikey": window.SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${access_token}`
+          }
+        });
+      if (!res.ok) throw new Error("No se pudo cargar el comportamiento de la web.");
+      todasLasVisitas = await res.json();
+      visitasCargadas = true;
+      pintarComportamiento();
+    } catch (e) {
+      errorEl.textContent = e.message || "No se pudo cargar el comportamiento de la web.";
+      errorEl.style.display = "block";
+    }
+  }
+
+  function barra(etiqueta, valor, total, textoValor, flojo) {
+    const pct = total > 0 ? Math.round((valor / total) * 100) : 0;
+    const fila = document.createElement("div");
+    fila.className = "barra-fila";
+    fila.innerHTML =
+      '<div class="barra-et"></div>' +
+      '<div class="barra-val"></div>' +
+      '<div class="barra-pista"><div class="barra-relleno"></div></div>';
+    fila.querySelector(".barra-et").textContent = etiqueta;
+    fila.querySelector(".barra-val").textContent = textoValor !== undefined ? textoValor : pct + "%";
+    const relleno = fila.querySelector(".barra-relleno");
+    relleno.style.width = Math.max(pct, valor > 0 ? 2 : 0) + "%";
+    if (flojo) relleno.classList.add("flojo");
+    return fila;
+  }
+
+  function listaDeBarras(id, filas, total, flojoPorDebajo) {
+    const caja = document.getElementById(id);
+    caja.innerHTML = "";
+    if (!filas.length) {
+      caja.innerHTML = '<p class="comp-vacio">Todavía sin datos.</p>';
+      return;
+    }
+    filas.forEach(f => {
+      const pct = total > 0 ? Math.round((f.valor / total) * 100) : 0;
+      caja.appendChild(barra(f.etiqueta, f.valor, total, pct + "% · " + f.valor,
+        flojoPorDebajo !== undefined && pct < flojoPorDebajo));
+    });
+  }
+
+  function cuandoTexto(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString("es-ES", { day: "numeric", month: "short" }) + " · " +
+           d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+  }
+
+  function pintarComportamiento() {
+    const total = todasLasVisitas.length;
+    const vacio = document.getElementById("comp-vacio");
+    const contenido = document.getElementById("comp-contenido");
+    vacio.style.display = total ? "none" : "block";
+    contenido.style.display = total ? "block" : "none";
+
+    const segundos = todasLasVisitas.reduce((a, v) => a + (v.segundos || 0), 0);
+    const scrolls = todasLasVisitas.reduce((a, v) => a + (v.scroll_max || 0), 0);
+    const lleganAlForm = todasLasVisitas.filter(
+      v => (v.secciones || []).indexOf("Lista de espera") !== -1).length;
+
+    document.getElementById("comp-visitas").textContent = total;
+    document.getElementById("comp-tiempo").textContent =
+      total ? Math.round(segundos / total) + "s" : "0s";
+    document.getElementById("comp-scroll").textContent =
+      total ? Math.round(scrolls / total) + "%" : "0%";
+    document.getElementById("comp-apuntados").textContent =
+      total ? Math.round((lleganAlForm / total) * 100) + "%" : "0%";
+
+    if (!total) return;
+
+    // Hasta dónde bajan, por secciones y en el orden en que están en la web.
+    const porSeccion = {};
+    todasLasVisitas.forEach(v => (v.secciones || []).forEach(sec => {
+      porSeccion[sec] = (porSeccion[sec] || 0) + 1;
+    }));
+    const filasSec = SECCIONES_ORDEN
+      .filter(sec => porSeccion[sec] !== undefined)
+      .map(sec => ({ etiqueta: sec, valor: porSeccion[sec] }));
+    Object.keys(porSeccion).forEach(sec => {
+      if (SECCIONES_ORDEN.indexOf(sec) === -1) filasSec.push({ etiqueta: sec, valor: porSeccion[sec] });
+    });
+    listaDeBarras("comp-secciones", filasSec, total, 25);
+
+    // Dónde hacen clic.
+    const porClic = {};
+    todasLasVisitas.forEach(v => (v.clics || []).forEach(c => {
+      const clave = (c.etiqueta || "?") + " — " + (c.seccion || "");
+      porClic[clave] = (porClic[clave] || 0) + 1;
+    }));
+    const filasClic = Object.keys(porClic)
+      .map(k => ({ etiqueta: k, valor: porClic[k] }))
+      .sort((a, b) => b.valor - a.valor).slice(0, 15);
+    const maxClic = filasClic.length ? filasClic[0].valor : 0;
+    listaDeBarras("comp-clics", filasClic, maxClic);
+
+    agrupar("comp-origen", "origen", total);
+    agrupar("comp-dispositivo", "dispositivo", total);
+    pintarVisitas();
+  }
+
+  function agrupar(id, campo, total) {
+    const cuenta = {};
+    todasLasVisitas.forEach(v => {
+      const k = v[campo] || "desconocido";
+      cuenta[k] = (cuenta[k] || 0) + 1;
+    });
+    const filas = Object.keys(cuenta).map(k => ({ etiqueta: k, valor: cuenta[k] }))
+      .sort((a, b) => b.valor - a.valor);
+    listaDeBarras(id, filas, total);
+  }
+
+  function pintarVisitas() {
+    const caja = document.getElementById("comp-visitas-lista");
+    caja.innerHTML = "";
+    todasLasVisitas.slice(0, 40).forEach(v => {
+      const fila = document.createElement("div");
+      fila.className = "visita-row";
+      fila.innerHTML =
+        '<div class="visita-cab">' +
+          '<span class="cuando"></span>' +
+          '<span class="dato"></span>' +
+        '</div>' +
+        '<div class="visita-detalle" hidden></div>';
+      fila.querySelector(".cuando").textContent = cuandoTexto(v.creado_en);
+      fila.querySelector(".dato").textContent =
+        [v.dispositivo, "desde " + (v.origen || "?"), (v.segundos || 0) + "s",
+         "bajó al " + (v.scroll_max || 0) + "%",
+         "llegó a: " + (v.ultima_seccion || "—")].join(" · ");
+
+      const detalle = fila.querySelector(".visita-detalle");
+      const clics = v.clics || [];
+      detalle.innerHTML =
+        "<div><b>Secciones que vio:</b> " + escapeHtml((v.secciones || []).join(", ") || "ninguna") + "</div>" +
+        "<div style='margin-top:8px;'><b>Clics:</b></div>" +
+        (clics.length
+          ? "<ol>" + clics.map(c =>
+              "<li><span class='seg'>" + (c.segundo || 0) + "s</span> " +
+              escapeHtml(c.etiqueta || "?") +
+              " <span class='seg'>(" + escapeHtml(c.seccion || "") + ")</span></li>").join("") + "</ol>"
+          : "<div class='comp-vacio'>No pulsó nada.</div>");
+
+      fila.querySelector(".visita-cab").addEventListener("click", () => {
+        detalle.hidden = !detalle.hidden;
+      });
+      caja.appendChild(fila);
+    });
+  }
+
+  // Para que las visitas de Alba no ensucien los datos.
+  const noMedirBtn = document.getElementById("comp-no-medir");
+  function pintarNoMedir() {
+    let activo = false;
+    try { activo = !!localStorage.getItem("cf_no_medir"); } catch (e) {}
+    document.getElementById("comp-no-medir-estado").textContent =
+      activo ? "Tus visitas desde este navegador no se están midiendo." : "";
+    noMedirBtn.textContent = activo
+      ? "Volver a medir mis visitas en este navegador"
+      : "No medir mis propias visitas en este navegador";
+  }
+  noMedirBtn.addEventListener("click", () => {
+    try {
+      if (localStorage.getItem("cf_no_medir")) localStorage.removeItem("cf_no_medir");
+      else localStorage.setItem("cf_no_medir", "1");
+    } catch (e) {}
+    pintarNoMedir();
+  });
+  pintarNoMedir();
+
   // ---------- Adjuntos y vista previa del email ----------
   const BUCKET_FOTOS = "email-fotos";
   const cuerpoEl = document.getElementById("compose-body");
@@ -1273,6 +1565,26 @@
       '<a href="' + url + '" style="display:inline-block;background:#8C6A1E;color:#FBF6E8;' +
       'text-decoration:none;padding:12px 22px;border-radius:4px;font-weight:700;">' + texto + '</a>'
     );
+  });
+
+  // Emojis sueltos, los que se usan de verdad escribiendo a alumnas.
+  const EMOJIS = ("👋 🙂 😊 😉 🤩 🥳 🙌 👏 💪 🙏 👉 👇 ✨ 🔥 ⭐ ❤️ 💛 🎯 ✅ ❌ ⚠️ 💡 📌 📣 🚀 ⏰ 📅 🎁 " +
+    "💶 💸 📈 📉 🏠 🚐 🧾 🏦 📊 🎓 📚 📝 🎥 ▶️ 📩 ☕").split(" ");
+
+  (function montarEmojis() {
+    const caja = document.getElementById("emoji-caja");
+    EMOJIS.forEach(e => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = e;
+      b.title = "Insertar " + e;
+      b.addEventListener("click", () => insertarEnCuerpo(e));
+      caja.appendChild(b);
+    });
+  })();
+
+  document.getElementById("adj-emoji").addEventListener("click", () => {
+    document.getElementById("emoji-caja").classList.toggle("open");
   });
 
   document.getElementById("adj-foto").addEventListener("click", () => {

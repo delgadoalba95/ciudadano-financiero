@@ -865,7 +865,7 @@
 
 <main id="top">
 
-  <section class="hero" style="border-bottom:1px solid var(--rule); padding:0;">
+  <section class="hero" id="inicio" style="border-bottom:1px solid var(--rule); padding:0;">
     <div class="hero-inner">
       <div>
         <p class="eyebrow">Educación financiera para la vida real</p>
@@ -1118,6 +1118,9 @@
     <h3>¿Qué datos recogemos?</h3>
     <p>Tu nombre, email y número de WhatsApp si te apuntas a la lista de espera. Si eres alumna, guardamos además en tu cuenta el trabajo que haces en el área privada (tu balance, tu flujo de caja y el test de relación con el dinero).</p>
 
+    <h3>¿Medimos cómo se usa la web?</h3>
+    <p>Sí, de forma anónima y sin cookies. Guardamos qué secciones de la página se ven, hasta dónde se baja, cuánto tiempo se está y qué botones se pulsan, junto con si la visita llega desde un móvil o un ordenador. No guardamos tu dirección IP ni ningún dato que permita identificarte, y esa información no se cruza con la de la lista de espera. Solo nos sirve para saber qué partes de la web se entienden y cuáles no.</p>
+
     <h3>¿Para qué los usamos?</h3>
     <p>Para avisarte del lanzamiento del curso, enviarte contenido sobre educación financiera y responderte si nos escribes.</p>
 
@@ -1212,5 +1215,127 @@ document.querySelectorAll(".legal-modal-backdrop").forEach((backdrop) => {
     <path d="M16.02 3C9.4 3 4 8.4 4 15.02c0 2.23.62 4.35 1.7 6.16L3 29l8.02-2.63a12.9 12.9 0 0 0 5 .99h.01c6.62 0 12.02-5.4 12.02-12.02C28.05 8.4 22.64 3 16.02 3zm0 21.9h-.01a9.9 9.9 0 0 1-5.05-1.38l-.36-.21-3.76 1.23 1.23-3.66-.24-.38a9.85 9.85 0 0 1-1.52-5.28C6.31 9.98 10.6 5.69 16.02 5.69c2.63 0 5.1 1.03 6.96 2.89a9.76 9.76 0 0 1 2.88 6.94c0 5.42-4.3 9.68-9.84 9.68zm5.4-7.28c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.25-.46-2.38-1.47-.88-.78-1.47-1.75-1.65-2.05-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51-.17-.01-.37-.01-.57-.01-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.08 1.76-.72 2.01-1.42.25-.7.25-1.29.17-1.42-.07-.13-.27-.2-.57-.35z"/>
   </svg>
 </a>
+<script>
+// ---------- Medición anónima del comportamiento ----------
+// No se guarda IP, ni nombre, ni email, ni cookies: solo qué secciones se ven,
+// hasta dónde se baja y dónde se hace clic. Sirve para saber qué parte de la
+// página funciona y cuál no. Se manda una sola vez, al salir.
+(function () {
+  if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return;
+  try { if (localStorage.getItem("cf_no_medir")) return; } catch (e) {}
+
+  var NOMBRES = {
+    inicio: "Portada",
+    "lista-espera": "Lista de espera",
+    problema: "El problema",
+    programa: "Programa",
+    "para-quien": "Para quién es",
+    precio: "Precio",
+    faq: "Preguntas frecuentes",
+    acceso: "Acceso alumnos"
+  };
+
+  var inicio = Date.now();
+  var scrollMax = 0;
+  var vistas = [];
+  var clics = [];
+  var ultima = null;
+  var enviado = false;
+
+  function segundo() { return Math.round((Date.now() - inicio) / 1000); }
+
+  function dispositivo() {
+    return window.matchMedia("(max-width: 760px)").matches ? "móvil" : "ordenador";
+  }
+
+  function origen() {
+    if (!document.referrer) return "directo";
+    try {
+      var h = new URL(document.referrer).hostname.replace(/^www\./, "");
+      return h === location.hostname.replace(/^www\./, "") ? "la propia web" : h;
+    } catch (e) { return "desconocido"; }
+  }
+
+  function medirScroll() {
+    var alto = document.documentElement.scrollHeight - window.innerHeight;
+    var pct = alto > 0 ? Math.round((window.scrollY / alto) * 100) : 100;
+    if (pct > scrollMax) scrollMax = Math.min(100, pct);
+  }
+
+  window.addEventListener("scroll", medirScroll, { passive: true });
+  medirScroll();
+
+  // Qué secciones llega a ver de verdad, no solo por dónde pasa de largo.
+  if (window.IntersectionObserver) {
+    var obs = new IntersectionObserver(function (entradas) {
+      entradas.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var nombre = NOMBRES[e.target.id] || e.target.id;
+        ultima = nombre;
+        if (vistas.indexOf(nombre) === -1) vistas.push(nombre);
+      });
+    }, { threshold: 0.35 });
+    Object.keys(NOMBRES).forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) obs.observe(el);
+    });
+  }
+
+  function seccionDe(el) {
+    var s = el.closest("section[id]");
+    if (s) return NOMBRES[s.id] || s.id;
+    if (el.closest("header")) return "Barra de arriba";
+    return "Otro";
+  }
+
+  function etiquetaDe(el) {
+    var txt = (el.getAttribute("aria-label") || el.textContent || "").replace(/\s+/g, " ").trim();
+    if (!txt && el.tagName === "INPUT") txt = el.getAttribute("placeholder") || el.type;
+    return txt.slice(0, 70) || el.tagName.toLowerCase();
+  }
+
+  document.addEventListener("click", function (ev) {
+    var el = ev.target.closest("a, button, input, summary, [role=button]");
+    if (!el) return;
+    if (clics.length >= 40) return;
+    clics.push({ etiqueta: etiquetaDe(el), seccion: seccionDe(el), segundo: segundo() });
+  }, true);
+
+  function enviar() {
+    if (enviado) return;
+    enviado = true;
+    medirScroll();
+    var datos = {
+      pagina: location.pathname.replace(/^\//, "") || "index.html",
+      dispositivo: dispositivo(),
+      origen: origen(),
+      segundos: segundo(),
+      scroll_max: scrollMax,
+      ultima_seccion: ultima,
+      secciones: vistas,
+      clics: clics
+    };
+    try {
+      fetch(window.SUPABASE_URL + "/rest/v1/web_visitas", {
+        method: "POST",
+        keepalive: true,
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": window.SUPABASE_ANON_KEY,
+          "Authorization": "Bearer " + window.SUPABASE_ANON_KEY,
+          "Prefer": "return=minimal"
+        },
+        body: JSON.stringify(datos)
+      });
+    } catch (e) { /* si no se puede mandar, no pasa nada */ }
+  }
+
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") enviar();
+  });
+  window.addEventListener("pagehide", enviar);
+})();
+</script>
+
 </body>
 </html>
