@@ -499,6 +499,20 @@
   }
   .emoji-caja button:hover { background: var(--bg); }
 
+  .envio-fila { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .programar-caja {
+    display: none; margin-top: 12px; padding: 13px 15px;
+    border: 1px solid var(--rule); border-radius: 4px; background: var(--bg);
+  }
+  .programar-caja.open { display: block; }
+  .programar-caja label { display: block; font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 5px; }
+  .programar-fila { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .programar-caja input[type="datetime-local"] {
+    font-family: "Public Sans", sans-serif; font-size: 0.92rem; color: var(--ink);
+    background: var(--surface-2); border: 1px solid var(--rule); border-radius: 3px; padding: 9px 11px;
+  }
+  .programados-aviso { font-size: 0.8rem; color: var(--ink-faint); margin-top: 8px; }
+
   .contact-list {
     display: flex;
     flex-direction: column;
@@ -665,6 +679,13 @@
           <div class="label">Fallidos</div>
         </div>
       </div>
+      <div id="programados-bloque" style="display:none; margin-bottom:26px;">
+        <h3 style="font-size:0.82rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent-strong); margin-bottom:8px;">
+          Programados
+        </h3>
+        <div id="programados-lista"></div>
+      </div>
+
       <div id="email-load-error" style="display:none;"></div>
       <div id="email-empty-state" style="display:none;">Todavía no se ha enviado ningún email.</div>
       <div class="contact-list" id="email-list"></div>
@@ -804,7 +825,23 @@
 
     <div id="compose-error" style="display:none;"></div>
     <div id="compose-success" style="display:none;"></div>
-    <button class="btn" id="compose-send-btn">Enviar</button>
+
+    <div class="envio-fila">
+      <button class="btn" id="compose-send-btn">Enviar ahora</button>
+      <button class="btn-outline" id="compose-programar-btn">Programar envío</button>
+    </div>
+
+    <div class="programar-caja" id="programar-caja">
+      <label for="programar-fecha">¿Qué día y a qué hora quieres que salga?</label>
+      <div class="programar-fila">
+        <input type="datetime-local" id="programar-fecha">
+        <button class="btn" id="programar-confirmar" style="width:auto;">Programar</button>
+      </div>
+      <p class="programados-aviso">
+        Se manda solo a la hora que elijas, aunque no tengas el panel abierto. Puedes cancelarlo
+        hasta ese momento desde «Emails enviados».
+      </p>
+    </div>
   </div>
 </div>
 
@@ -957,8 +994,9 @@
   tabBtnContacts.addEventListener("click", () => activateTab("contacts"));
   tabBtnEmails.addEventListener("click", async () => {
     activateTab("emails");
-    if (!emailsLoaded && currentAccessToken) {
-      await loadEmailLogIntoDashboard(currentAccessToken);
+    if (currentAccessToken) {
+      if (!emailsLoaded) await loadEmailLogIntoDashboard(currentAccessToken);
+      if (!programadosCargados) await cargarProgramados(currentAccessToken);
     }
   });
   tabBtnComportamiento.addEventListener("click", async () => {
@@ -1302,6 +1340,7 @@
     document.getElementById("compose-error").style.display = "none";
     document.getElementById("compose-success").style.display = "none";
     composeBackdrop.classList.add("open");
+    document.getElementById("programar-caja").classList.remove("open");
     pintarPrevia();
   });
   document.getElementById("compose-close-btn").addEventListener("click", () => {
@@ -1309,6 +1348,138 @@
   });
 
 
+
+
+  // ---------- Programar el envío ----------
+  function destinatariosElegidos() {
+    return allContacts.filter(c => selectedContactIds.has(c.id))
+      .map(c => ({ id: c.id, email: c.email, name: c.name }));
+  }
+
+  document.getElementById("compose-programar-btn").addEventListener("click", () => {
+    const caja = document.getElementById("programar-caja");
+    caja.classList.toggle("open");
+    if (caja.classList.contains("open")) {
+      const fecha = document.getElementById("programar-fecha");
+      if (!fecha.value) {
+        // Por defecto, mañana a las 9:00: la hora a la que se suelen leer.
+        const d = new Date();
+        d.setDate(d.getDate() + 1);
+        d.setHours(9, 0, 0, 0);
+        fecha.value = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+          .toISOString().slice(0, 16);
+      }
+      fecha.focus();
+    }
+  });
+
+  document.getElementById("programar-confirmar").addEventListener("click", async () => {
+    const errorEl = document.getElementById("compose-error");
+    const successEl = document.getElementById("compose-success");
+    errorEl.style.display = "none";
+    successEl.style.display = "none";
+
+    const subject = asuntoEl.value.trim();
+    const body = cuerpoEl.value.trim();
+    const cuando = document.getElementById("programar-fecha").value;
+    const destinatarios = destinatariosElegidos();
+
+    function fallo(texto) {
+      errorEl.textContent = texto;
+      errorEl.style.display = "block";
+    }
+    if (!subject || !body) return fallo("Escribe un asunto y un mensaje.");
+    if (!destinatarios.length) return fallo("No hay destinatarios seleccionados.");
+    if (!cuando) return fallo("Elige el día y la hora.");
+    const fecha = new Date(cuando);
+    if (isNaN(fecha.getTime())) return fallo("Esa fecha no vale.");
+    if (fecha.getTime() <= Date.now()) return fallo("Esa hora ya ha pasado. Elige una futura.");
+    if (!currentAccessToken) return fallo("Tu sesión no está lista todavía, recarga la página.");
+
+    const btn = document.getElementById("programar-confirmar");
+    btn.disabled = true;
+    btn.textContent = "Programando...";
+    try {
+      const res = await fetch(`${window.SUPABASE_URL}/rest/v1/emails_programados`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": window.SUPABASE_ANON_KEY,
+          "Authorization": `Bearer ${currentAccessToken}`,
+          "Prefer": "return=minimal"
+        },
+        body: JSON.stringify({
+          enviar_en: fecha.toISOString(),
+          asunto: subject,
+          html: htmlParaEnviar(preheaderEl.value.trim(), body),
+          destinatarios: destinatarios
+        })
+      });
+      if (!res.ok) throw new Error("No se pudo programar el envío.");
+      successEl.textContent = "Programado para el " + fechaLarga(fecha) +
+        " · " + destinatarios.length + " destinatarios.";
+      successEl.style.display = "block";
+      document.getElementById("programar-caja").classList.remove("open");
+      programadosCargados = false;
+    } catch (e) {
+      fallo(e.message || "No se pudo programar el envío.");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Programar";
+    }
+  });
+
+  function fechaLarga(d) {
+    return d.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" }) +
+           " a las " + d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+  }
+
+  let programadosCargados = false;
+
+  async function cargarProgramados(access_token) {
+    const bloque = document.getElementById("programados-bloque");
+    const lista = document.getElementById("programados-lista");
+    try {
+      const res = await fetch(
+        `${window.SUPABASE_URL}/rest/v1/emails_programados?select=id,enviar_en,asunto,destinatarios,estado&estado=eq.programado&order=enviar_en.asc`, {
+          headers: {
+            "apikey": window.SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${access_token}`
+          }
+        });
+      if (!res.ok) throw new Error("no");
+      const filas = await res.json();
+      programadosCargados = true;
+      bloque.style.display = filas.length ? "block" : "none";
+      lista.innerHTML = "";
+      filas.forEach(f => {
+        const fila = document.createElement("div");
+        fila.className = "email-row";
+        fila.innerHTML =
+          '<div><div class="subject"></div><div class="meta"></div></div>' +
+          '<button class="btn-outline" style="padding:6px 12px; font-size:0.78rem;">Cancelar</button>';
+        fila.querySelector(".subject").textContent = f.asunto;
+        fila.querySelector(".meta").textContent =
+          "Sale el " + fechaLarga(new Date(f.enviar_en)) +
+          " · " + (f.destinatarios || []).length + " destinatarios";
+        fila.querySelector("button").addEventListener("click", async () => {
+          if (!confirm("¿Cancelar este envío programado?")) return;
+          await fetch(`${window.SUPABASE_URL}/rest/v1/emails_programados?id=eq.${f.id}`, {
+            method: "DELETE",
+            headers: {
+              "apikey": window.SUPABASE_ANON_KEY,
+              "Authorization": `Bearer ${access_token}`
+            }
+          });
+          programadosCargados = false;
+          await cargarProgramados(access_token);
+        });
+        lista.appendChild(fila);
+      });
+    } catch (e) {
+      bloque.style.display = "none";
+    }
+  }
 
   // ---------- Comportamiento en la web ----------
   let visitasCargadas = false;
@@ -1646,13 +1817,33 @@
     avisoAdjuntos("Subiendo la foto...", false);
     try {
       const url = await subirFoto(file);
-      insertarEnCuerpo('<img src="' + url + '" alt="" style="max-width:100%;height:auto;">');
+      const medidas = await medirFoto(file);
+      insertarEnCuerpo(etiquetaImagen(url, medidas));
       anadirChipFoto(file, url);
       avisoAdjuntos("", false);
     } catch (e) {
       avisoAdjuntos(e.message || "No se pudo subir la foto.", true);
     }
   });
+
+  function medirFoto(file) {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => resolve({ ancho: img.naturalWidth, alto: img.naturalHeight });
+      img.onerror = () => resolve(null);
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  // Una captura de móvil es mucho más alta que ancha: a todo lo ancho del email
+  // tapa el mensaje entero. Se deja al tamaño de un móvil y centrada.
+  function etiquetaImagen(url, medidas) {
+    const vertical = medidas && medidas.alto > medidas.ancho * 1.2;
+    const estilo = vertical
+      ? "display:block;margin:12px auto;width:100%;max-width:300px;height:auto;border-radius:10px;"
+      : "display:block;margin:12px auto;max-width:100%;height:auto;";
+    return '<img src="' + url + '" alt="" style="' + estilo + '">';
+  }
 
   // La foto se guarda en Supabase y se mete en el email como enlace: así se ve
   // dentro del mensaje y no hay que adjuntar un archivo pesado.
@@ -1690,8 +1881,8 @@
       '<button type="button" class="adjunto-btn" style="padding:4px 9px;">Volver a insertar</button>';
     fila.querySelector("img").src = url;
     fila.querySelector(".nombre").textContent = file.name;
-    fila.querySelector("button").addEventListener("click", () => {
-      insertarEnCuerpo('<img src="' + url + '" alt="" style="max-width:100%;height:auto;">');
+    fila.querySelector("button").addEventListener("click", async () => {
+      insertarEnCuerpo(etiquetaImagen(url, await medirFoto(file)));
     });
     caja.appendChild(fila);
   }
