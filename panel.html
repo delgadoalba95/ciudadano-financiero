@@ -350,10 +350,12 @@
     padding: 11px 16px;
     border-bottom: 1px solid #e6e6e6;
     font-size: 0.88rem;
-    font-weight: 700;
     color: #1C2B42;
     background: #f7f7f7;
   }
+  .previa-asunto .asunto { font-weight: 700; }
+  .previa-asunto .preheader { color: #777; }
+  .previa-asunto .preheader::before { content: " — "; }
   .previa-cuerpo {
     padding: 16px;
     font-family: "Public Sans", Arial, sans-serif;
@@ -758,6 +760,14 @@
       <input type="text" id="compose-subject" placeholder="Asunto del email">
     </div>
     <div class="compose-field">
+      <label for="compose-preheader">
+        Texto de vista previa — lo que se lee en la bandeja de entrada, al lado del asunto
+      </label>
+      <input type="text" id="compose-preheader" maxlength="140"
+             placeholder="Dentro tienes la primera clase y el calendario de las siguientes">
+      <p class="pie" id="preheader-cuenta" style="font-size:0.76rem;color:var(--ink-faint);margin-top:4px;"></p>
+    </div>
+    <div class="compose-field">
       <label for="compose-body">Mensaje</label>
       <textarea id="compose-body" rows="9" placeholder="Hola {{nombre}},&#10;&#10;..."></textarea>
     </div>
@@ -783,11 +793,11 @@
 
     <div class="previa">
       <div class="previa-cabecera">
-        <span>Vista previa — así le llega</span>
+        <span>Vista previa — arriba, la bandeja de entrada</span>
         <span id="previa-quien"></span>
       </div>
       <div class="previa-marco">
-        <div class="previa-asunto" id="previa-asunto">(sin asunto)</div>
+        <div class="previa-asunto" id="previa-asunto"></div>
         <div class="previa-cuerpo" id="previa-cuerpo"><span class="previa-vacia">Escribe el mensaje y lo verás aquí tal cual.</span></div>
       </div>
     </div>
@@ -1488,11 +1498,26 @@
   const BUCKET_FOTOS = "email-fotos";
   const cuerpoEl = document.getElementById("compose-body");
   const asuntoEl = document.getElementById("compose-subject");
+  const preheaderEl = document.getElementById("compose-preheader");
 
   // El cuerpo se manda tal cual, cambiando solo los saltos de línea por <br>.
   // La previa usa esta misma función para que no haya sorpresas al enviar.
   function cuerpoAHtml(texto) {
     return texto.replace(/\n/g, "<br>");
+  }
+
+  // El texto de vista previa va escondido al principio del email: los gestores
+  // de correo lo leen para la bandeja de entrada, pero no se ve al abrirlo.
+  // El relleno de después evita que, si es corto, la bandeja siga con el
+  // principio del mensaje.
+  function htmlParaEnviar(preheader, cuerpo) {
+    const html = cuerpoAHtml(cuerpo);
+    const texto = (preheader || "").trim();
+    if (!texto) return html;
+    const oculto = "display:none;max-height:0;overflow:hidden;mso-hide:all;";
+    const relleno = "&#847;&zwnj;&nbsp;".repeat(60);
+    return '<div style="' + oculto + '">' + escapeHtml(texto) + "</div>" +
+           '<div style="' + oculto + '">' + relleno + "</div>" + html;
   }
 
   function primerDestinatario() {
@@ -1503,9 +1528,20 @@
   function pintarPrevia() {
     const asunto = asuntoEl.value.trim();
     const cuerpo = cuerpoEl.value.trim();
+    const pre = preheaderEl.value.trim();
     const quien = primerDestinatario();
 
-    document.getElementById("previa-asunto").textContent = asunto || "(sin asunto)";
+    const conNombre = t => t.replace(/\{\{\s*nombre\s*\}\}/g, quien);
+    const cabecera = document.getElementById("previa-asunto");
+    cabecera.innerHTML = '<span class="asunto"></span><span class="preheader"></span>';
+    cabecera.querySelector(".asunto").textContent = asunto ? conNombre(asunto) : "(sin asunto)";
+    const span = cabecera.querySelector(".preheader");
+    if (pre) span.textContent = conNombre(pre); else span.remove();
+
+    const cuenta = document.getElementById("preheader-cuenta");
+    cuenta.textContent = pre
+      ? pre.length + " caracteres · en el móvil se suelen leer los primeros 40"
+      : "Si lo dejas vacío, la bandeja de entrada enseñará el principio del mensaje.";
     document.getElementById("previa-quien").textContent =
       selectedContactIds.size > 1 ? "con los datos de " + quien : "";
 
@@ -1538,6 +1574,7 @@
   }
 
   asuntoEl.addEventListener("input", pintarPrevia);
+  preheaderEl.addEventListener("input", pintarPrevia);
   cuerpoEl.addEventListener("input", pintarPrevia);
 
   document.getElementById("adj-nombre").addEventListener("click", () => {
@@ -1661,6 +1698,7 @@
 
   document.getElementById("compose-send-btn").addEventListener("click", async () => {
     const subject = document.getElementById("compose-subject").value.trim();
+    const preheader = document.getElementById("compose-preheader").value.trim();
     const body = document.getElementById("compose-body").value.trim();
     const errorEl = document.getElementById("compose-error");
     const successEl = document.getElementById("compose-success");
@@ -1698,7 +1736,7 @@
           "Authorization": `Bearer ${currentAccessToken}`,
           "apikey": window.SUPABASE_ANON_KEY
         },
-        body: JSON.stringify({ contacts: recipients, subject, html: cuerpoAHtml(body) })
+        body: JSON.stringify({ contacts: recipients, subject, html: htmlParaEnviar(preheader, body) })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "No se pudo enviar.");
