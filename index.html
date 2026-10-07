@@ -1256,33 +1256,34 @@ document.querySelectorAll(".legal-modal-backdrop").forEach((backdrop) => {
     } catch (e) { return "desconocido"; }
   }
 
+  var SECCIONES = Object.keys(NOMBRES)
+    .map(function (id) { return { id: id, nombre: NOMBRES[id], el: document.getElementById(id) }; })
+    .filter(function (s) { return !!s.el; });
+
   function medirScroll() {
     var alto = document.documentElement.scrollHeight - window.innerHeight;
     var pct = alto > 0 ? Math.round((window.scrollY / alto) * 100) : 100;
     if (pct > scrollMax) scrollMax = Math.min(100, pct);
+    medirSecciones();
+  }
+
+  // Una sección cuenta como vista cuando cruza la mitad de la pantalla. Se
+  // calcula con la posición, no con IntersectionObserver, porque las secciones
+  // más altas que la pantalla no llegan nunca a un porcentaje de visibilidad.
+  function medirSecciones() {
+    var medio = window.innerHeight / 2;
+    SECCIONES.forEach(function (s) {
+      var r = s.el.getBoundingClientRect();
+      if (r.top <= medio && r.bottom >= medio) {
+        ultima = s.nombre;
+        if (vistas.indexOf(s.nombre) === -1) vistas.push(s.nombre);
+      }
+    });
   }
 
   window.addEventListener("scroll", medirScroll, { passive: true });
+  window.addEventListener("resize", medirScroll);
   medirScroll();
-
-  // Qué secciones llega a ver de verdad, no solo por dónde pasa de largo.
-  if (window.IntersectionObserver) {
-    var obs = new IntersectionObserver(function (entradas) {
-      entradas.forEach(function (e) {
-        if (!e.isIntersecting) return;
-        var nombre = NOMBRES[e.target.id] || e.target.id;
-        ultima = nombre;
-        if (vistas.indexOf(nombre) === -1) vistas.push(nombre);
-      });
-      // Se cuenta como vista cuando la sección pasa por el centro de la
-      // pantalla. Con un porcentaje del elemento no valdría: las secciones
-      // más altas que la pantalla nunca llegarían a cumplirlo.
-    }, { rootMargin: "-45% 0px -45% 0px", threshold: 0 });
-    Object.keys(NOMBRES).forEach(function (id) {
-      var el = document.getElementById(id);
-      if (el) obs.observe(el);
-    });
-  }
 
   function seccionDe(el) {
     var s = el.closest("section[id]");
