@@ -23,10 +23,11 @@ create index if not exists emails_programados_pendientes_idx
 
 alter table public.emails_programados enable row level security;
 
--- Solo desde el panel.
+-- Solo Alba: las alumnas también tienen cuenta, así que "authenticated" a
+-- secas les dejaría programar envíos a cualquier dirección.
 drop policy if exists "emails_programados_admin" on public.emails_programados;
 create policy "emails_programados_admin" on public.emails_programados
-  for all to authenticated using (true) with check (true);
+  for all to authenticated using (is_admin()) with check (is_admin());
 
 grant select, insert, update, delete on public.emails_programados to authenticated;
 

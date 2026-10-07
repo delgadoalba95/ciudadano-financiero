@@ -11,16 +11,29 @@ insert into storage.buckets (id, name, public)
 values ('email-fotos', 'email-fotos', true)
 on conflict (id) do update set public = true;
 
--- Subir fotos: solo quien ha entrado en el panel.
+-- Subir, ver y borrar fotos: solo Alba. Ojo: las alumnas también tienen cuenta
+-- de Supabase, así que "authenticated" a secas las incluiría a todas.
+-- El servicio de Storage necesita el select para poder subir: sin él la subida
+-- falla con "new row violates row-level security policy".
 drop policy if exists "email_fotos_sube_admin" on storage.objects;
 create policy "email_fotos_sube_admin" on storage.objects
   for insert to authenticated
-  with check (bucket_id = 'email-fotos');
+  with check (bucket_id = 'email-fotos' and is_admin());
 
 drop policy if exists "email_fotos_actualiza_admin" on storage.objects;
 create policy "email_fotos_actualiza_admin" on storage.objects
   for update to authenticated
-  using (bucket_id = 'email-fotos');
+  using (bucket_id = 'email-fotos' and is_admin());
+
+drop policy if exists "email_fotos_lee_admin" on storage.objects;
+create policy "email_fotos_lee_admin" on storage.objects
+  for select to authenticated
+  using (bucket_id = 'email-fotos' and is_admin());
+
+drop policy if exists "email_fotos_borra_admin" on storage.objects;
+create policy "email_fotos_borra_admin" on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'email-fotos' and is_admin());
 
 -- Verlas no necesita política: al ser un bucket público, la URL
 -- .../object/public/email-fotos/... sirve el archivo sin pasar por RLS.
@@ -52,11 +65,11 @@ create policy "web_visitas_inserta_cualquiera" on public.web_visitas
   for insert to anon, authenticated
   with check (true);
 
--- Leerlas, solo desde el panel.
+-- Leerlas, solo Alba.
 drop policy if exists "web_visitas_lee_admin" on public.web_visitas;
 create policy "web_visitas_lee_admin" on public.web_visitas
   for select to authenticated
-  using (true);
+  using (is_admin());
 
 grant insert on public.web_visitas to anon, authenticated;
 grant select on public.web_visitas to authenticated;
