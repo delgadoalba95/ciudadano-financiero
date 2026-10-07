@@ -22,11 +22,11 @@ create policy "email_fotos_actualiza_admin" on storage.objects
   for update to authenticated
   using (bucket_id = 'email-fotos');
 
--- Verlas: cualquiera, porque el email las carga desde fuera.
+-- Verlas no necesita política: al ser un bucket público, la URL
+-- .../object/public/email-fotos/... sirve el archivo sin pasar por RLS.
+-- Dar un select abierto sobre storage.objects dejaría además que cualquiera
+-- listase todos los archivos del almacén, así que no se pone.
 drop policy if exists "email_fotos_lee_todos" on storage.objects;
-create policy "email_fotos_lee_todos" on storage.objects
-  for select to public
-  using (bucket_id = 'email-fotos');
 
 -- ---------- 2. Comportamiento en la web ----------
 create table if not exists public.web_visitas (
