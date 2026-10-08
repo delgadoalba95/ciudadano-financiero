@@ -1153,6 +1153,26 @@
     renderContacts();
   }
 
+  // Las alumnas también tienen cuenta de Supabase. Aunque la base de datos no
+  // les deja ver nada del panel, aquí se les cierra la puerta directamente.
+  async function esAdmin(access_token) {
+    try {
+      const res = await fetch(`${window.SUPABASE_URL}/rest/v1/rpc/is_admin`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": window.SUPABASE_ANON_KEY,
+          "Authorization": `Bearer ${access_token}`
+        },
+        body: "{}"
+      });
+      if (!res.ok) return false;
+      return (await res.json()) === true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   async function boot() {
     const session = loadSession();
     if (!session) { showLogin(); return; }
@@ -1174,6 +1194,11 @@
         return;
       }
     }
+    if (!(await esAdmin(access_token))) {
+      clearSession();
+      showLogin("Esta cuenta no tiene acceso al panel.");
+      return;
+    }
     await loadContactsIntoDashboard(access_token);
   }
 
@@ -1183,6 +1208,9 @@
     loginBtn.textContent = "Entrando...";
     try {
       const session = await login(loginEmail.value.trim(), loginPassword.value);
+      if (!(await esAdmin(session.access_token))) {
+        throw new Error("Esta cuenta no tiene acceso al panel.");
+      }
       saveSession(session);
       showDashboard();
       await loadContactsIntoDashboard(session.access_token);
