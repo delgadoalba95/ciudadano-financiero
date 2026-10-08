@@ -551,6 +551,7 @@
   }
   .badge-waitlist { background: var(--surface); color: var(--accent-strong); }
   .badge-test { background: var(--good-bg); color: var(--good); }
+  .badge-pendiente { background: var(--surface); color: var(--accent-strong); }
   .contact-date {
     font-family: "IBM Plex Mono", monospace;
     font-size: 0.72rem;
@@ -691,10 +692,14 @@
           <div class="num" id="stat-emails-failed">0</div>
           <div class="label">Fallidos</div>
         </div>
+        <div class="stat-card">
+          <div class="num" id="stat-emails-pendientes">0</div>
+          <div class="label">Pendientes</div>
+        </div>
       </div>
       <div id="programados-bloque" style="display:none; margin-bottom:26px;">
         <h3 style="font-size:0.82rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent-strong); margin-bottom:8px;">
-          Programados
+          Pendientes de enviar
         </h3>
         <div id="programados-lista"></div>
       </div>
@@ -839,20 +844,15 @@
     <div id="compose-error" style="display:none;"></div>
     <div id="compose-success" style="display:none;"></div>
 
-    <div class="envio-fila">
-      <button class="btn" id="compose-send-btn">Enviar ahora</button>
-      <button class="btn-outline" id="compose-programar-btn">Programar envío</button>
-    </div>
-
-    <div class="programar-caja" id="programar-caja">
+    <div class="programar-caja open" id="programar-caja">
       <label for="programar-fecha">¿Qué día y a qué hora quieres que salga?</label>
       <div class="programar-fila">
         <input type="datetime-local" id="programar-fecha">
-        <button class="btn" id="programar-confirmar" style="width:auto;">Programar</button>
+        <button class="btn" id="programar-confirmar" style="width:auto;">Programar envío</button>
       </div>
       <p class="programados-aviso">
-        Se manda solo a la hora que elijas, aunque no tengas el panel abierto. Puedes cancelarlo
-        hasta ese momento desde «Emails enviados».
+        Sale solo a esa hora, aunque tengas el panel cerrado. Si lo quieres mandar ya, pon la hora
+        de dentro de un par de minutos. Hasta que salga puedes cancelarlo desde «Emails enviados».
       </p>
     </div>
   </div>
@@ -1412,7 +1412,14 @@
     document.getElementById("compose-error").style.display = "none";
     document.getElementById("compose-success").style.display = "none";
     composeBackdrop.classList.add("open");
-    document.getElementById("programar-caja").classList.remove("open");
+    const fecha = document.getElementById("programar-fecha");
+    if (!fecha.value) {
+      // Por defecto, mañana a las 9:00: la hora a la que se suelen leer.
+      const d = new Date();
+      d.setDate(d.getDate() + 1);
+      d.setHours(9, 0, 0, 0);
+      fecha.value = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    }
     pintarPrevia();
   });
   document.getElementById("compose-close-btn").addEventListener("click", () => {
@@ -1427,23 +1434,6 @@
     return allContacts.filter(c => selectedContactIds.has(c.id))
       .map(c => ({ id: c.id, email: c.email, name: primerNombre(c.name) }));
   }
-
-  document.getElementById("compose-programar-btn").addEventListener("click", () => {
-    const caja = document.getElementById("programar-caja");
-    caja.classList.toggle("open");
-    if (caja.classList.contains("open")) {
-      const fecha = document.getElementById("programar-fecha");
-      if (!fecha.value) {
-        // Por defecto, mañana a las 9:00: la hora a la que se suelen leer.
-        const d = new Date();
-        d.setDate(d.getDate() + 1);
-        d.setHours(9, 0, 0, 0);
-        fecha.value = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-          .toISOString().slice(0, 16);
-      }
-      fecha.focus();
-    }
-  });
 
   document.getElementById("programar-confirmar").addEventListener("click", async () => {
     const errorEl = document.getElementById("compose-error");
@@ -1491,7 +1481,6 @@
       successEl.textContent = "Programado para el " + fechaLarga(fecha) +
         " · " + destinatarios.length + " destinatarios.";
       successEl.style.display = "block";
-      document.getElementById("programar-caja").classList.remove("open");
       programadosCargados = false;
     } catch (e) {
       fallo(e.message || "No se pudo programar el envío.");
@@ -1522,6 +1511,7 @@
       if (!res.ok) throw new Error("no");
       const filas = await res.json();
       programadosCargados = true;
+      document.getElementById("stat-emails-pendientes").textContent = filas.length;
       bloque.style.display = filas.length ? "block" : "none";
       lista.innerHTML = "";
       filas.forEach(f => {
@@ -1529,7 +1519,10 @@
         fila.className = "email-row";
         fila.innerHTML =
           '<div><div class="subject"></div><div class="meta"></div></div>' +
-          '<button class="btn-outline" style="padding:6px 12px; font-size:0.78rem;">Cancelar</button>';
+          '<div style="display:flex; align-items:center; gap:10px;">' +
+            '<span class="badge badge-pendiente">Pendiente</span>' +
+            '<button class="btn-outline" style="padding:6px 12px; font-size:0.78rem;">Cancelar</button>' +
+          '</div>';
         fila.querySelector(".subject").textContent = f.asunto;
         fila.querySelector(".meta").textContent =
           "Sale el " + fechaLarga(new Date(f.enviar_en)) +
@@ -1972,66 +1965,6 @@
     });
     caja.appendChild(fila);
   }
-
-  document.getElementById("compose-send-btn").addEventListener("click", async () => {
-    const subject = document.getElementById("compose-subject").value.trim();
-    const preheader = document.getElementById("compose-preheader").value.trim();
-    const body = document.getElementById("compose-body").value.trim();
-    const errorEl = document.getElementById("compose-error");
-    const successEl = document.getElementById("compose-success");
-    errorEl.style.display = "none";
-    successEl.style.display = "none";
-
-    if (!subject || !body) {
-      errorEl.textContent = "Escribe un asunto y un mensaje.";
-      errorEl.style.display = "block";
-      return;
-    }
-    if (selectedContactIds.size === 0) {
-      errorEl.textContent = "No hay destinatarios seleccionados.";
-      errorEl.style.display = "block";
-      return;
-    }
-    if (!currentAccessToken) {
-      errorEl.textContent = "Tu sesión no está lista todavía, recarga la página.";
-      errorEl.style.display = "block";
-      return;
-    }
-
-    const recipients = allContacts.filter(c => selectedContactIds.has(c.id))
-      .map(c => ({ id: c.id, email: c.email, name: primerNombre(c.name) }));
-
-    const sendBtn = document.getElementById("compose-send-btn");
-    sendBtn.disabled = true;
-    sendBtn.textContent = "Enviando...";
-
-    try {
-      const res = await fetch(`${window.SUPABASE_URL}/functions/v1/send-manual-email`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${currentAccessToken}`,
-          "apikey": window.SUPABASE_ANON_KEY
-        },
-        body: JSON.stringify({ contacts: recipients, subject, html: htmlParaEnviar(preheader, body) })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "No se pudo enviar.");
-
-      successEl.textContent = `Enviado: ${data.sent} · Fallidos: ${data.failed}`;
-      successEl.style.display = "block";
-      emailsLoaded = false;
-      if (document.getElementById("tab-emails").style.display === "block") {
-        await loadEmailLogIntoDashboard(currentAccessToken);
-      }
-    } catch (e) {
-      errorEl.textContent = e.message || "No se pudo enviar el email.";
-      errorEl.style.display = "block";
-    } finally {
-      sendBtn.disabled = false;
-      sendBtn.textContent = "Enviar";
-    }
-  });
 
   boot();
 })();
