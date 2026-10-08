@@ -72,7 +72,7 @@
   .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; }
 
   /* ---------- Login screen ---------- */
-  #login-screen {
+  #login-screen, #unavailable-screen {
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -613,6 +613,19 @@
   </div>
 </div>
 
+<div id="unavailable-screen" style="display:none;">
+  <div class="login-card">
+    <div class="eyebrow">Ciudadano Financiero</div>
+    <h1>No disponible</h1>
+    <p style="font-size:0.92rem; color:var(--ink-soft); line-height:1.5; margin-top:10px;">
+      Esta página no está disponible para tu cuenta.
+    </p>
+    <a class="btn" href="/alumno.html" style="display:block; text-align:center; text-decoration:none; margin-top:18px;">
+      Ir a tu área de alumna
+    </a>
+  </div>
+</div>
+
 <div id="dashboard">
   <header class="panel-header">
     <div class="panel-header-inner">
@@ -908,12 +921,23 @@
     return res.json();
   }
 
+  const unavailableScreen = document.getElementById("unavailable-screen");
+
   function showDashboard() {
     loginScreen.style.display = "none";
+    unavailableScreen.style.display = "none";
     dashboard.style.display = "block";
+  }
+
+  // Para quien no es Alba: ni formulario, ni pista de que esto exista.
+  function showUnavailable() {
+    dashboard.style.display = "none";
+    loginScreen.style.display = "none";
+    unavailableScreen.style.display = "flex";
   }
   function showLogin(message) {
     dashboard.style.display = "none";
+    unavailableScreen.style.display = "none";
     loginScreen.style.display = "flex";
     if (message) {
       loginError.textContent = message;
@@ -1173,9 +1197,28 @@
     }
   }
 
+  // Las alumnas entran en alumno.html con otra sesión, guardada en el mismo
+  // navegador. Si hay una y no es admin, esto no es para ella.
+  async function sesionDeAlumna() {
+    try {
+      const s = JSON.parse(localStorage.getItem("cf_alumno_session") || "null");
+      return s && s.access_token ? s.access_token : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   async function boot() {
     const session = loadSession();
-    if (!session) { showLogin(); return; }
+    if (!session) {
+      const tokenAlumna = await sesionDeAlumna();
+      if (tokenAlumna && !(await esAdmin(tokenAlumna))) {
+        showUnavailable();
+        return;
+      }
+      showLogin();
+      return;
+    }
 
     showDashboard();
     let access_token = session.access_token;
@@ -1196,7 +1239,7 @@
     }
     if (!(await esAdmin(access_token))) {
       clearSession();
-      showLogin("Esta cuenta no tiene acceso al panel.");
+      showUnavailable();
       return;
     }
     await loadContactsIntoDashboard(access_token);
@@ -1209,7 +1252,8 @@
     try {
       const session = await login(loginEmail.value.trim(), loginPassword.value);
       if (!(await esAdmin(session.access_token))) {
-        throw new Error("Esta cuenta no tiene acceso al panel.");
+        showUnavailable();
+        return;
       }
       saveSession(session);
       showDashboard();
