@@ -1425,7 +1425,7 @@
   // ---------- Programar el envío ----------
   function destinatariosElegidos() {
     return allContacts.filter(c => selectedContactIds.has(c.id))
-      .map(c => ({ id: c.id, email: c.email, name: c.name }));
+      .map(c => ({ id: c.id, email: c.email, name: primerNombre(c.name) }));
   }
 
   document.getElementById("compose-programar-btn").addEventListener("click", () => {
@@ -1763,9 +1763,23 @@
            '<div style="' + oculto + '">' + relleno + "</div>" + html;
   }
 
+  // En el email se saluda solo con el nombre de pila: casi todo el mundo se
+  // apunta con nombre y apellidos, y "Hola Ana García Ruiz," suena a circular.
+  // En la lista de contactos se sigue viendo el nombre entero.
+  function primerNombre(completo) {
+    const limpio = String(completo || "").trim();
+    if (!limpio) return limpio;
+    const uno = limpio.split(/\s+/)[0];
+    // Si lo escribió todo en minúsculas o todo en mayúsculas, se arregla.
+    if (uno === uno.toLowerCase() || uno === uno.toUpperCase()) {
+      return uno.charAt(0).toUpperCase() + uno.slice(1).toLowerCase();
+    }
+    return uno;
+  }
+
   function primerDestinatario() {
     const c = allContacts.find(c => selectedContactIds.has(c.id));
-    return (c && c.name) ? c.name : "Nombre";
+    return (c && c.name) ? primerNombre(c.name) : "Nombre";
   }
 
   function pintarPrevia() {
@@ -1985,7 +1999,7 @@
     }
 
     const recipients = allContacts.filter(c => selectedContactIds.has(c.id))
-      .map(c => ({ id: c.id, email: c.email, name: c.name }));
+      .map(c => ({ id: c.id, email: c.email, name: primerNombre(c.name) }));
 
     const sendBtn = document.getElementById("compose-send-btn");
     sendBtn.disabled = true;
