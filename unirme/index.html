@@ -79,11 +79,12 @@
   h1 {
     font-family: "Newsreader", serif;
     font-weight: 600;
-    font-size: clamp(30px, 5.2vw, 50px);
-    line-height: 1.1;
-    letter-spacing: -0.015em;
+    /* En pantalla de ordenador tiene que caber en una sola línea. */
+    font-size: clamp(25px, 4vw, 44px);
+    line-height: 1.12;
+    letter-spacing: -0.02em;
     margin: 20px auto 10px;
-    max-width: 16ch;
+    text-wrap: balance;
   }
   /* Etiqueta pequeña que dice de qué va el vídeo que viene debajo. */
   .etiqueta-video {
@@ -167,6 +168,9 @@
   @media (max-width: 640px) {
     main { padding: 4px 16px 44px; }
     .nav-row { padding: 14px 18px; }
+    /* En el móvil manda el ancho: si no, la caja queda más alta que el vídeo
+       y aparecen bandas negras arriba y abajo. */
+    .video { height: auto; width: 100%; }
     .logo-texto { font-size: 0.86rem; }
     h1 { margin-top: 18px; }
     .video { border-radius: 10px; }
