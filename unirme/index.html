@@ -121,9 +121,8 @@
 
   .btn {
     display: inline-flex;
-    flex-direction: column;
     align-items: center;
-    gap: 4px;
+    justify-content: center;
     width: 100%;
     max-width: 620px;
     padding: 20px 28px;
@@ -140,13 +139,6 @@
     transition: background .15s ease, transform .15s ease;
   }
   .btn:hover { background: var(--accent-strong); transform: translateY(-1px); }
-  .btn .precio {
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    opacity: 0.85;
-  }
 
   .aviso {
     margin: 14px auto 0;
@@ -209,10 +201,7 @@
   </div>
 
   <div class="compra">
-    <a class="btn" id="btn-comprar" href="#">
-      Quiero aprender a gestionar mi dinero y a multiplicarlo
-      <span class="precio">250 €</span>
-    </a>
+    <a class="btn" id="btn-comprar" href="#">Quiero gestionar y multiplicar mi dinero</a>
     <p class="aviso" id="aviso" hidden></p>
   </div>
 </main>
