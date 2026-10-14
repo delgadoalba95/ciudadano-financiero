@@ -1746,8 +1746,21 @@
   // de correo lo leen para la bandeja de entrada, pero no se ve al abrirlo.
   // El relleno de después evita que, si es corto, la bandeja siga con el
   // principio del mensaje.
+  // Pie obligatorio: por ley un email comercial tiene que decir quién lo manda
+  // y cómo dejar de recibirlo, y además los filtros de spam lo buscan. Sin esto
+  // Gmail es mucho más propenso a mandar el correo a la carpeta de no deseado.
+  const PIE_LEGAL =
+    '<div style="margin-top:28px;padding-top:14px;border-top:1px solid #ddd;' +
+    'font-family:Arial,sans-serif;font-size:12px;line-height:1.5;color:#777;">' +
+    'Recibes este email porque te apuntaste a la lista de espera de ' +
+    '<a href="https://ciudadanofinanciero.com" style="color:#777;">Ciudadano Financiero</a>.<br>' +
+    'Si no quieres recibir más, ' +
+    '<a href="mailto:hola@ciudadanofinanciero.com?subject=BAJA" style="color:#777;">' +
+    'escríbenos y te damos de baja</a>.' +
+    '</div>';
+
   function htmlParaEnviar(preheader, cuerpo) {
-    const html = cuerpoAHtml(cuerpo);
+    const html = cuerpoAHtml(cuerpo) + PIE_LEGAL;
     const texto = (preheader || "").trim();
     if (!texto) return html;
     const oculto = "display:none;max-height:0;overflow:hidden;mso-hide:all;";
@@ -1800,7 +1813,8 @@
       caja.innerHTML = '<span class="previa-vacia">Escribe el mensaje y lo verás aquí tal cual.</span>';
       return;
     }
-    caja.innerHTML = cuerpoAHtml(cuerpo).replace(/\{\{\s*nombre\s*\}\}/g, escapeHtml(quien));
+    caja.innerHTML = (cuerpoAHtml(cuerpo) + PIE_LEGAL)
+      .replace(/\{\{\s*nombre\s*\}\}/g, escapeHtml(quien));
   }
 
   // Mete texto donde esté el cursor, no al final.
