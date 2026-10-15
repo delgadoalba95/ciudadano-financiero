@@ -96,13 +96,14 @@
     color: var(--ink-faint);
   }
 
-  /* El vídeo es lo único que importa aquí: ocupa todo el ancho disponible. */
+  /* El vídeo es lo único que importa aquí. Es 16:9: lo que dice la API de Loom
+     sobre su tamaño no es de fiar, se comprueba mirando si salen franjas. */
   .video {
     position: relative;
     /* Se limita por altura para que el botón de compra entre en pantalla
        sin tener que bajar. */
     height: min(60vh, 620px);
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 16 / 9;
     width: auto;
     max-width: 100%;
     margin: 0 auto;
