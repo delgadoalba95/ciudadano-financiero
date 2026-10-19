@@ -328,7 +328,7 @@
      donde iría la duración. El vídeo no está en el HTML, así que tampoco se
      puede llegar a él mirando el código de la página. */
   /* Tarea escrita del módulo: plegada, se abre al pulsar. Se da por hecha
-     cuando hay al menos 5 palabras escritas. */
+     cuando hay al menos 10 palabras escritas. */
   .tarea {
     margin-top: 18px; padding: 14px 16px;
     border: 1px solid var(--rule); border-radius: 10px;
@@ -3616,9 +3616,9 @@
   }
 
   // ---------- Tarea escrita del módulo I ----------
-  // Se da por completada en cuanto hay 5 palabras o más, y el texto se guarda
+  // Se da por completada en cuanto hay 10 palabras o más, y el texto se guarda
   // en la cuenta de la alumna como el resto de sus datos.
-  var PALABRAS_MINIMAS = 5;
+  var PALABRAS_MINIMAS = 10;
 
   function contarPalabras(txt){
     var limpio = String(txt || "").trim();
@@ -3635,8 +3635,8 @@
     document.getElementById("tarea-pista").textContent = hecha
       ? n + (n === 1 ? " palabra escrita." : " palabras escritas.")
       : (PALABRAS_MINIMAS - n === 1
-          ? "Te falta 1 palabra para darla por hecha."
-          : "Te faltan " + (PALABRAS_MINIMAS - n) + " palabras para darla por hecha.");
+          ? "Te falta 1 palabra para marcarla como hecha."
+          : "Te faltan " + (PALABRAS_MINIMAS - n) + " palabras para marcarla como hecha.");
   }
 
   (function conectarTarea(){
