@@ -316,6 +316,33 @@
   .leccion-pendiente .pendiente-tag {
     flex:none; font-size:11.5px; font-style:italic; color: var(--ink-faint);
   }
+  /* Lecciones aún no abiertas: candado en vez de icono de play y "Bloqueado"
+     donde iría la duración. El vídeo no está en el HTML, así que tampoco se
+     puede llegar a él mirando el código de la página. */
+  .leccion-bloqueada {
+    display:flex; align-items:center; gap:14px; padding: 14px 16px;
+    background: rgba(255,255,255,0.18);
+  }
+  .leccion-bloqueada .leccion-name { color: var(--ink-faint); font-weight:600; }
+  .leccion-candado { flex:none; display:inline-flex; color: var(--ink-faint); }
+  .leccion-candado svg { width:19px; height:19px; }
+  .bloqueado-tag {
+    flex:none; font-family:"IBM Plex Mono", monospace; font-size:11px;
+    font-weight:600; letter-spacing:.07em; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  /* Aviso que sale al pulsar una sección todavía cerrada. */
+  .bloqueo-aviso {
+    max-width: 52ch; margin: 40px auto; text-align:center;
+    padding: 30px 26px; border: 1px solid var(--rule); border-radius: 12px;
+    background: rgba(255,255,255,0.3);
+  }
+  .bloqueo-aviso svg { width:34px; height:34px; color: var(--ink-faint); }
+  .bloqueo-aviso h2 {
+    margin: 14px 0 8px; font-size: 16px; letter-spacing:.04em;
+    text-transform: uppercase;
+  }
+  .bloqueo-aviso p { margin:0; color: var(--ink-faint); font-size:13.5px; line-height:1.6; }
   .checklist {
     margin-top: 16px; padding: 14px 16px;
     border: 1px solid var(--rule); border-radius: 10px;
@@ -1002,9 +1029,9 @@
       <nav>
         <button class="nav-item destacado active" data-view="curso"><span class="ico">&#9679;</span> Curso</button>
         <button class="nav-item" data-view="test"><span class="ico">&#9678;</span> Test</button>
-        <button class="nav-item" data-view="flujo"><span class="ico">&#8646;</span> Flujo de caja</button>
-        <button class="nav-item" data-view="balance"><span class="ico">&#9633;</span> Balance</button>
-        <button class="nav-item" data-view="inmobiliaria"><span class="ico">&#8962;</span> Inmuebles</button>
+        <button class="nav-item" data-view="flujo" data-bloqueado="1"><span class="ico">&#8646;</span> Flujo de caja<span class="tag">Bloqueado</span></button>
+        <button class="nav-item" data-view="balance" data-bloqueado="1"><span class="ico">&#9633;</span> Balance<span class="tag">Bloqueado</span></button>
+        <button class="nav-item" data-view="inmobiliaria" data-bloqueado="1"><span class="ico">&#8962;</span> Inmuebles<span class="tag">Bloqueado</span></button>
       </nav>
       <div class="sidebar-foot">
         <span id="sidebar-email"></span>
@@ -1094,69 +1121,24 @@
             <p class="modulo-desc">Activos y pasivos en tus finanzas personales, tu flujo de caja, el control de gastos y tu balance personal, con las decisiones y los riesgos que conllevan.</p>
             <div class="lecciones">
               <div class="leccion">
-                <button class="leccion-head" type="button" aria-expanded="false">
-                  <span class="leccion-play" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="12" r="10.25" stroke="currentColor" stroke-width="1.5"></circle>
-                      <path d="M10 8.4 16.2 12 10 15.6V8.4Z" fill="currentColor"></path>
-                    </svg>
-                  </span>
+                <div class="leccion-bloqueada">
+                  <span class="leccion-candado" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4.75" y="10.25" width="14.5" height="9" rx="2" stroke="currentColor" stroke-width="1.5"></rect><path d="M8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.5"></path></svg></span>
                   <span class="leccion-name">Activos y Pasivos en tus finanzas personales</span>
-                  <span class="leccion-meta">
-                    <span class="leccion-dur">27:53</span>
-                  </span>
-                </button>
-                <div class="leccion-body" hidden>
-                  <div class="video-wrap" style="background-image:url(https://cdn.loom.com/sessions/thumbnails/4ba7c7bed3d44206a370d7bf81cfe929-7fd7766fe0d07333.gif)">
-                    <iframe data-src="https://www.loom.com/embed/4ba7c7bed3d44206a370d7bf81cfe929?hideEmbedTopBar=true&amp;hide_share=true&amp;hide_owner=true&amp;hide_title=true"
-                            title="Activos y Pasivos en tus finanzas personales"
-                            allow="fullscreen"
-                            allowfullscreen></iframe>
-                  </div>
+                  <span class="bloqueado-tag">Bloqueado</span>
                 </div>
               </div>
               <div class="leccion">
-                <button class="leccion-head" type="button" aria-expanded="false">
-                  <span class="leccion-play" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="12" r="10.25" stroke="currentColor" stroke-width="1.5"></circle>
-                      <path d="M10 8.4 16.2 12 10 15.6V8.4Z" fill="currentColor"></path>
-                    </svg>
-                  </span>
+                <div class="leccion-bloqueada">
+                  <span class="leccion-candado" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4.75" y="10.25" width="14.5" height="9" rx="2" stroke="currentColor" stroke-width="1.5"></rect><path d="M8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.5"></path></svg></span>
                   <span class="leccion-name">Tu flujo de caja personal</span>
-                  <span class="leccion-meta">
-                    <span class="leccion-dur">07:19</span>
-                  </span>
-                </button>
-                <div class="leccion-body" hidden>
-                  <div class="video-wrap" style="background-image:url(https://cdn.loom.com/sessions/thumbnails/6c18e26ffb064a9a8deff8d4b734366f-b482e44398f82fde.gif)">
-                    <iframe data-src="https://www.loom.com/embed/6c18e26ffb064a9a8deff8d4b734366f?hideEmbedTopBar=true&amp;hide_share=true&amp;hide_owner=true&amp;hide_title=true"
-                            title="Tu flujo de caja personal"
-                            allow="fullscreen"
-                            allowfullscreen></iframe>
-                  </div>
+                  <span class="bloqueado-tag">Bloqueado</span>
                 </div>
               </div>
               <div class="leccion">
-                <button class="leccion-head" type="button" aria-expanded="false">
-                  <span class="leccion-play" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="12" r="10.25" stroke="currentColor" stroke-width="1.5"></circle>
-                      <path d="M10 8.4 16.2 12 10 15.6V8.4Z" fill="currentColor"></path>
-                    </svg>
-                  </span>
+                <div class="leccion-bloqueada">
+                  <span class="leccion-candado" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4.75" y="10.25" width="14.5" height="9" rx="2" stroke="currentColor" stroke-width="1.5"></rect><path d="M8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.5"></path></svg></span>
                   <span class="leccion-name">Tu balance personal</span>
-                  <span class="leccion-meta">
-                    <span class="leccion-dur">08:12</span>
-                  </span>
-                </button>
-                <div class="leccion-body" hidden>
-                  <div class="video-wrap" style="background-image:url(https://cdn.loom.com/sessions/thumbnails/bc3f8fafd83742c3bcfa6c93efcbaa18-a81ef2187ced3482.gif)">
-                    <iframe data-src="https://www.loom.com/embed/bc3f8fafd83742c3bcfa6c93efcbaa18?hideEmbedTopBar=true&amp;hide_share=true&amp;hide_owner=true&amp;hide_title=true"
-                            title="Tu balance personal"
-                            allow="fullscreen"
-                            allowfullscreen></iframe>
-                  </div>
+                  <span class="bloqueado-tag">Bloqueado</span>
                 </div>
               </div>
             </div>
@@ -1169,37 +1151,24 @@
             <p class="modulo-desc">Los productos financieros que te permiten invertir con alta rentabilidad.</p>
             <div class="lecciones">
               <div class="leccion">
-                <button class="leccion-head" type="button" aria-expanded="false">
-                  <span class="leccion-play" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="12" r="10.25" stroke="currentColor" stroke-width="1.5"></circle>
-                      <path d="M10 8.4 16.2 12 10 15.6V8.4Z" fill="currentColor"></path>
-                    </svg>
-                  </span>
+                <div class="leccion-bloqueada">
+                  <span class="leccion-candado" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4.75" y="10.25" width="14.5" height="9" rx="2" stroke="currentColor" stroke-width="1.5"></rect><path d="M8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.5"></path></svg></span>
                   <span class="leccion-name">Productos financieros de alta rentabilidad</span>
-                  <span class="leccion-meta">
-                    <span class="leccion-dur">33:19</span>
-                  </span>
-                </button>
-                <div class="leccion-body" hidden>
-                  <div class="video-wrap" style="background-image:url(https://cdn.loom.com/sessions/thumbnails/32c4786a487b480782a0532c2ab54fa7-a215101caf4a9701.gif)">
-                    <iframe data-src="https://www.loom.com/embed/32c4786a487b480782a0532c2ab54fa7?hideEmbedTopBar=true&amp;hide_share=true&amp;hide_owner=true&amp;hide_title=true"
-                            title="Productos financieros de alta rentabilidad"
-                            allow="fullscreen"
-                            allowfullscreen></iframe>
-                  </div>
+                  <span class="bloqueado-tag">Bloqueado</span>
                 </div>
               </div>
               <div class="leccion">
-                <div class="leccion-pendiente">
+                <div class="leccion-bloqueada">
+                  <span class="leccion-candado" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4.75" y="10.25" width="14.5" height="9" rx="2" stroke="currentColor" stroke-width="1.5"></rect><path d="M8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.5"></path></svg></span>
                   <span class="leccion-name">Rentabilidad inmobiliaria</span>
-                  <span class="pendiente-tag">Vídeo pendiente</span>
+                  <span class="bloqueado-tag">Bloqueado</span>
                 </div>
               </div>
               <div class="leccion">
-                <div class="leccion-pendiente">
+                <div class="leccion-bloqueada">
+                  <span class="leccion-candado" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4.75" y="10.25" width="14.5" height="9" rx="2" stroke="currentColor" stroke-width="1.5"></rect><path d="M8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.5"></path></svg></span>
                   <span class="leccion-name">ETFs</span>
-                  <span class="pendiente-tag">Vídeo pendiente</span>
+                  <span class="bloqueado-tag">Bloqueado</span>
                 </div>
               </div>
             </div>
@@ -1212,31 +1181,17 @@
             <p class="modulo-desc">Análisis técnico y fundamental, junto con las herramientas necesarias para crear tu cartera rentable.</p>
             <div class="lecciones">
               <div class="leccion">
-                <button class="leccion-head" type="button" aria-expanded="false">
-                  <span class="leccion-play" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="12" r="10.25" stroke="currentColor" stroke-width="1.5"></circle>
-                      <path d="M10 8.4 16.2 12 10 15.6V8.4Z" fill="currentColor"></path>
-                    </svg>
-                  </span>
+                <div class="leccion-bloqueada">
+                  <span class="leccion-candado" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4.75" y="10.25" width="14.5" height="9" rx="2" stroke="currentColor" stroke-width="1.5"></rect><path d="M8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.5"></path></svg></span>
                   <span class="leccion-name">Análisis Técnico</span>
-                  <span class="leccion-meta">
-                    <span class="leccion-dur">46:33</span>
-                  </span>
-                </button>
-                <div class="leccion-body" hidden>
-                  <div class="video-wrap" style="background-image:url(https://cdn.loom.com/sessions/thumbnails/dd3a1b36fa6547c482b74ff9013cba0b-d11d9f2ddc1696ec.gif)">
-                    <iframe data-src="https://www.loom.com/embed/dd3a1b36fa6547c482b74ff9013cba0b?hideEmbedTopBar=true&amp;hide_share=true&amp;hide_owner=true&amp;hide_title=true"
-                            title="Análisis Técnico"
-                            allow="fullscreen"
-                            allowfullscreen></iframe>
-                  </div>
+                  <span class="bloqueado-tag">Bloqueado</span>
                 </div>
               </div>
               <div class="leccion">
-                <div class="leccion-pendiente">
+                <div class="leccion-bloqueada">
+                  <span class="leccion-candado" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4.75" y="10.25" width="14.5" height="9" rx="2" stroke="currentColor" stroke-width="1.5"></rect><path d="M8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.5"></path></svg></span>
                   <span class="leccion-name">Herramientas de análisis e inversión</span>
-                  <span class="pendiente-tag">Vídeo pendiente</span>
+                  <span class="bloqueado-tag">Bloqueado</span>
                 </div>
               </div>
             </div>
@@ -1249,21 +1204,34 @@
             <p class="modulo-desc">Ejemplos reales de principio a fin y cómo montar tu propia cartera de inversión.</p>
             <div class="lecciones">
               <div class="leccion">
-                <div class="leccion-pendiente">
+                <div class="leccion-bloqueada">
+                  <span class="leccion-candado" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4.75" y="10.25" width="14.5" height="9" rx="2" stroke="currentColor" stroke-width="1.5"></rect><path d="M8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.5"></path></svg></span>
                   <span class="leccion-name">Casos de uso</span>
-                  <span class="pendiente-tag">Vídeo pendiente</span>
+                  <span class="bloqueado-tag">Bloqueado</span>
                 </div>
               </div>
               <div class="leccion">
-                <div class="leccion-pendiente">
+                <div class="leccion-bloqueada">
+                  <span class="leccion-candado" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4.75" y="10.25" width="14.5" height="9" rx="2" stroke="currentColor" stroke-width="1.5"></rect><path d="M8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.5"></path></svg></span>
                   <span class="leccion-name">Creación de tu cartera de inversión</span>
-                  <span class="pendiente-tag">Vídeo pendiente</span>
+                  <span class="bloqueado-tag">Bloqueado</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
+      </section>
+
+      <section class="view" id="view-bloqueado">
+        <div class="bloqueo-aviso">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="4.75" y="10.25" width="14.5" height="9" rx="2" stroke="currentColor" stroke-width="1.5"></rect>
+            <path d="M8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.5"></path>
+          </svg>
+          <h2>Todavía no disponible</h2>
+          <p>Esta herramienta se abre más adelante, cuando lleguemos a su módulo. Mientras tanto tienes el módulo I completo en <strong>Curso</strong>.</p>
+        </div>
       </section>
 
       <section class="view" id="view-test">
@@ -3510,6 +3478,12 @@
       document.querySelectorAll(".nav-item").forEach(function(b){ b.classList.remove("active"); });
       btn.classList.add("active");
       document.querySelectorAll(".view").forEach(function(v){ v.classList.remove("active"); });
+      // Secciones que aún no se han abierto a las alumnas: se ve el aviso.
+      if(btn.getAttribute("data-bloqueado") === "1"){
+        document.getElementById("view-bloqueado").classList.add("active");
+        document.getElementById("page-title").textContent = VIEWS[target];
+        return;
+      }
       document.getElementById("view-" + target).classList.add("active");
       var titulo = VIEWS[target];
       if(target === "inmobiliaria"){
