@@ -327,26 +327,28 @@
   /* Lecciones aún no abiertas: candado en vez de icono de play y "Bloqueado"
      donde iría la duración. El vídeo no está en el HTML, así que tampoco se
      puede llegar a él mirando el código de la página. */
-  /* Tarea escrita del módulo: se da por hecha cuando hay al menos 5 palabras. */
+  /* Tarea escrita del módulo: plegada, se abre al pulsar. Se da por hecha
+     cuando hay al menos 5 palabras escritas. */
   .tarea {
-    margin-top: 18px; padding: 18px 18px 16px;
+    margin-top: 18px; padding: 14px 16px;
     border: 1px solid var(--rule); border-radius: 10px;
     background: rgba(255,255,255,0.3);
   }
-  .tarea-head { display:flex; align-items:center; gap:10px; }
-  .tarea-head h4 {
-    flex:1; margin:0; font-size:11.5px; font-weight:700;
-    text-transform: uppercase; letter-spacing:.09em; color: var(--accent-strong);
+  .tarea summary {
+    cursor: pointer; display:flex; align-items:center; gap:10px;
+    font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .09em; color: var(--accent-strong); list-style: none;
   }
-  .tarea-tik { flex:none; display:inline-flex; color: var(--ink-faint); opacity:.4; }
-  .tarea-tik svg { width:19px; height:19px; }
+  .tarea summary::-webkit-details-marker { display: none; }
+  .tarea summary::before {
+    content: "\25B8"; flex:none; font-size: 12px; line-height: 1;
+    transition: transform .15s ease;
+  }
+  .tarea[open] summary::before { transform: rotate(90deg); }
+  .tarea-tik { margin-left:auto; flex:none; display:inline-flex; color: var(--ink-faint); opacity:.4; }
+  .tarea-tik svg { width:18px; height:18px; }
   .tarea.hecha .tarea-tik { color: var(--positive); opacity:1; }
-  .tarea-estado {
-    flex:none; font-family:"IBM Plex Mono", monospace; font-size:11px;
-    letter-spacing:.06em; text-transform: uppercase; color: var(--ink-faint);
-  }
-  .tarea.hecha .tarea-estado { color: var(--positive); }
-  .tarea-enunciado { margin: 11px 0 12px; font-size:13px; line-height:1.55; color: var(--ink); }
+  .tarea-enunciado { margin: 13px 0 12px; font-size:13px; line-height:1.55; color: var(--ink); }
   .tarea textarea {
     width:100%; box-sizing:border-box; resize:vertical; min-height:110px;
     padding: 12px 13px; border:1px solid var(--rule); border-radius:8px;
@@ -1130,8 +1132,9 @@
               </div>
             </div>
 
-            <div class="tarea" id="tarea-estrategia">
-              <div class="tarea-head">
+            <details class="tarea" id="tarea-estrategia">
+              <summary>
+                Tarea módulo I
                 <span class="tarea-tik" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none">
                     <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"></circle>
@@ -1139,13 +1142,11 @@
                           stroke-linecap="round" stroke-linejoin="round"></path>
                   </svg>
                 </span>
-                <h4>Tarea de este módulo</h4>
-                <span class="tarea-estado" id="tarea-estado">Sin completar</span>
-              </div>
+              </summary>
               <p class="tarea-enunciado">Escribe la estrategia que vas a llevar a cabo para mejorar tu relación con el dinero, a partir del perfil que te haya salido en el test.</p>
               <textarea id="tarea-texto" rows="6" placeholder="Escribe aquí tu estrategia..."></textarea>
               <p class="tarea-pista" id="tarea-pista"></p>
-            </div>
+            </details>
           </div>
         </div>
 
@@ -3631,7 +3632,6 @@
     var n = contarPalabras(state.estrategia);
     var hecha = n >= PALABRAS_MINIMAS;
     caja.classList.toggle("hecha", hecha);
-    document.getElementById("tarea-estado").textContent = hecha ? "Completada" : "Sin completar";
     document.getElementById("tarea-pista").textContent = hecha
       ? n + (n === 1 ? " palabra escrita." : " palabras escritas.")
       : (PALABRAS_MINIMAS - n === 1
