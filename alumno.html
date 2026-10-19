@@ -219,6 +219,14 @@
   }
   .nav-item.active .tag { background: rgba(36,27,8,0.18); color: #3a2c0d; }
 
+  /* Candado de las secciones que todavía no se han abierto a las alumnas. */
+  .nav-candado {
+    margin-left:auto; flex:none; display:inline-flex;
+    color: var(--header-ink-dim); opacity:.75;
+  }
+  .nav-candado svg { width:14px; height:14px; }
+  .nav-item.active .nav-candado { color: #3a2c0d; opacity:1; }
+
   /* El curso es el contenido principal: va enmarcado para que destaque. */
   .nav-item.destacado {
     border: 1.5px solid var(--accent);
@@ -994,9 +1002,9 @@
       <nav>
         <button class="nav-item destacado active" data-view="curso"><span class="ico">&#9679;</span> Curso</button>
         <button class="nav-item" data-view="test"><span class="ico">&#9678;</span> Test</button>
-        <button class="nav-item" data-view="flujo" data-bloqueado="1"><span class="ico">&#8646;</span> Flujo de caja<span class="tag">Bloqueado</span></button>
-        <button class="nav-item" data-view="balance" data-bloqueado="1"><span class="ico">&#9633;</span> Balance<span class="tag">Bloqueado</span></button>
-        <button class="nav-item" data-view="inmobiliaria" data-bloqueado="1"><span class="ico">&#8962;</span> Inmuebles<span class="tag">Bloqueado</span></button>
+        <button class="nav-item" data-view="flujo" data-bloqueado="1"><span class="ico">&#8646;</span> Flujo de caja<span class="nav-candado" title="Bloqueado" aria-label="Bloqueado"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4.75" y="10.25" width="14.5" height="9" rx="2" stroke="currentColor" stroke-width="1.6"></rect><path d="M8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.6"></path></svg></span></button>
+        <button class="nav-item" data-view="balance" data-bloqueado="1"><span class="ico">&#9633;</span> Balance<span class="nav-candado" title="Bloqueado" aria-label="Bloqueado"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4.75" y="10.25" width="14.5" height="9" rx="2" stroke="currentColor" stroke-width="1.6"></rect><path d="M8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.6"></path></svg></span></button>
+        <button class="nav-item" data-view="inmobiliaria" data-bloqueado="1"><span class="ico">&#8962;</span> Inmuebles<span class="nav-candado" title="Bloqueado" aria-label="Bloqueado"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4.75" y="10.25" width="14.5" height="9" rx="2" stroke="currentColor" stroke-width="1.6"></rect><path d="M8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.6"></path></svg></span></button>
       </nav>
       <div class="sidebar-foot">
         <span id="sidebar-email"></span>
