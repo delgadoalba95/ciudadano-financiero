@@ -327,6 +327,34 @@
   /* Lecciones aún no abiertas: candado en vez de icono de play y "Bloqueado"
      donde iría la duración. El vídeo no está en el HTML, así que tampoco se
      puede llegar a él mirando el código de la página. */
+  /* Tarea escrita del módulo: se da por hecha cuando hay al menos 5 palabras. */
+  .tarea {
+    margin-top: 18px; padding: 18px 18px 16px;
+    border: 1px solid var(--rule); border-radius: 10px;
+    background: rgba(255,255,255,0.3);
+  }
+  .tarea-head { display:flex; align-items:center; gap:10px; }
+  .tarea-head h4 {
+    flex:1; margin:0; font-size:11.5px; font-weight:700;
+    text-transform: uppercase; letter-spacing:.09em; color: var(--accent-strong);
+  }
+  .tarea-tik { flex:none; display:inline-flex; color: var(--ink-faint); opacity:.4; }
+  .tarea-tik svg { width:19px; height:19px; }
+  .tarea.hecha .tarea-tik { color: var(--positive); opacity:1; }
+  .tarea-estado {
+    flex:none; font-family:"IBM Plex Mono", monospace; font-size:11px;
+    letter-spacing:.06em; text-transform: uppercase; color: var(--ink-faint);
+  }
+  .tarea.hecha .tarea-estado { color: var(--positive); }
+  .tarea-enunciado { margin: 11px 0 12px; font-size:13px; line-height:1.55; color: var(--ink); }
+  .tarea textarea {
+    width:100%; box-sizing:border-box; resize:vertical; min-height:110px;
+    padding: 12px 13px; border:1px solid var(--rule); border-radius:8px;
+    background: rgba(255,255,255,0.75); color: var(--ink);
+    font-family: inherit; font-size:13.5px; line-height:1.6;
+  }
+  .tarea textarea:focus { outline:2px solid var(--accent); outline-offset:1px; }
+  .tarea-pista { margin: 9px 0 0; font-size:12px; color: var(--ink-faint); }
   .leccion-bloqueada {
     display:flex; align-items:center; gap:14px; padding: 14px 16px;
     background: rgba(255,255,255,0.18);
@@ -1100,6 +1128,23 @@
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div class="tarea" id="tarea-estrategia">
+              <div class="tarea-head">
+                <span class="tarea-tik" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"></circle>
+                    <path d="M7.8 12.3 10.6 15l5.6-6" stroke="currentColor" stroke-width="2"
+                          stroke-linecap="round" stroke-linejoin="round"></path>
+                  </svg>
+                </span>
+                <h4>Tarea de este módulo</h4>
+                <span class="tarea-estado" id="tarea-estado">Sin completar</span>
+              </div>
+              <p class="tarea-enunciado">Escribe la estrategia que vas a llevar a cabo para mejorar tu relación con el dinero, a partir del perfil que te haya salido en el test.</p>
+              <textarea id="tarea-texto" rows="6" placeholder="Escribe aquí tu estrategia..."></textarea>
+              <p class="tarea-pista" id="tarea-pista"></p>
             </div>
           </div>
         </div>
@@ -1879,7 +1924,7 @@
   function tipoDe(item){ return item.tipo === "pasivos" ? "pasivos" : "activos"; }
 
   var session = null; // { access_token, refresh_token, user_id, email }
-  var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [], flujo: {}, meses: [], test: null, tareas: {} };
+  var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [], flujo: {}, meses: [], test: null, tareas: {}, estrategia: "" };
   var filasFlujo = [];
   var saveTimer = null;
 
@@ -3559,12 +3604,50 @@
   }
 
   function pintarTareas(){
+    var campo = document.getElementById("tarea-texto");
+    if(campo && campo.value !== state.estrategia) campo.value = state.estrategia || "";
+    pintarTarea();
     document.querySelectorAll(".leccion-visto[data-visto]").forEach(function(tik){
       var visto = !!state.tareas[tik.getAttribute("data-visto")];
       tik.classList.toggle("visto", visto);
       tik.setAttribute("title", visto ? "Ya la has visto" : "Todavía sin ver");
     });
   }
+
+  // ---------- Tarea escrita del módulo I ----------
+  // Se da por completada en cuanto hay 5 palabras o más, y el texto se guarda
+  // en la cuenta de la alumna como el resto de sus datos.
+  var PALABRAS_MINIMAS = 5;
+
+  function contarPalabras(txt){
+    var limpio = String(txt || "").trim();
+    if(!limpio) return 0;
+    return limpio.split(/\s+/).length;
+  }
+
+  function pintarTarea(){
+    var caja = document.getElementById("tarea-estrategia");
+    if(!caja) return;
+    var n = contarPalabras(state.estrategia);
+    var hecha = n >= PALABRAS_MINIMAS;
+    caja.classList.toggle("hecha", hecha);
+    document.getElementById("tarea-estado").textContent = hecha ? "Completada" : "Sin completar";
+    document.getElementById("tarea-pista").textContent = hecha
+      ? n + (n === 1 ? " palabra escrita." : " palabras escritas.")
+      : (PALABRAS_MINIMAS - n === 1
+          ? "Te falta 1 palabra para darla por hecha."
+          : "Te faltan " + (PALABRAS_MINIMAS - n) + " palabras para darla por hecha.");
+  }
+
+  (function conectarTarea(){
+    var campo = document.getElementById("tarea-texto");
+    if(!campo) return;
+    campo.addEventListener("input", function(){
+      state.estrategia = campo.value;
+      pintarTarea();
+      queueSave();
+    });
+  })();
 
   construirTiks();
 
@@ -3640,6 +3723,7 @@
         state.meses = Array.isArray(data.meses) ? data.meses : [];
         state.test = data.test || null;
         state.tareas = data.tareas || {};
+        state.estrategia = typeof data.estrategia === "string" ? data.estrategia : "";
         migrarRepartidos();
       }
     }catch(e){
