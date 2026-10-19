@@ -3632,11 +3632,14 @@
     var n = contarPalabras(state.estrategia);
     var hecha = n >= PALABRAS_MINIMAS;
     caja.classList.toggle("hecha", hecha);
-    document.getElementById("tarea-pista").textContent = hecha
-      ? n + (n === 1 ? " palabra escrita." : " palabras escritas.")
-      : (PALABRAS_MINIMAS - n === 1
-          ? "Te falta 1 palabra para marcarla como hecha."
-          : "Te faltan " + (PALABRAS_MINIMAS - n) + " palabras para marcarla como hecha.");
+    // Hecha la tarea, el aviso sobra: basta con el tik en verde.
+    var pista = document.getElementById("tarea-pista");
+    pista.hidden = hecha;
+    if(!hecha){
+      pista.textContent = PALABRAS_MINIMAS - n === 1
+        ? "Te falta 1 palabra para marcarla como hecha."
+        : "Te faltan " + (PALABRAS_MINIMAS - n) + " palabras para marcarla como hecha.";
+    }
   }
 
   (function conectarTarea(){
