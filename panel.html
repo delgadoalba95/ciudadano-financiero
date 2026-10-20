@@ -935,6 +935,47 @@
     return res.json();
   }
 
+  // El token de acceso caduca a la hora. Si el panel lleva abierto más tiempo,
+  // cualquier guardado fallaba con un 401 y solo se veía "no se pudo". Ahora se
+  // renueva la sesión y se reintenta una vez.
+  async function authFetch(url, opts) {
+    opts = opts || {};
+    function conToken(token) {
+      return Object.assign({}, opts, {
+        headers: Object.assign({}, opts.headers, {
+          "apikey": window.SUPABASE_ANON_KEY,
+          "Authorization": "Bearer " + token
+        })
+      });
+    }
+    let res = await fetch(url, conToken(currentAccessToken));
+    if (res.status !== 401 && res.status !== 403) return res;
+
+    const session = loadSession();
+    if (!session || !session.refresh_token) return res;
+    let refreshed;
+    try {
+      refreshed = await refreshSession(session.refresh_token);
+    } catch {
+      return res;
+    }
+    saveSession(refreshed);
+    currentAccessToken = refreshed.access_token;
+    return fetch(url, conToken(currentAccessToken));
+  }
+
+  // Saca el motivo real que devuelve Supabase, en vez de un "no se pudo" seco.
+  async function motivoDelFallo(res) {
+    if (res.status === 401 || res.status === 403) {
+      return "Tu sesión ha caducado. Recarga la página y vuelve a entrar.";
+    }
+    let data = null;
+    try { data = await res.json(); } catch {}
+    const detalle = data && (data.message || data.hint || data.details);
+    return detalle ? "No se pudo programar el envío: " + detalle
+                   : "No se pudo programar el envío (error " + res.status + ").";
+  }
+
   async function refreshSession(refresh_token) {
     const res = await fetch(`${window.SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
       method: "POST",
@@ -1572,12 +1613,10 @@
     btn.disabled = true;
     btn.textContent = "Programando...";
     try {
-      const res = await fetch(`${window.SUPABASE_URL}/rest/v1/emails_programados`, {
+      const res = await authFetch(`${window.SUPABASE_URL}/rest/v1/emails_programados`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "apikey": window.SUPABASE_ANON_KEY,
-          "Authorization": `Bearer ${currentAccessToken}`,
           "Prefer": "return=minimal"
         },
         body: JSON.stringify({
@@ -1587,7 +1626,7 @@
           destinatarios: destinatarios
         })
       });
-      if (!res.ok) throw new Error("No se pudo programar el envío.");
+      if (!res.ok) throw new Error(await motivoDelFallo(res));
       successEl.textContent = "Programado para el " + fechaLarga(fecha) +
         " · " + destinatarios.length + " destinatarios.";
       successEl.style.display = "block";
@@ -1611,13 +1650,8 @@
     const bloque = document.getElementById("programados-bloque");
     const lista = document.getElementById("programados-lista");
     try {
-      const res = await fetch(
-        `${window.SUPABASE_URL}/rest/v1/emails_programados?select=id,enviar_en,asunto,destinatarios,estado&estado=eq.programado&order=enviar_en.asc`, {
-          headers: {
-            "apikey": window.SUPABASE_ANON_KEY,
-            "Authorization": `Bearer ${access_token}`
-          }
-        });
+      const res = await authFetch(
+        `${window.SUPABASE_URL}/rest/v1/emails_programados?select=id,enviar_en,asunto,destinatarios,estado&estado=eq.programado&order=enviar_en.asc`);
       if (!res.ok) throw new Error("no");
       const filas = await res.json();
       programadosCargados = true;
@@ -1639,12 +1673,8 @@
           " · " + (f.destinatarios || []).length + " destinatarios";
         fila.querySelector("button").addEventListener("click", async () => {
           if (!confirm("¿Cancelar este envío programado?")) return;
-          await fetch(`${window.SUPABASE_URL}/rest/v1/emails_programados?id=eq.${f.id}`, {
-            method: "DELETE",
-            headers: {
-              "apikey": window.SUPABASE_ANON_KEY,
-              "Authorization": `Bearer ${access_token}`
-            }
+          await authFetch(`${window.SUPABASE_URL}/rest/v1/emails_programados?id=eq.${f.id}`, {
+            method: "DELETE"
           });
           programadosCargados = false;
           await cargarProgramados(access_token);
