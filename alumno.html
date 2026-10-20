@@ -888,11 +888,7 @@
     display: block; font-family: "IBM Plex Mono", monospace;
     font-size: 11px; opacity: .75;
   }
-  .interes-vacio {
-    margin: 0 0 18px; padding: 26px 20px; text-align: center;
-    border: 1px dashed var(--rule); border-radius: 10px;
-    font-size: 13.5px; color: var(--ink-faint);
-  }
+  .int-aviso { font-size: 13px; }
   .interes-nota { font-size: 12px; color: var(--ink-faint); line-height: 1.5; margin: 0 0 18px; }
   @media (max-width: 720px) {
     .interes-grafico svg { height: 260px; }
@@ -1460,11 +1456,9 @@
           </div>
         </div>
 
-        <p class="interes-vacio" id="int-vacio">Rellena tu edad y al menos una de las dos cantidades para ver la gráfica.</p>
-
         <div class="interes-resumen" id="int-resumen" hidden></div>
 
-        <div class="interes-grafico" id="int-grafico" hidden>
+        <div class="interes-grafico" id="int-grafico">
           <svg id="int-svg" viewBox="0 0 900 380" preserveAspectRatio="none" role="img"
                aria-label="Evolución de tu dinero durante los próximos 30 años"></svg>
           <div class="interes-tooltip" id="int-tooltip" hidden></div>
@@ -3831,6 +3825,26 @@
     return String(Math.round(n));
   }
 
+  // Marco sin datos: se ve la cuadrícula para que la sección no quede coja,
+  // con el aviso en medio de lo que falta por rellenar.
+  function graficoVacio(){
+    var piezas = [];
+    var base = intY(0, 1);
+    for(var g = 1; g <= 4; g++){
+      var y = intY(1 * g / 4, 1);
+      piezas.push('<line class="int-guia" x1="' + INT_PAD.izquierda + '" y1="' + y +
+                  '" x2="' + (INT_W - INT_PAD.derecha) + '" y2="' + y + '"></line>');
+    }
+    piezas.push('<line class="int-eje" x1="' + INT_PAD.izquierda + '" y1="' + base +
+                '" x2="' + (INT_W - INT_PAD.derecha) + '" y2="' + base + '"></line>');
+    // Entre dos guías, para que el texto no quede partido por una línea.
+    var yAviso = (intY(1 * 2 / 4, 1) + intY(1 * 3 / 4, 1)) / 2;
+    piezas.push('<text class="int-texto int-aviso" x="' + (INT_W / 2) + '" y="' + yAviso +
+                '" text-anchor="middle">Rellena tu edad y al menos una de las dos cantidades ' +
+                'para ver tu gráfica.</text>');
+    return piezas.join("");
+  }
+
   function renderInteres(){
     var svg = document.getElementById("int-svg");
     if(!svg) return;
@@ -3842,16 +3856,12 @@
     // edad de 30 y una gráfica de ceros, y parecía que ya estaba relleno.
     if(d.edad <= 0 || (d.inicial <= 0 && d.mensual <= 0)){
       intDatos = [];
-      svg.innerHTML = "";
-      caja.hidden = true;
+      svg.innerHTML = graficoVacio();
       resumen.innerHTML = "";
       resumen.hidden = true;
-      document.getElementById("int-vacio").hidden = false;
       return;
     }
-    caja.hidden = false;
     resumen.hidden = false;
-    document.getElementById("int-vacio").hidden = true;
     var edad = d.edad;
 
     intDatos = serieInteres(d.inicial, d.mensual, d.tasa, INT_ANIOS);
