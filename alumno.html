@@ -871,6 +871,19 @@
   .interes-grafico svg { display: block; width: 100%; height: 340px; }
   .int-area { fill: var(--accent); opacity: .16; }
   .int-linea { fill: none; stroke: var(--accent-strong); stroke-width: 2.5; }
+  .int-aportado {
+    fill: none; stroke: var(--ink-faint); stroke-width: 2;
+    stroke-dasharray: 5 4; opacity: .9;
+  }
+  .int-punto.aportado { fill: var(--ink-faint); }
+  .interes-leyenda {
+    display: flex; gap: 18px; flex-wrap: wrap;
+    margin: 0 0 12px; font-size: 12.5px; color: var(--ink-faint);
+  }
+  .interes-leyenda span { display: inline-flex; align-items: center; gap: 7px; }
+  .interes-leyenda .muestra { width: 18px; height: 0; border-top: 2.5px solid var(--accent-strong); }
+  .interes-leyenda .muestra.aportado { border-top: 2px dashed var(--ink-faint); }
+  .interes-tooltip .puesto { display: block; font-size: 11.5px; opacity: .8; }
   .int-eje { stroke: var(--rule); stroke-width: 1; }
   .int-guia { stroke: var(--rule); stroke-width: 1; stroke-dasharray: 3 4; }
   .int-texto {
@@ -1468,6 +1481,11 @@
           <svg id="int-svg" viewBox="0 0 900 380" preserveAspectRatio="none" role="img"
                aria-label="Evolución de tu dinero durante los próximos 30 años"></svg>
           <div class="interes-tooltip" id="int-tooltip" hidden></div>
+        </div>
+
+        <div class="interes-leyenda">
+          <span><i class="muestra total"></i> Lo que tendrías</span>
+          <span><i class="muestra aportado"></i> Dinero aportado</span>
         </div>
 
         <p class="interes-nota">Los intereses se calculan mes a mes sobre el total acumulado. Es una estimación: la rentabilidad real de cualquier inversión varía cada año y puede ser negativa.</p>
@@ -3885,11 +3903,14 @@
                   '" text-anchor="end">' + intCorto(valor) + '</text>');
     }
 
-    // Línea y relleno.
+    // Dos líneas: el total acumulado y, por debajo, lo que ha puesto ella.
+    // La distancia entre las dos es lo que han hecho los intereses.
     var puntos = intDatos.map(function(p, i){ return intX(i, intDatos.length) + "," + intY(p.saldo, techo); });
+    var puntosAp = intDatos.map(function(p, i){ return intX(i, intDatos.length) + "," + intY(p.aportado, techo); });
     var base = intY(0, techo);
     piezas.push('<polygon class="int-area" points="' + intX(0, intDatos.length) + ',' + base + ' ' +
                 puntos.join(" ") + ' ' + intX(intDatos.length - 1, intDatos.length) + ',' + base + '"></polygon>');
+    piezas.push('<polyline class="int-aportado" points="' + puntosAp.join(" ") + '"></polyline>');
     piezas.push('<polyline class="int-linea" points="' + puntos.join(" ") + '"></polyline>');
 
     // Eje de abajo: la edad que tendría en cada tramo.
@@ -3970,14 +3991,18 @@
       if(viejo) viejo.remove();
       var grupo = document.createElementNS("http://www.w3.org/2000/svg", "g");
       grupo.setAttribute("class", "int-marca-grupo");
+      var yAp = intY(p.aportado, techo);
       grupo.innerHTML =
         '<line class="int-marca" x1="' + x + '" y1="' + INT_PAD.arriba + '" x2="' + x +
         '" y2="' + intY(0, techo) + '"></line>' +
+        '<circle class="int-punto aportado" cx="' + x + '" cy="' + yAp + '" r="3.5"></circle>' +
         '<circle class="int-punto" cx="' + x + '" cy="' + y + '" r="4"></circle>';
       svg.appendChild(grupo);
 
       tip.hidden = false;
-      tip.innerHTML = fmt(p.saldo) + '<span class="edad">' + (edad + p.anio) + " años</span>";
+      tip.innerHTML = fmt(p.saldo) +
+        '<span class="puesto">De eso has puesto tú ' + fmt(p.aportado) + "</span>" +
+        '<span class="edad">' + (edad + p.anio) + " años</span>";
       var cajaR = caja.getBoundingClientRect();
       // Se coloca sobre el punto marcado, no sobre el ratón: así no baila
       // mientras el punto va saltando de año en año.
