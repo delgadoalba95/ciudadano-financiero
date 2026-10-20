@@ -3932,7 +3932,7 @@
     resumen.innerHTML =
       "A los <strong>" + (edad + INT_ANIOS) + " años</strong> tendrías <strong>" + fmt(ultimo.saldo) + "</strong>" +
       '<br><span class="aportado">De eso, ' + fmt(ultimo.aportado) + " lo habrías puesto tú y " +
-      fmt(intereses) + " serían intereses.</span>";
+      fmt(intereses) + " sería interés compuesto.</span>";
   }
 
   function intGuarda(){
@@ -4001,7 +4001,8 @@
 
       tip.hidden = false;
       tip.innerHTML = fmt(p.saldo) +
-        '<span class="puesto">De eso has puesto tú ' + fmt(p.aportado) + "</span>" +
+        '<span class="puesto">' + fmt(p.aportado) + " los has puesto tú</span>" +
+        '<span class="puesto">' + fmt(p.saldo - p.aportado) + " de interés compuesto</span>" +
         '<span class="edad">' + (edad + p.anio) + " años</span>";
       var cajaR = caja.getBoundingClientRect();
       // Se coloca sobre el punto marcado, no sobre el ratón: así no baila
