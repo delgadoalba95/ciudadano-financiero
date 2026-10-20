@@ -828,6 +828,71 @@
   .meses-head p { margin: 4px 0 0; font-size: 13px; color: var(--ink-faint); max-width: 56ch; }
   .meses-form { display:flex; align-items:center; gap: 10px; }
 
+  /* ---------- Interés compuesto ---------- */
+  .interes-campos {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px; margin-bottom: 18px;
+  }
+  .interes-campo {
+    display: flex; flex-direction: column; gap: 7px;
+    background: var(--surface-2); border: 1px solid var(--rule);
+    border-radius: 10px; padding: 14px 16px;
+  }
+  .interes-campo > span { font-size: 13px; font-weight: 700; }
+  .interes-campo input {
+    font: inherit; font-size: 15px; color: var(--ink);
+    background: var(--bg); border: 1px solid var(--rule);
+    border-radius: 8px; padding: 9px 12px; width: 100%; box-sizing: border-box;
+  }
+  .interes-campo input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .interes-campo small { font-size: 11.5px; color: var(--ink-faint); line-height: 1.4; }
+  .interes-tasas { display: flex; gap: 6px; flex-wrap: wrap; }
+  .interes-tasas .tasa {
+    flex: 1; min-width: 56px; font-family: "IBM Plex Mono", monospace; font-size: 13px;
+    padding: 9px 4px; border: 1px solid var(--rule); border-radius: 8px;
+    background: var(--bg); color: var(--ink-faint); cursor: pointer;
+  }
+  .interes-tasas .tasa:hover { border-color: var(--accent); }
+  .interes-tasas .tasa.activa {
+    background: var(--accent); border-color: var(--accent);
+    color: #241b08; font-weight: 700;
+  }
+  .interes-resumen {
+    margin-bottom: 14px; font-size: 14px; line-height: 1.6; color: var(--ink);
+  }
+  .interes-resumen strong { font-size: 17px; }
+  .interes-resumen .aportado { color: var(--ink-faint); font-size: 13px; }
+  /* El gráfico se estira al ancho disponible; el SVG lleva su propio sistema
+     de coordenadas, así que no hay que recalcular nada al cambiar de tamaño. */
+  .interes-grafico {
+    position: relative; border: 1px solid var(--rule); border-radius: 10px;
+    background: var(--surface-2); padding: 10px 12px 6px; margin-bottom: 12px;
+  }
+  .interes-grafico svg { display: block; width: 100%; height: 340px; }
+  .int-area { fill: var(--accent); opacity: .16; }
+  .int-linea { fill: none; stroke: var(--accent-strong); stroke-width: 2.5; }
+  .int-eje { stroke: var(--rule); stroke-width: 1; }
+  .int-guia { stroke: var(--rule); stroke-width: 1; stroke-dasharray: 3 4; }
+  .int-texto {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px; fill: var(--ink-faint);
+  }
+  .int-marca { stroke: var(--accent-strong); stroke-width: 1; }
+  .int-punto { fill: var(--accent-strong); }
+  .interes-tooltip {
+    position: absolute; pointer-events: none; z-index: 2;
+    background: var(--ink); color: var(--bg);
+    border-radius: 7px; padding: 7px 10px; font-size: 12.5px; line-height: 1.45;
+    white-space: nowrap; transform: translate(-50%, -115%);
+  }
+  .interes-tooltip .edad {
+    display: block; font-family: "IBM Plex Mono", monospace;
+    font-size: 11px; opacity: .75;
+  }
+  .interes-nota { font-size: 12px; color: var(--ink-faint); line-height: 1.5; margin: 0 0 18px; }
+  @media (max-width: 720px) {
+    .interes-grafico svg { height: 260px; }
+  }
+
   .mes-selector {
     display:flex; align-items:center; gap: 12px; flex-wrap: wrap;
     background: var(--surface-2); border: 1px solid var(--rule);
@@ -1032,6 +1097,7 @@
       <nav>
         <button class="nav-item destacado active" data-view="curso"><span class="ico">&#9679;</span> Curso</button>
         <button class="nav-item" data-view="test"><span class="ico">&#9678;</span> Test</button>
+        <button class="nav-item" data-view="interes"><span class="ico">&#8734;</span> Interés</button>
         <button class="nav-item" data-view="flujo" data-bloqueado="1"><span class="ico">&#8646;</span> Flujo de caja<span class="nav-candado" title="Bloqueado" aria-label="Bloqueado"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4.75" y="10.25" width="14.5" height="9" rx="2" stroke="currentColor" stroke-width="1.6"></rect><path d="M8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.6"></path></svg></span></button>
         <button class="nav-item" data-view="balance" data-bloqueado="1"><span class="ico">&#9633;</span> Balance<span class="nav-candado" title="Bloqueado" aria-label="Bloqueado"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4.75" y="10.25" width="14.5" height="9" rx="2" stroke="currentColor" stroke-width="1.6"></rect><path d="M8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.6"></path></svg></span></button>
         <button class="nav-item" data-view="inmobiliaria" data-bloqueado="1"><span class="ico">&#8962;</span> Inmuebles<span class="nav-candado" title="Bloqueado" aria-label="Bloqueado"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4.75" y="10.25" width="14.5" height="9" rx="2" stroke="currentColor" stroke-width="1.6"></rect><path d="M8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.6"></path></svg></span></button>
@@ -1350,6 +1416,54 @@
             </div>
           </div>
         </div>
+
+        <div class="save-row">
+          <div class="autosave"><span class="dot"></span> <span class="autosave-text">Tus cifras se guardan en tu cuenta.</span></div>
+          <button class="btn-save" disabled>Guardado</button>
+        </div>
+      </section>
+
+      <section class="view" id="view-interes">
+        <div class="instructions">
+          <span class="mark">&#9432;</span>
+          <p>Mira en qué se convierte tu dinero si lo dejas trabajar. Rellena lo que tienes hoy, lo que vas a aportar cada mes y la rentabilidad que esperas: la gráfica te muestra <strong>los 30 años siguientes</strong>, año a año. Pasa el ratón por encima para ver la cifra de cada edad.</p>
+        </div>
+
+        <div class="interes-campos">
+          <label class="interes-campo">
+            <span>Tu edad</span>
+            <input type="text" inputmode="numeric" id="int-edad" placeholder="30">
+          </label>
+          <label class="interes-campo">
+            <span>Importe inicial</span>
+            <input type="text" inputmode="numeric" id="int-inicial" placeholder="5.000 €">
+            <small>Lo que tienes ahora para destinar a invertir.</small>
+          </label>
+          <label class="interes-campo">
+            <span>Aporte mensual</span>
+            <input type="text" inputmode="numeric" id="int-mensual" placeholder="200 €">
+            <small>Lo que te comprometes a aportar cada mes.</small>
+          </label>
+          <div class="interes-campo">
+            <span>Interés anual</span>
+            <div class="interes-tasas" id="int-tasas">
+              <button type="button" class="tasa activa" data-tasa="12">12%</button>
+              <button type="button" class="tasa" data-tasa="30">30%</button>
+              <button type="button" class="tasa" data-tasa="60">60%</button>
+              <button type="button" class="tasa" data-tasa="100">100%</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="interes-resumen" id="int-resumen"></div>
+
+        <div class="interes-grafico" id="int-grafico">
+          <svg id="int-svg" viewBox="0 0 900 380" preserveAspectRatio="none" role="img"
+               aria-label="Evolución de tu dinero durante los próximos 30 años"></svg>
+          <div class="interes-tooltip" id="int-tooltip" hidden></div>
+        </div>
+
+        <p class="interes-nota">Los intereses se calculan mes a mes sobre el total acumulado. Es una estimación: la rentabilidad real de cualquier inversión varía cada año y puede ser negativa.</p>
 
         <div class="save-row">
           <div class="autosave"><span class="dot"></span> <span class="autosave-text">Tus cifras se guardan en tu cuenta.</span></div>
@@ -1925,7 +2039,7 @@
   function tipoDe(item){ return item.tipo === "pasivos" ? "pasivos" : "activos"; }
 
   var session = null; // { access_token, refresh_token, user_id, email }
-  var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [], flujo: {}, meses: [], test: null, tareas: {}, estrategia: "" };
+  var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [], flujo: {}, meses: [], test: null, tareas: {}, estrategia: "", interes: null };
   var filasFlujo = [];
   var saveTimer = null;
 
@@ -2601,6 +2715,7 @@
     renderFlujo();
     renderMeses();
     cargarTestGuardado();
+    pintarInteres();
     pintarTareas();
     recalc();
   }
@@ -3506,7 +3621,7 @@
 
   renderCalc();
 
-  var VIEWS = { curso: "Tu curso", test: "Tu relación con el dinero", balance: "Tu balance personal", flujo: "Tu flujo de caja", inmobiliaria: "Inmuebles" };
+  var VIEWS = { curso: "Tu curso", test: "Tu relación con el dinero", interes: "Interés compuesto", balance: "Tu balance personal", flujo: "Tu flujo de caja", inmobiliaria: "Inmuebles" };
   document.querySelectorAll(".nav-item").forEach(function(btn){
     btn.addEventListener("click", function(){
       var target = btn.getAttribute("data-view");
@@ -3652,6 +3767,208 @@
     });
   })();
 
+  // ---------- Interés compuesto ----------
+  // Los intereses se acumulan mes a mes: cada mes el saldo crece un doceavo
+  // del interés anual y encima se suma el aporte. La gráfica recorre los 30
+  // años siguientes a la edad que haya puesto.
+  var INT_ANIOS = 30;
+  var intDatos = [];
+
+  function intLee(){
+    return {
+      edad: digitsToNumber(document.getElementById("int-edad").value),
+      inicial: digitsToNumber(document.getElementById("int-inicial").value),
+      mensual: digitsToNumber(document.getElementById("int-mensual").value),
+      tasa: Number(document.querySelector("#int-tasas .tasa.activa").getAttribute("data-tasa"))
+    };
+  }
+
+  function serieInteres(inicial, mensual, tasaAnual, anios){
+    var r = tasaAnual / 100 / 12;
+    var saldo = inicial;
+    var aportado = inicial;
+    var puntos = [{ anio: 0, saldo: saldo, aportado: aportado }];
+    for(var a = 1; a <= anios; a++){
+      for(var m = 0; m < 12; m++){
+        saldo = saldo * (1 + r) + mensual;
+        aportado += mensual;
+      }
+      puntos.push({ anio: a, saldo: saldo, aportado: aportado });
+    }
+    return puntos;
+  }
+
+  // Redondea el tope del eje a una cifra "redonda" para que las guías se lean.
+  function techoBonito(n){
+    if(n <= 0) return 1;
+    var exp = Math.pow(10, Math.floor(Math.log10(n)));
+    return Math.ceil(n / exp) * exp;
+  }
+
+  var INT_PAD = { arriba: 18, derecha: 16, abajo: 34, izquierda: 74 };
+  var INT_W = 900, INT_H = 380;
+
+  function intX(i, total){
+    var ancho = INT_W - INT_PAD.izquierda - INT_PAD.derecha;
+    return INT_PAD.izquierda + (total <= 1 ? 0 : (i / (total - 1)) * ancho);
+  }
+  function intY(valor, techo){
+    var alto = INT_H - INT_PAD.arriba - INT_PAD.abajo;
+    return INT_PAD.arriba + alto - (techo <= 0 ? 0 : (valor / techo) * alto);
+  }
+
+  function intCorto(n){
+    if(n >= 1e9) return Math.round(n / 1e8) / 10 + " MM";
+    if(n >= 1e6) return Math.round(n / 1e5) / 10 + " M";
+    if(n >= 1000) return Math.round(n / 1000) + "k";
+    return String(Math.round(n));
+  }
+
+  function renderInteres(){
+    var svg = document.getElementById("int-svg");
+    if(!svg) return;
+    var d = intLee();
+    var edad = d.edad > 0 ? d.edad : 30;
+
+    intDatos = serieInteres(d.inicial, d.mensual, d.tasa, INT_ANIOS);
+    var ultimo = intDatos[intDatos.length - 1];
+    var techo = techoBonito(ultimo.saldo || 1);
+
+    var piezas = [];
+    // Guías horizontales con su cifra.
+    for(var g = 0; g <= 4; g++){
+      var valor = techo * g / 4;
+      var y = intY(valor, techo);
+      piezas.push('<line class="int-guia" x1="' + INT_PAD.izquierda + '" y1="' + y +
+                  '" x2="' + (INT_W - INT_PAD.derecha) + '" y2="' + y + '"></line>');
+      piezas.push('<text class="int-texto" x="' + (INT_PAD.izquierda - 8) + '" y="' + (y + 4) +
+                  '" text-anchor="end">' + intCorto(valor) + '</text>');
+    }
+
+    // Línea y relleno.
+    var puntos = intDatos.map(function(p, i){ return intX(i, intDatos.length) + "," + intY(p.saldo, techo); });
+    var base = intY(0, techo);
+    piezas.push('<polygon class="int-area" points="' + intX(0, intDatos.length) + ',' + base + ' ' +
+                puntos.join(" ") + ' ' + intX(intDatos.length - 1, intDatos.length) + ',' + base + '"></polygon>');
+    piezas.push('<polyline class="int-linea" points="' + puntos.join(" ") + '"></polyline>');
+
+    // Eje de abajo: la edad que tendría en cada tramo.
+    piezas.push('<line class="int-eje" x1="' + INT_PAD.izquierda + '" y1="' + base +
+                '" x2="' + (INT_W - INT_PAD.derecha) + '" y2="' + base + '"></line>');
+    for(var a = 0; a <= INT_ANIOS; a += 5){
+      var x = intX(a, intDatos.length);
+      piezas.push('<text class="int-texto" x="' + x + '" y="' + (INT_H - 12) +
+                  '" text-anchor="middle">' + (edad + a) + '</text>');
+    }
+    piezas.push('<text class="int-texto" x="' + (INT_W - INT_PAD.derecha) + '" y="' + (INT_H - 1) +
+                '" text-anchor="end">tu edad</text>');
+
+    svg.innerHTML = piezas.join("");
+    svg.setAttribute("data-techo", techo);
+    svg.setAttribute("data-edad", edad);
+
+    var resumen = document.getElementById("int-resumen");
+    var intereses = ultimo.saldo - ultimo.aportado;
+    resumen.innerHTML =
+      "A los <strong>" + (edad + INT_ANIOS) + " años</strong> tendrías <strong>" + fmt(ultimo.saldo) + "</strong>" +
+      '<br><span class="aportado">De eso, ' + fmt(ultimo.aportado) + " lo habrías puesto tú y " +
+      fmt(intereses) + " serían intereses.</span>";
+  }
+
+  function intGuarda(){
+    var d = intLee();
+    state.interes = d;
+    queueSave();
+  }
+
+  (function conectarInteres(){
+    var svg = document.getElementById("int-svg");
+    if(!svg) return;
+    var campos = ["int-edad", "int-inicial", "int-mensual"].map(function(id){ return document.getElementById(id); });
+
+    campos.forEach(function(campo){
+      campo.addEventListener("input", function(){
+        // Mismo formato de miles que en el resto de la página.
+        if(campo.id !== "int-edad"){
+          var n = digitsToNumber(campo.value);
+          campo.value = n ? formatThousands(n) : "";
+        } else {
+          campo.value = campo.value.replace(/[^\d]/g, "").slice(0, 3);
+        }
+        renderInteres();
+        intGuarda();
+      });
+    });
+
+    document.querySelectorAll("#int-tasas .tasa").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        document.querySelectorAll("#int-tasas .tasa").forEach(function(b){ b.classList.remove("activa"); });
+        btn.classList.add("activa");
+        renderInteres();
+        intGuarda();
+      });
+    });
+
+    // Al pasar por encima se marca el año más cercano y se ve la cifra.
+    var caja = document.getElementById("int-grafico");
+    var tip = document.getElementById("int-tooltip");
+
+    function alMover(e){
+      if(intDatos.length === 0) return;
+      var r = svg.getBoundingClientRect();
+      var px = (e.clientX - r.left) / r.width * INT_W;
+      var ancho = INT_W - INT_PAD.izquierda - INT_PAD.derecha;
+      var i = Math.round((px - INT_PAD.izquierda) / ancho * (intDatos.length - 1));
+      i = Math.max(0, Math.min(intDatos.length - 1, i));
+
+      var techo = Number(svg.getAttribute("data-techo"));
+      var edad = Number(svg.getAttribute("data-edad"));
+      var p = intDatos[i];
+      var x = intX(i, intDatos.length);
+      var y = intY(p.saldo, techo);
+
+      var viejo = svg.querySelector(".int-marca-grupo");
+      if(viejo) viejo.remove();
+      var grupo = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      grupo.setAttribute("class", "int-marca-grupo");
+      grupo.innerHTML =
+        '<line class="int-marca" x1="' + x + '" y1="' + INT_PAD.arriba + '" x2="' + x +
+        '" y2="' + intY(0, techo) + '"></line>' +
+        '<circle class="int-punto" cx="' + x + '" cy="' + y + '" r="4"></circle>';
+      svg.appendChild(grupo);
+
+      tip.hidden = false;
+      tip.innerHTML = fmt(p.saldo) + '<span class="edad">' + (edad + p.anio) + " años</span>";
+      var cajaR = caja.getBoundingClientRect();
+      // Se coloca sobre el punto marcado, no sobre el ratón: así no baila
+      // mientras el punto va saltando de año en año.
+      tip.style.left = (r.left - cajaR.left + x * (r.width / INT_W)) + "px";
+      tip.style.top = (r.top - cajaR.top + y * (r.height / INT_H)) + "px";
+    }
+
+    caja.addEventListener("mousemove", alMover);
+    caja.addEventListener("mouseleave", function(){
+      tip.hidden = true;
+      var viejo = svg.querySelector(".int-marca-grupo");
+      if(viejo) viejo.remove();
+    });
+  })();
+
+  // Vuelca en los campos lo que tenga guardado y dibuja.
+  function pintarInteres(){
+    if(!document.getElementById("int-svg")) return;
+    var g = state.interes;
+    if(g){
+      document.getElementById("int-edad").value = g.edad ? String(g.edad) : "";
+      document.getElementById("int-inicial").value = g.inicial ? formatThousands(g.inicial) : "";
+      document.getElementById("int-mensual").value = g.mensual ? formatThousands(g.mensual) : "";
+      document.querySelectorAll("#int-tasas .tasa").forEach(function(b){
+        b.classList.toggle("activa", Number(b.getAttribute("data-tasa")) === Number(g.tasa || 12));
+      });
+    }
+    renderInteres();
+  }
+
   construirTiks();
 
   // Loom habla el protocolo player.js: le pedimos que nos avise al terminar
@@ -3727,6 +4044,7 @@
         state.test = data.test || null;
         state.tareas = data.tareas || {};
         state.estrategia = typeof data.estrategia === "string" ? data.estrategia : "";
+        state.interes = data.interes || null;
         migrarRepartidos();
       }
     }catch(e){

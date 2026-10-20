@@ -556,11 +556,19 @@
   .badge-cohorte { background: var(--surface); color: var(--ink-faint); }
   /* Cada grupo de contactos va con su cabecera, para verlos separados. */
   .grupo-head {
-    display: flex; align-items: baseline; gap: 10px;
-    margin: 22px 0 8px; padding-bottom: 7px;
-    border-bottom: 1px solid var(--rule);
+    display: flex; align-items: baseline; gap: 10px; width: 100%;
+    margin: 22px 0 8px; padding: 0 0 7px;
+    border: 0; border-bottom: 1px solid var(--rule);
+    background: none; cursor: pointer; text-align: left;
+    font-family: inherit; color: inherit;
   }
-  .grupo-head:first-child { margin-top: 4px; }
+  .grupo:first-child .grupo-head { margin-top: 4px; }
+  .grupo-head .flecha {
+    flex: none; font-size: 0.7rem; color: var(--ink-faint);
+    transition: transform .15s ease;
+  }
+  .grupo:not(.plegado) .grupo-head .flecha { transform: rotate(90deg); }
+  .grupo.plegado .grupo-cuerpo { display: none; }
   .grupo-head h3 {
     margin: 0; font-size: 0.78rem; font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-strong);
@@ -1318,6 +1326,8 @@
   // de datos sola). "alumno" marca a quien ya ha pagado y está matriculado.
   function cohorteDe(c) { return c.cohorte || 1; }
 
+  const gruposPlegados = new Set();
+
   const GRUPOS = [
     { titulo: "Cohorte 1 · lista de espera", test: c => cohorteDe(c) === 1 && !c.alumno },
     { titulo: "Cohorte 1 · alumnos",         test: c => cohorteDe(c) === 1 && !!c.alumno },
@@ -1405,18 +1415,35 @@
       return;
     }
     empty.style.display = "none";
-    list.innerHTML = GRUPOS.map(g => {
+    list.innerHTML = GRUPOS.map((g, i) => {
       const gente = filtered.filter(g.test);
+      const plegado = gruposPlegados.has(i) ? " plegado" : "";
       return `
-        <div class="grupo-head">
-          <h3>${g.titulo}</h3>
-          <span class="cuantos">${gente.length}</span>
+        <div class="grupo${plegado}" data-grupo="${i}">
+          <button class="grupo-head" type="button" aria-expanded="${plegado ? "false" : "true"}">
+            <span class="flecha" aria-hidden="true">&#9656;</span>
+            <h3>${g.titulo}</h3>
+            <span class="cuantos">${gente.length}</span>
+          </button>
+          <div class="grupo-cuerpo">
+            ${gente.length
+              ? gente.map(contactRowHtml).join("")
+              : '<p class="grupo-vacio">Todavía no hay nadie en este grupo.</p>'}
+          </div>
         </div>
-        ${gente.length
-          ? gente.map(contactRowHtml).join("")
-          : '<p class="grupo-vacio">Todavía no hay nadie en este grupo.</p>'}
       `;
     }).join("");
+
+    // Cada grupo se pliega al pulsar su cabecera, para ver la lista de un vistazo.
+    list.querySelectorAll(".grupo-head").forEach(cab => {
+      cab.addEventListener("click", () => {
+        const caja = cab.closest(".grupo");
+        const i = Number(caja.dataset.grupo);
+        const ahoraPlegado = caja.classList.toggle("plegado");
+        cab.setAttribute("aria-expanded", ahoraPlegado ? "false" : "true");
+        if (ahoraPlegado) gruposPlegados.add(i); else gruposPlegados.delete(i);
+      });
+    });
 
     list.querySelectorAll(".contact-row").forEach(row => {
       row.addEventListener("click", (e) => {
