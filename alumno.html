@@ -888,6 +888,11 @@
     display: block; font-family: "IBM Plex Mono", monospace;
     font-size: 11px; opacity: .75;
   }
+  .interes-vacio {
+    margin: 0 0 18px; padding: 26px 20px; text-align: center;
+    border: 1px dashed var(--rule); border-radius: 10px;
+    font-size: 13.5px; color: var(--ink-faint);
+  }
   .interes-nota { font-size: 12px; color: var(--ink-faint); line-height: 1.5; margin: 0 0 18px; }
   @media (max-width: 720px) {
     .interes-grafico svg { height: 260px; }
@@ -1432,16 +1437,16 @@
         <div class="interes-campos">
           <label class="interes-campo">
             <span>Tu edad</span>
-            <input type="text" inputmode="numeric" id="int-edad" placeholder="30">
+            <input type="text" inputmode="numeric" id="int-edad">
           </label>
           <label class="interes-campo">
             <span>Importe inicial</span>
-            <input type="text" inputmode="numeric" id="int-inicial" placeholder="5.000 €">
+            <input type="text" inputmode="numeric" id="int-inicial">
             <small>Lo que tienes ahora para destinar a invertir.</small>
           </label>
           <label class="interes-campo">
             <span>Aporte mensual</span>
-            <input type="text" inputmode="numeric" id="int-mensual" placeholder="200 €">
+            <input type="text" inputmode="numeric" id="int-mensual">
             <small>Lo que te comprometes a aportar cada mes.</small>
           </label>
           <div class="interes-campo">
@@ -1455,9 +1460,11 @@
           </div>
         </div>
 
-        <div class="interes-resumen" id="int-resumen"></div>
+        <p class="interes-vacio" id="int-vacio">Rellena tu edad y al menos una de las dos cantidades para ver la gráfica.</p>
 
-        <div class="interes-grafico" id="int-grafico">
+        <div class="interes-resumen" id="int-resumen" hidden></div>
+
+        <div class="interes-grafico" id="int-grafico" hidden>
           <svg id="int-svg" viewBox="0 0 900 380" preserveAspectRatio="none" role="img"
                aria-label="Evolución de tu dinero durante los próximos 30 años"></svg>
           <div class="interes-tooltip" id="int-tooltip" hidden></div>
@@ -3828,7 +3835,24 @@
     var svg = document.getElementById("int-svg");
     if(!svg) return;
     var d = intLee();
-    var edad = d.edad > 0 ? d.edad : 30;
+    var caja = document.getElementById("int-grafico");
+    var resumen = document.getElementById("int-resumen");
+
+    // Sin edad o sin dinero no hay nada que dibujar: antes se inventaba una
+    // edad de 30 y una gráfica de ceros, y parecía que ya estaba relleno.
+    if(d.edad <= 0 || (d.inicial <= 0 && d.mensual <= 0)){
+      intDatos = [];
+      svg.innerHTML = "";
+      caja.hidden = true;
+      resumen.innerHTML = "";
+      resumen.hidden = true;
+      document.getElementById("int-vacio").hidden = false;
+      return;
+    }
+    caja.hidden = false;
+    resumen.hidden = false;
+    document.getElementById("int-vacio").hidden = true;
+    var edad = d.edad;
 
     intDatos = serieInteres(d.inicial, d.mensual, d.tasa, INT_ANIOS);
     var ultimo = intDatos[intDatos.length - 1];
@@ -3867,7 +3891,6 @@
     svg.setAttribute("data-techo", techo);
     svg.setAttribute("data-edad", edad);
 
-    var resumen = document.getElementById("int-resumen");
     var intereses = ultimo.saldo - ultimo.aportado;
     resumen.innerHTML =
       "A los <strong>" + (edad + INT_ANIOS) + " años</strong> tendrías <strong>" + fmt(ultimo.saldo) + "</strong>" +
