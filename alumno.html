@@ -846,9 +846,9 @@
   }
   .interes-campo input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   .interes-campo small { font-size: 11.5px; color: var(--ink-faint); line-height: 1.4; }
-  .interes-tasas { display: flex; gap: 6px; flex-wrap: wrap; }
+  .interes-tasas { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .interes-tasas .tasa {
-    flex: 1; min-width: 56px; font-family: "IBM Plex Mono", monospace; font-size: 13px;
+    font-family: "IBM Plex Mono", monospace; font-size: 13px;
     padding: 9px 4px; border: 1px solid var(--rule); border-radius: 8px;
     background: var(--bg); color: var(--ink-faint); cursor: pointer;
   }
@@ -3932,7 +3932,7 @@
     resumen.innerHTML =
       "A los <strong>" + (edad + INT_ANIOS) + " años</strong> tendrías <strong>" + fmt(ultimo.saldo) + "</strong>" +
       '<br><span class="aportado">De eso, ' + fmt(ultimo.aportado) + " lo habrías puesto tú y " +
-      fmt(intereses) + " sería interés compuesto.</span>";
+      fmt(intereses) + " son resultado del interés compuesto.</span>";
   }
 
   function intGuarda(){
@@ -4002,7 +4002,7 @@
       tip.hidden = false;
       tip.innerHTML = fmt(p.saldo) +
         '<span class="puesto">' + fmt(p.aportado) + " los has puesto tú</span>" +
-        '<span class="puesto">' + fmt(p.saldo - p.aportado) + " de interés compuesto</span>" +
+        '<span class="puesto">' + fmt(p.saldo - p.aportado) + " son resultado del interés compuesto</span>" +
         '<span class="edad">' + (edad + p.anio) + " años</span>";
       var cajaR = caja.getBoundingClientRect();
       // Se coloca sobre el punto marcado, no sobre el ratón: así no baila
