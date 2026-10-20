@@ -552,6 +552,25 @@
   .badge-waitlist { background: var(--surface); color: var(--accent-strong); }
   .badge-test { background: var(--good-bg); color: var(--good); }
   .badge-pendiente { background: var(--surface); color: var(--accent-strong); }
+  .badge-alumno { background: var(--good); color: #fff; }
+  .badge-cohorte { background: var(--surface); color: var(--ink-faint); }
+  /* Cada grupo de contactos va con su cabecera, para verlos separados. */
+  .grupo-head {
+    display: flex; align-items: baseline; gap: 10px;
+    margin: 22px 0 8px; padding-bottom: 7px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .grupo-head:first-child { margin-top: 4px; }
+  .grupo-head h3 {
+    margin: 0; font-size: 0.78rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-strong);
+  }
+  .grupo-head .cuantos {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; color: var(--ink-faint);
+  }
+  .grupo-vacio {
+    padding: 12px 2px; font-size: 0.82rem; color: var(--ink-faint); font-style: italic;
+  }
   .contact-date {
     font-family: "IBM Plex Mono", monospace;
     font-size: 0.72rem;
@@ -663,6 +682,9 @@
         <input type="text" id="search-input" placeholder="Buscar por nombre o email...">
         <select class="filter-select" id="filter-source">
           <option value="all">Todos</option>
+          <option value="c1-espera">Cohorte 1 · lista de espera</option>
+          <option value="c1-alumnos">Cohorte 1 · alumnos</option>
+          <option value="c2">Cohorte 2</option>
           <option value="waitlist">Solo lista de espera</option>
           <option value="test">Solo test</option>
         </select>
@@ -1291,8 +1313,32 @@
     vigilante: "Vigilante", obsesivo: "Obsesivo", estatus: "Estatus", evitativo: "Evitativo"
   };
 
+  // La cohorte 1 es la primera edición: todo el que ya estaba cuando se lanzó.
+  // Quien se apunte a partir de ahora entra como cohorte 2 (lo pone la base
+  // de datos sola). "alumno" marca a quien ya ha pagado y está matriculado.
+  function cohorteDe(c) { return c.cohorte || 1; }
+
+  const GRUPOS = [
+    { titulo: "Cohorte 1 · lista de espera", test: c => cohorteDe(c) === 1 && !c.alumno },
+    { titulo: "Cohorte 1 · alumnos",         test: c => cohorteDe(c) === 1 && !!c.alumno },
+    { titulo: "Cohorte 2",                   test: c => cohorteDe(c) >= 2 }
+  ];
+
+  function pasaFiltro(c, filter) {
+    switch (filter) {
+      case "c1-espera":  return cohorteDe(c) === 1 && !c.alumno;
+      case "c1-alumnos": return cohorteDe(c) === 1 && !!c.alumno;
+      case "c2":         return cohorteDe(c) >= 2;
+      case "waitlist":   return !!c.is_waitlist;
+      case "test":       return !!c.is_test;
+      default:           return true;
+    }
+  }
+
   function contactRowHtml(c) {
     const badges = [];
+    if (c.alumno) badges.push('<span class="badge badge-alumno">Alumno</span>');
+    badges.push(`<span class="badge badge-cohorte">Cohorte ${cohorteDe(c)}</span>`);
     if (c.is_waitlist) badges.push('<span class="badge badge-waitlist">Lista de espera</span>');
     if (c.is_test) badges.push(`<span class="badge badge-test">Test: ${escapeHtml(PROFILE_LABELS[c.test_result_top] || c.test_result_top || "")}</span>`);
 
@@ -1339,7 +1385,7 @@
 
     let filtered = allContacts.filter(c => {
       const matchesQuery = !q || c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q);
-      const matchesFilter = filter === "all" || (filter === "waitlist" && c.is_waitlist) || (filter === "test" && c.is_test);
+      const matchesFilter = pasaFiltro(c, filter);
       return matchesQuery && matchesFilter;
     });
 
@@ -1359,7 +1405,18 @@
       return;
     }
     empty.style.display = "none";
-    list.innerHTML = filtered.map(contactRowHtml).join("");
+    list.innerHTML = GRUPOS.map(g => {
+      const gente = filtered.filter(g.test);
+      return `
+        <div class="grupo-head">
+          <h3>${g.titulo}</h3>
+          <span class="cuantos">${gente.length}</span>
+        </div>
+        ${gente.length
+          ? gente.map(contactRowHtml).join("")
+          : '<p class="grupo-vacio">Todavía no hay nadie en este grupo.</p>'}
+      `;
+    }).join("");
 
     list.querySelectorAll(".contact-row").forEach(row => {
       row.addEventListener("click", (e) => {
@@ -1393,7 +1450,7 @@
     const filter = document.getElementById("filter-source").value;
     const filtered = allContacts.filter(c => {
       const matchesQuery = !q || c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q);
-      const matchesFilter = filter === "all" || (filter === "waitlist" && c.is_waitlist) || (filter === "test" && c.is_test);
+      const matchesFilter = pasaFiltro(c, filter);
       return matchesQuery && matchesFilter;
     });
     filtered.forEach(c => {
