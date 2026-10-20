@@ -139,6 +139,19 @@
     border-radius: 6px;
     padding: 12px 14px;
   }
+  .gate-ayuda {
+    margin: 7px 0 0; font-size: 0.78rem; line-height: 1.45; color: var(--ink-faint);
+  }
+  /* El ojito va dentro del campo, pegado a la derecha. */
+  .gate-input-ojo { position: relative; }
+  .gate-input-ojo input { padding-right: 46px; }
+  .gate-input-ojo .ojo {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+    border: 0; background: none; cursor: pointer; color: var(--ink-faint); padding: 0;
+  }
+  .gate-input-ojo .ojo:hover { color: var(--ink); }
+  .gate-input-ojo .ojo svg { width: 19px; height: 19px; }
   .gate-btn {
     width: 100%;
     margin-top: 16px;
@@ -1031,19 +1044,32 @@
     </div>
     <div class="eyebrow">Área de alumnos</div>
     <h1>Entra a tu balance</h1>
-    <p class="desc">Escribe el email con el que te matriculaste.</p>
     <div class="gate-field" id="field-email">
       <label for="login-email">Email</label>
       <input type="email" id="login-email" autocomplete="email" placeholder="tú@email.com">
+      <p class="gate-ayuda">Escribe el email con el que te apuntaste.</p>
     </div>
     <button class="gate-btn" id="email-btn">Continuar</button>
     <div class="gate-note" id="login-note"></div>
 
     <div class="gate-field" id="field-password" style="display:none; margin-top:16px;">
-      <label for="login-password">Contraseña</label>
-      <input type="password" id="login-password" autocomplete="current-password" placeholder="••••••••">
-      <p class="desc" style="font-size:0.82rem; margin:8px 0 0;">Si es tu primera vez, escribe la contraseña que quieras usar a partir de ahora.</p>
+      <label for="login-password" id="login-password-label">Contraseña</label>
+      <div class="gate-input-ojo">
+        <input type="password" id="login-password" autocomplete="current-password" placeholder="••••••••">
+        <button type="button" class="ojo" data-ojo="login-password" aria-label="Ver la contraseña"></button>
+      </div>
+      <p class="gate-ayuda" id="login-password-ayuda" hidden>Escribe la contraseña que quieres tener de acceso.</p>
     </div>
+
+    <div class="gate-field" id="field-password2" style="display:none; margin-top:16px;">
+      <label for="login-password2">Confirma tu contraseña</label>
+      <div class="gate-input-ojo">
+        <input type="password" id="login-password2" autocomplete="new-password" placeholder="••••••••">
+        <button type="button" class="ojo" data-ojo="login-password2" aria-label="Ver la contraseña"></button>
+      </div>
+      <p class="gate-ayuda">Vuelve a escribirla para confirmar.</p>
+    </div>
+
     <button class="gate-btn" id="password-btn" style="display:none; margin-top:10px;">Entrar</button>
     <div class="gate-note" id="password-note"></div>
     <button class="link-btn" id="forgot-btn" style="display:none;">He olvidado mi contraseña</button>
@@ -1767,6 +1793,17 @@
     return autorizado === true;
   }
 
+  // Para saber si le pedimos su contraseña o le pedimos que elija una.
+  async function tieneClave(email){
+    var res = await fetch(window.SUPABASE_URL + "/rest/v1/rpc/alumno_tiene_clave", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "apikey": window.SUPABASE_ANON_KEY },
+      body: JSON.stringify({ p_email: email })
+    });
+    if(!res.ok) return true; // ante la duda, le pedimos la contraseña de siempre
+    return await res.json() === true;
+  }
+
   async function signInWithPassword(email, password){
     var res = await fetch(window.SUPABASE_URL + "/auth/v1/token?grant_type=password", {
       method: "POST",
@@ -1892,6 +1929,8 @@
   var passwordBtn = document.getElementById("password-btn");
   var passwordNote = document.getElementById("password-note");
   var pendingEmail = null;
+  var esPrimeraVez = false;
+  var loginPassword2 = document.getElementById("login-password2");
 
   // Paso 1: solo seguimos si el email está en la lista de alumnos autorizados.
   emailBtn.addEventListener("click", async function(){
@@ -1917,11 +1956,22 @@
         return;
       }
       pendingEmail = email;
+      esPrimeraVez = !(await tieneClave(email));
       loginNote.className = "gate-note";
       loginNote.textContent = "";
+
+      // Primera vez: elige contraseña y la confirma. Si ya la tiene, entra.
+      document.getElementById("login-password-label").textContent =
+        esPrimeraVez ? "Nueva contraseña" : "Contraseña";
+      document.getElementById("login-password-ayuda").hidden = !esPrimeraVez;
+      loginPassword.setAttribute("autocomplete", esPrimeraVez ? "new-password" : "current-password");
+      document.getElementById("field-password2").style.display = esPrimeraVez ? "block" : "none";
+      loginPassword2.value = "";
+      passwordBtn.textContent = esPrimeraVez ? "Crear mi acceso" : "Entrar";
+      document.getElementById("forgot-btn").style.display = esPrimeraVez ? "none" : "block";
+
       fieldPassword.style.display = "block";
       passwordBtn.style.display = "block";
-      document.getElementById("forgot-btn").style.display = "block";
       loginPassword.focus();
     }catch(e){
       loginNote.className = "gate-note error";
@@ -1945,11 +1995,25 @@
     }
     if(!password){
       passwordNote.className = "gate-note error";
-      passwordNote.textContent = "Escribe tu contraseña.";
+      passwordNote.textContent = esPrimeraVez ? "Elige una contraseña." : "Escribe tu contraseña.";
       return;
     }
+    if(esPrimeraVez){
+      if(password.length < 6){
+        passwordNote.className = "gate-note error";
+        passwordNote.textContent = "La contraseña debe tener al menos 6 caracteres.";
+        return;
+      }
+      if(password !== loginPassword2.value){
+        passwordNote.className = "gate-note error";
+        passwordNote.textContent = "Las dos contraseñas no coinciden.";
+        loginPassword2.focus();
+        return;
+      }
+    }
+    var textoBoton = passwordBtn.textContent;
     passwordBtn.disabled = true;
-    passwordBtn.textContent = "Entrando...";
+    passwordBtn.textContent = esPrimeraVez ? "Creando tu acceso..." : "Entrando...";
     try{
       var tokenData = await signInWithPassword(pendingEmail, password);
       if(!tokenData){
@@ -1965,9 +2029,31 @@
       passwordNote.textContent = e.message || "No se pudo entrar.";
     }finally{
       passwordBtn.disabled = false;
-      passwordBtn.textContent = "Entrar";
+      passwordBtn.textContent = textoBoton;
     }
   });
+
+  // El ojito enseña u oculta lo que han escrito.
+  var OJO_ABIERTO = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+    '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" ' +
+    'stroke="currentColor" stroke-width="1.6"></path>' +
+    '<circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"></circle></svg>';
+  var OJO_TACHADO = OJO_ABIERTO.replace("</svg>",
+    '<path d="M4 20 20 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>');
+
+  document.querySelectorAll(".gate-input-ojo .ojo").forEach(function(btn){
+    btn.innerHTML = OJO_ABIERTO;
+    btn.addEventListener("click", function(){
+      var campo = document.getElementById(btn.getAttribute("data-ojo"));
+      var visible = campo.type === "text";
+      campo.type = visible ? "password" : "text";
+      btn.innerHTML = visible ? OJO_ABIERTO : OJO_TACHADO;
+      btn.setAttribute("aria-label", visible ? "Ver la contraseña" : "Ocultar la contraseña");
+      campo.focus();
+    });
+  });
+
+  loginPassword2.addEventListener("keydown", function(e){ if(e.key === "Enter") passwordBtn.click(); });
 
   loginEmail.addEventListener("keydown", function(e){ if(e.key === "Enter") emailBtn.click(); });
   loginPassword.addEventListener("keydown", function(e){ if(e.key === "Enter") passwordBtn.click(); });
