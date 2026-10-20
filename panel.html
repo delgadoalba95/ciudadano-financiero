@@ -556,18 +556,23 @@
   .badge-cohorte { background: var(--surface); color: var(--ink-faint); }
   /* Cada grupo de contactos va con su cabecera, para verlos separados. */
   .grupo-head {
-    display: flex; align-items: baseline; gap: 10px; width: 100%;
+    display: flex; align-items: center; gap: 10px; width: 100%;
     margin: 22px 0 8px; padding: 0 0 7px;
-    border: 0; border-bottom: 1px solid var(--rule);
-    background: none; cursor: pointer; text-align: left;
-    font-family: inherit; color: inherit;
+    border-bottom: 1px solid var(--rule);
+  }
+  .grupo-head .grupo-checkbox { flex: none; margin: 0; cursor: pointer; }
+  .grupo-head .grupo-checkbox:disabled { cursor: default; opacity: .4; }
+  .grupo-plegar {
+    display: flex; align-items: baseline; gap: 10px; flex: 1;
+    border: 0; padding: 0; background: none; cursor: pointer;
+    text-align: left; font-family: inherit; color: inherit;
   }
   .grupo:first-child .grupo-head { margin-top: 4px; }
-  .grupo-head .flecha {
+  .grupo-plegar .flecha {
     flex: none; font-size: 0.7rem; color: var(--ink-faint);
     transition: transform .15s ease;
   }
-  .grupo:not(.plegado) .grupo-head .flecha { transform: rotate(90deg); }
+  .grupo:not(.plegado) .grupo-plegar .flecha { transform: rotate(90deg); }
   .grupo.plegado .grupo-cuerpo { display: none; }
   .grupo-head h3 {
     margin: 0; font-size: 0.78rem; font-weight: 700;
@@ -1369,7 +1374,8 @@
           <input type="checkbox" class="contact-checkbox" data-id="${c.id}" ${checked}>
           <div style="flex:1; min-width:0;">
             <div class="contact-name">${escapeHtml(c.name)}</div>
-            <div class="contact-meta">${escapeHtml(c.email)} · ${escapeHtml(c.whatsapp)}</div>
+            <div class="contact-meta">${escapeHtml(c.email)}</div>
+            ${c.whatsapp && c.whatsapp !== "—" ? `<div class="contact-meta">${escapeHtml(c.whatsapp)}</div>` : ""}
           </div>
           <div style="display:flex; align-items:center; gap:10px;">
             <div class="badge-row">${badges.join("")}</div>
@@ -1420,11 +1426,18 @@
       const plegado = gruposPlegados.has(i) ? " plegado" : "";
       return `
         <div class="grupo${plegado}" data-grupo="${i}">
-          <button class="grupo-head" type="button" aria-expanded="${plegado ? "false" : "true"}">
-            <span class="flecha" aria-hidden="true">&#9656;</span>
-            <h3>${g.titulo}</h3>
-            <span class="cuantos">${gente.length}</span>
-          </button>
+          <div class="grupo-head">
+            <input type="checkbox" class="grupo-checkbox" data-grupo="${i}"
+                   title="Seleccionar todo el grupo"
+                   aria-label="Seleccionar todo el grupo ${g.titulo}"
+                   ${gente.length && gente.every(c => selectedContactIds.has(c.id)) ? "checked" : ""}
+                   ${gente.length ? "" : "disabled"}>
+            <button class="grupo-plegar" type="button" aria-expanded="${plegado ? "false" : "true"}">
+              <span class="flecha" aria-hidden="true">&#9656;</span>
+              <h3>${g.titulo}</h3>
+              <span class="cuantos">${gente.length}</span>
+            </button>
+          </div>
           <div class="grupo-cuerpo">
             ${gente.length
               ? gente.map(contactRowHtml).join("")
@@ -1435,13 +1448,26 @@
     }).join("");
 
     // Cada grupo se pliega al pulsar su cabecera, para ver la lista de un vistazo.
-    list.querySelectorAll(".grupo-head").forEach(cab => {
+    list.querySelectorAll(".grupo-plegar").forEach(cab => {
       cab.addEventListener("click", () => {
         const caja = cab.closest(".grupo");
         const i = Number(caja.dataset.grupo);
         const ahoraPlegado = caja.classList.toggle("plegado");
         cab.setAttribute("aria-expanded", ahoraPlegado ? "false" : "true");
         if (ahoraPlegado) gruposPlegados.add(i); else gruposPlegados.delete(i);
+      });
+    });
+
+    // La casilla del grupo marca o desmarca a todos los suyos. Está en la
+    // cabecera, así que funciona igual con el grupo plegado.
+    list.querySelectorAll(".grupo-checkbox").forEach(box => {
+      box.addEventListener("click", e => e.stopPropagation());
+      box.addEventListener("change", () => {
+        const gente = filtered.filter(GRUPOS[Number(box.dataset.grupo)].test);
+        gente.forEach(c => {
+          if (box.checked) selectedContactIds.add(c.id); else selectedContactIds.delete(c.id);
+        });
+        renderContacts();
       });
     });
 
