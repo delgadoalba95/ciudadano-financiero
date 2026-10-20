@@ -125,6 +125,8 @@
     box-shadow: 0 6px 24px -10px var(--shadow);
   }
   .gate-card h1 { font-size: 1.5rem; margin: 8px 0 10px; }
+  /* Cuando la tarjeta no lleva título, el aire lo pone el eyebrow. */
+  .gate-card .eyebrow + .gate-field { margin-top: 20px; }
   .gate-card p.desc { color: var(--ink-soft); font-size: 0.92rem; margin: 0 0 22px; line-height: 1.55; }
   .gate-field label {
     display: block; font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 6px; font-weight: 600;
@@ -1043,7 +1045,6 @@
       <span>Ciudadano Financiero</span>
     </div>
     <div class="eyebrow">Área de alumnos</div>
-    <h1>Entra a tu balance</h1>
     <div class="gate-field" id="field-email">
       <label for="login-email">Email</label>
       <input type="email" id="login-email" autocomplete="email" placeholder="tú@email.com">
@@ -1062,7 +1063,7 @@
     </div>
 
     <div class="gate-field" id="field-password2" style="display:none; margin-top:16px;">
-      <label for="login-password2">Confirma tu contraseña</label>
+      <label for="login-password2">Confirma tu nueva contraseña</label>
       <div class="gate-input-ojo">
         <input type="password" id="login-password2" autocomplete="new-password" placeholder="••••••••">
         <button type="button" class="ojo" data-ojo="login-password2" aria-label="Ver la contraseña"></button>
@@ -1967,7 +1968,7 @@
       loginPassword.setAttribute("autocomplete", esPrimeraVez ? "new-password" : "current-password");
       document.getElementById("field-password2").style.display = esPrimeraVez ? "block" : "none";
       loginPassword2.value = "";
-      passwordBtn.textContent = esPrimeraVez ? "Crear mi acceso" : "Entrar";
+      passwordBtn.textContent = esPrimeraVez ? "Acceder" : "Entrar";
       document.getElementById("forgot-btn").style.display = esPrimeraVez ? "none" : "block";
 
       fieldPassword.style.display = "block";
