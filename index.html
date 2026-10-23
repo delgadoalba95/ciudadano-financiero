@@ -253,11 +253,14 @@
   /* Llamada a la acción al cerrar "este curso es para ti si...". */
   /* Franja de cierre: una sola llamada, separada del resto. */
   /* Cierre de la página: por qué cuesta tanto, y el vídeo de las 3 habilidades. */
-  .tres-strip { border-top: 1px solid var(--rule); }
+  .tres-strip {
+    border-top: 1px solid var(--rule);
+    background: var(--surface-2);
+  }
   .tres-inner {
     max-width: 720px;
     margin: 0 auto;
-    padding: 64px 28px 72px;
+    padding: 38px 28px 56px;
     text-align: center;
   }
   .tres-inner h2 {
@@ -281,24 +284,15 @@
   }
   .tres-btn { margin-top: 6px; padding: 18px 30px; font-size: 1.02rem; }
 
-  .cierre-strip {
-    background: var(--surface-2);
-    border-top: 1px solid var(--rule);
-    border-bottom: 1px solid var(--rule);
-  }
-  .cierre-inner {
-    max-width: 880px;
-    margin: 0 auto;
-    padding: 52px 28px;
-    text-align: center;
-  }
-  .cierre-btn {
-    max-width: 640px;
+  /* El botón cierra el bloque de "para quién es", centrado. */
+  .whom-cta { margin-top: 34px; text-align: center; }
+  .whom-cta .btn {
+    max-width: 620px;
     text-align: center;
     line-height: 1.4;
     white-space: normal;
-    padding: 20px 30px;
-    font-size: 1.02rem;
+    padding: 18px 28px;
+    font-size: 1rem;
   }
 
   .link-plain {
@@ -1022,12 +1016,9 @@
         <div class="whom-item"><span class="check">→</span>Quieres invertir pero te da miedo hacerlo mal o no sabes cómo hacerlo.</div>
       </div>
       <div class="honest-note"><strong>No es para ti</strong> si buscas hacerte rico rápido. Aquí se aprende a construir, no a apostar. El patrimonio se construye con criterio y con tiempo — eso es lo que vas a aprender.</div>
-    </div>
-  </section>
-
-  <section class="cierre-strip" id="acceso">
-    <div class="cierre-inner">
-      <a class="btn btn-primary cierre-btn" href="#lista-espera">Si quieres aprender a gestionar e invertir tu dinero de forma exponencial, haz clic aquí.</a>
+      <div class="whom-cta">
+        <a class="btn btn-primary" href="#lista-espera">Si quieres aprender a gestionar e invertir tu dinero de forma exponencial, haz clic aquí.</a>
+      </div>
     </div>
   </section>
 
