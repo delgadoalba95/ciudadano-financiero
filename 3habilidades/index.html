@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Las 3 habilidades del dinero — Ciudadano Financiero</title>
+<meta name="description" content="Un vídeo gratis de 8 minutos con las tres habilidades que hacen que el dinero crezca o se quede donde está.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.loom.com">
+<link rel="preconnect" href="https://cdn.loom.com">
+<script defer src="/supabase-config.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ECE3CB;
+    --surface-2: #F5EFDC;
+    --ink: #1C2B42;
+    --ink-soft: #48597D;
+    --ink-faint: #7C88A3;
+    --accent: #A9832E;
+    --accent-strong: #8C6D25;
+    --accent-ink: #152A47;
+    --rule: #C9BA8C;
+    --shadow: rgba(28, 43, 66, 0.14);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101B2C;
+      --surface-2: #1D2E49;
+      --ink: #EFE7D2;
+      --ink-soft: #B4BFD6;
+      --ink-faint: #7A87A3;
+      --accent: #D9B35C;
+      --accent-strong: #EBCB80;
+      --accent-ink: #1B1404;
+      --rule: #334563;
+      --shadow: rgba(0, 0, 0, 0.5);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Public Sans", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* La misma cabecera que el resto de la web. */
+  header.site { background: #122641; }
+  .nav-row { display: flex; align-items: center; padding: 16px 26px; }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: "Newsreader", serif;
+    font-weight: 600;
+    font-size: 0.98rem;
+    letter-spacing: 0.03em;
+    text-decoration: none;
+    color: #F5F1E6;
+  }
+  .logo svg { flex: none; }
+
+  main {
+    flex: 1;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 4px 24px 32px;
+    text-align: center;
+  }
+
+  h1 {
+    font-family: "Newsreader", serif;
+    font-weight: 600;
+    /* En pantalla de ordenador tiene que caber en una sola línea. */
+    font-size: clamp(25px, 4vw, 44px);
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    margin: 16px auto 8px;
+    text-wrap: balance;
+  }
+  /* Etiqueta pequeña que dice de qué va el vídeo que viene debajo. */
+  .etiqueta-video {
+    margin: 0 0 12px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* El vídeo es lo único que importa aquí. Es 16:9: lo que dice la API de Loom
+     sobre su tamaño no es de fiar, se comprueba mirando si salen franjas. */
+  .video {
+    position: relative;
+    /* Se limita por altura para que el botón de compra entre en pantalla
+       sin tener que bajar. */
+    height: min(60vh, 620px);
+    aspect-ratio: 16 / 9;
+    width: auto;
+    max-width: 100%;
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: 14px;
+    border: 1px solid var(--rule);
+    background: #000 center/cover no-repeat;
+    box-shadow: 0 18px 50px var(--shadow);
+  }
+  .video iframe {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%; border: 0;
+  }
+
+  .compra { margin-top: 18px; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 620px;
+    padding: 20px 28px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-family: "Public Sans", sans-serif;
+    font-size: clamp(16px, 2.4vw, 20px);
+    font-weight: 700;
+    line-height: 1.25;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background .15s ease, transform .15s ease;
+  }
+  .btn:hover { background: var(--accent-strong); transform: translateY(-1px); }
+
+  .aviso {
+    margin: 14px auto 0;
+    max-width: 620px;
+    font-size: 13.5px;
+    color: var(--ink-faint);
+    line-height: 1.5;
+  }
+  .aviso[hidden] { display: none; }
+
+  /* ---------- Puerta: el email antes del vídeo ---------- */
+  .puerta { max-width: 520px; margin: 26px auto 0; text-align: left; }
+  .puerta p.intro {
+    margin: 0 0 20px; text-align: center;
+    font-size: 1rem; line-height: 1.6; color: var(--ink-soft);
+  }
+  .campos { display: grid; gap: 10px; }
+  .campos input[type="text"], .campos input[type="email"] {
+    width: 100%; font: inherit; font-size: 1rem; color: var(--ink);
+    background: var(--surface-2); border: 1px solid var(--rule);
+    border-radius: 8px; padding: 14px 16px;
+  }
+  .campos input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .consent {
+    display: flex; gap: 10px; align-items: flex-start;
+    margin: 14px 0 16px; font-size: 13px; line-height: 1.5; color: var(--ink-soft);
+  }
+  .consent input { margin-top: 2px; flex: none; }
+  .puerta .btn:disabled { opacity: .5; cursor: default; transform: none; }
+  .estado { margin: 12px 0 0; font-size: 13.5px; line-height: 1.5; min-height: 1.2em; text-align: center; }
+  .estado.error { color: #B4472F; }
+  .pie-legal { margin: 16px 0 0; font-size: 12px; color: var(--ink-faint); text-align: center; line-height: 1.5; }
+
+  [hidden] { display: none !important; }
+
+  footer {
+    padding: 0 24px 28px;
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+  }
+  footer a { color: var(--ink-faint); }
+
+  @media (max-width: 640px) {
+    main { padding: 4px 16px 44px; }
+    .nav-row { padding: 14px 18px; }
+    /* En el móvil manda el ancho: si no, la caja queda más alta que el vídeo
+       y aparecen bandas negras arriba y abajo. */
+    .video { height: auto; width: 100%; }
+    .logo-texto { font-size: 0.86rem; }
+    h1 { margin-top: 18px; }
+    .video { border-radius: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="nav-row">
+    <a class="logo" href="/">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="30" height="30">
+        <g fill="none" stroke="#F5F1E6">
+          <circle cx="120" cy="120" r="104" stroke-width="7"/>
+          <circle cx="120" cy="120" r="90" stroke-width="3.5"/>
+        </g>
+        <g fill="#F5F1E6">
+          <path d="M70 72 H90 V110 H113 V130 H90 V168 H70 V72 Z"/>
+          <path d="M170 72 H150 V110 H127 V130 H150 V168 H170 V72 Z"/>
+        </g>
+      </svg>
+      <span class="logo-texto">CIUDADANO FINANCIERO</span>
+    </a>
+  </div>
+</header>
+
+<main>
+  <h1>Las 3 habilidades del dinero</h1>
+
+  <!-- Antes de ver el vídeo deja su email y entra en la lista de espera. -->
+  <section class="puerta" id="puerta">
+    <p class="intro">Te lo cuento en un vídeo de 8 minutos: por qué hay gente que gana lo mismo que tú y acaba con mucho más. Déjame tu email y lo ves ahora mismo.</p>
+    <form id="form-acceso" novalidate>
+      <div class="campos">
+        <input type="text" id="nombre" placeholder="Tu nombre" autocomplete="name">
+        <input type="email" id="email" placeholder="Tu email" autocomplete="email">
+      </div>
+      <label class="consent">
+        <input type="checkbox" id="consent">
+        <span>Acepto recibir contenido sobre educación financiera por email y el aviso cuando abra la próxima edición.</span>
+      </label>
+      <button type="submit" class="btn" id="btn-ver" disabled>Ver el vídeo</button>
+      <p class="estado" id="estado"></p>
+    </form>
+    <p class="pie-legal">Tu email no se comparte con nadie. Puedes darte de baja cuando quieras.</p>
+  </section>
+
+  <!-- El vídeo aparece aquí mismo cuando se ha apuntado. -->
+  <section id="zona-video" hidden>
+    <p class="etiqueta-video">Las 3 habilidades del dinero</p>
+    <div class="video" id="video"></div>
+  </section>
+</main>
+
+<footer>
+  <a href="/">Ciudadano Financiero</a>
+</footer>
+
+<script>
+  // El vídeo solo se carga cuando ya ha dejado el email, para que no se pueda
+  // ver mirando el código de la página antes de apuntarse.
+  var VIDEO = "https://www.loom.com/embed/468e4e37edd5463f8212127e77a13eba" +
+              "?hideEmbedTopBar=true&hide_share=true&hide_owner=true&hide_title=true";
+  var RECUERDO = "cf_3habilidades";
+
+  var form = document.getElementById("form-acceso");
+  var nombre = document.getElementById("nombre");
+  var email = document.getElementById("email");
+  var consent = document.getElementById("consent");
+  var btn = document.getElementById("btn-ver");
+  var estado = document.getElementById("estado");
+
+  function mostrarVideo() {
+    document.getElementById("puerta").hidden = true;
+    var zona = document.getElementById("zona-video");
+    zona.hidden = false;
+    var marco = document.getElementById("video");
+    if (!marco.querySelector("iframe")) {
+      var f = document.createElement("iframe");
+      f.src = VIDEO;
+      f.title = "Las 3 habilidades del dinero";
+      f.allow = "fullscreen";
+      f.allowFullscreen = true;
+      marco.appendChild(f);
+    }
+  }
+
+  // Si ya se apuntó otro día, no se le vuelve a pedir el email.
+  try { if (localStorage.getItem(RECUERDO)) mostrarVideo(); } catch (e) {}
+
+  function emailValido(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v); }
+
+  function revisar() {
+    btn.disabled = !(nombre.value.trim() && emailValido(email.value.trim()) && consent.checked);
+  }
+  [nombre, email].forEach(function (el) { el.addEventListener("input", revisar); });
+  consent.addEventListener("change", revisar);
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.textContent = "Un momento...";
+    estado.textContent = "";
+    estado.className = "estado";
+    try {
+      await submitContact({
+        nombre: nombre.value.trim(),
+        email: email.value.trim(),
+        whatsapp: null,
+        consent: true,
+        source: "waitlist"
+      });
+      try { localStorage.setItem(RECUERDO, "1"); } catch (e2) {}
+      mostrarVideo();
+    } catch (err) {
+      estado.textContent = "Algo ha fallado. Inténtalo otra vez en un momento.";
+      estado.className = "estado error";
+      btn.disabled = false;
+      btn.textContent = "Ver el vídeo";
+    }
+  });
+</script>
+
+</body>
+</html>
