@@ -252,6 +252,35 @@
 
   /* Llamada a la acción al cerrar "este curso es para ti si...". */
   /* Franja de cierre: una sola llamada, separada del resto. */
+  /* Cierre de la página: por qué cuesta tanto, y el vídeo de las 3 habilidades. */
+  .tres-strip { border-top: 1px solid var(--rule); }
+  .tres-inner {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 64px 28px 72px;
+    text-align: center;
+  }
+  .tres-inner h2 {
+    font-family: "Newsreader", serif;
+    font-weight: 600;
+    font-size: clamp(24px, 3.4vw, 34px);
+    line-height: 1.18;
+    margin: 10px 0 18px;
+    text-wrap: balance;
+  }
+  .tres-inner p {
+    margin: 0 0 14px;
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--ink-soft);
+  }
+  .tres-pregunta {
+    margin-top: 26px !important;
+    color: var(--ink) !important;
+    font-weight: 600;
+  }
+  .tres-btn { margin-top: 6px; padding: 18px 30px; font-size: 1.02rem; }
+
   .cierre-strip {
     background: var(--surface-2);
     border-top: 1px solid var(--rule);
@@ -271,18 +300,6 @@
     padding: 20px 30px;
     font-size: 1.02rem;
   }
-
-  /* Botón del vídeo regalo: lleva texto largo, así que se le deja partir. */
-  .btn-regalo {
-    background: transparent;
-    color: var(--ink);
-    border: 1.5px solid var(--accent);
-    text-align: left;
-    line-height: 1.35;
-    max-width: 420px;
-    white-space: normal;
-  }
-  .btn-regalo:hover { background: rgba(169,131,46,0.12); }
 
   .link-plain {
     font-size: 0.94rem;
@@ -893,7 +910,6 @@
         <p class="sub">Un curso práctico para entender cómo funciona el dinero, tomar decisiones con criterio y construir ingresos que van más allá de tu sueldo.</p>
         <div class="hero-ctas">
           <a class="btn btn-primary" href="#lista-espera">Apúntame a la lista de espera →</a>
-          <a class="btn btn-regalo" href="/3habilidades/">Te enseño las 3 habilidades del dinero gratis en un vídeo de 8 minutos</a>
         </div>
         <p class="meta-line">SIN CONOCIMIENTOS PREVIOS</p>
       </div>
@@ -1009,6 +1025,12 @@
     </div>
   </section>
 
+  <section class="cierre-strip" id="acceso">
+    <div class="cierre-inner">
+      <a class="btn btn-primary cierre-btn" href="#lista-espera">Si quieres aprender a gestionar e invertir tu dinero de forma exponencial, haz clic aquí.</a>
+    </div>
+  </section>
+
   <section id="faq">
     <div class="wrap">
       <div class="head">
@@ -1047,9 +1069,14 @@
     </div>
   </section>
 
-  <section class="cierre-strip" id="acceso">
-    <div class="cierre-inner">
-      <a class="btn btn-primary cierre-btn" href="#lista-espera">Si quieres aprender a gestionar e invertir tu dinero de forma exponencial, haz clic aquí.</a>
+  <section class="tres-strip">
+    <div class="tres-inner">
+      <p class="eyebrow">Las 3 habilidades del dinero</p>
+      <h2>Casi nadie tiene un problema de ingresos</h2>
+      <p>Tiene un problema de habilidades. Manejar bien el dinero se reduce a tres: saber <strong>ingresarlo</strong>, saber <strong>gestionarlo</strong> y saber <strong>multiplicarlo</strong>. La mayoría hace bien una, con suerte dos, y casi nadie las tres.</p>
+      <p>Eso explica llegar justo a fin de mes ganando un buen sueldo, no poder decir que no a un trabajo, o aplazar decisiones importantes porque las cuentas no dan. No se arregla ganando más: se arregla sabiendo cuál de las tres te está fallando.</p>
+      <p class="tres-pregunta">¿Quieres saber si eres bueno en las tres?</p>
+      <a class="btn btn-primary tres-btn" href="/3habilidades/">Las 3 habilidades del dinero →</a>
     </div>
   </section>
 

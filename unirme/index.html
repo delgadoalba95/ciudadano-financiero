@@ -53,8 +53,21 @@
   }
 
   /* La misma cabecera que el resto de la web. */
-  header.site { background: #122641; }
-  .nav-row { display: flex; align-items: center; padding: 16px 26px; }
+  header.site {
+    background: #122641;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 28px;
+    max-width: 880px;
+    margin: 0 auto;
+  }
   .logo {
     display: flex;
     align-items: center;

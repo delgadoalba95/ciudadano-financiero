@@ -53,8 +53,21 @@
   }
 
   /* La misma cabecera que el resto de la web. */
-  header.site { background: #122641; }
-  .nav-row { display: flex; align-items: center; padding: 16px 26px; }
+  header.site {
+    background: #122641;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 28px;
+    max-width: 880px;
+    margin: 0 auto;
+  }
   .logo {
     display: flex;
     align-items: center;
@@ -154,8 +167,15 @@
   /* ---------- Puerta: el email antes del vídeo ---------- */
   .puerta { max-width: 520px; margin: 26px auto 0; text-align: left; }
   .puerta p.intro {
-    margin: 0 0 20px; text-align: center;
-    font-size: 1rem; line-height: 1.6; color: var(--ink-soft);
+    margin: 0 0 14px; text-align: center;
+    font-size: 1rem; line-height: 1.65; color: var(--ink-soft);
+  }
+  /* La frase que pide el email va aparte y en el dorado de la marca. */
+  .puerta p.reclamo {
+    margin: 0 0 24px; text-align: center;
+    font-family: "Newsreader", serif;
+    font-size: 1.22rem; line-height: 1.4; font-weight: 600;
+    color: var(--accent-strong);
   }
   .campos { display: grid; gap: 10px; }
   .campos input[type="text"], .campos input[type="email"] {
@@ -221,7 +241,8 @@
 
   <!-- Antes de ver el vídeo deja su email y entra en la lista de espera. -->
   <section class="puerta" id="puerta">
-    <p class="intro">Te lo cuento en un vídeo de 8 minutos: por qué hay gente que gana lo mismo que tú y acaba con mucho más. Déjame tu email y lo ves ahora mismo.</p>
+    <p class="intro">Te lo cuento en un vídeo de 8 minutos: por qué hay gente que gana lo mismo que tú y acaba con mucho más.</p>
+    <p class="reclamo">Déjame tu email y lo ves ahora mismo.</p>
     <form id="form-acceso" novalidate>
       <div class="campos">
         <input type="text" id="nombre" placeholder="Tu nombre" autocomplete="name">
@@ -239,7 +260,6 @@
 
   <!-- El vídeo aparece aquí mismo cuando se ha apuntado. -->
   <section id="zona-video" hidden>
-    <p class="etiqueta-video">Las 3 habilidades del dinero</p>
     <div class="video" id="video"></div>
   </section>
 </main>
