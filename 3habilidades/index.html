@@ -88,6 +88,11 @@
     margin: 0 auto;
     padding: 4px 24px 32px;
     text-align: center;
+    /* Centrado en vertical: ya con el vídeo solo, si no quedaba un hueco
+       enorme entre el vídeo y el pie. */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 
   h1 {
@@ -97,7 +102,7 @@
     font-size: clamp(25px, 4vw, 44px);
     line-height: 1.12;
     letter-spacing: -0.02em;
-    margin: 16px auto 8px;
+    margin: 38px auto 8px;
     text-wrap: balance;
   }
   /* Etiqueta pequeña que dice de qué va el vídeo que viene debajo. */
@@ -211,7 +216,7 @@
        y aparecen bandas negras arriba y abajo. */
     .video { height: auto; width: 100%; }
     .logo-texto { font-size: 0.86rem; }
-    h1 { margin-top: 18px; }
+    h1 { margin-top: 26px; }
     .video { border-radius: 10px; }
   }
 </style>
@@ -241,8 +246,8 @@
 
   <!-- Antes de ver el vídeo deja su email y entra en la lista de espera. -->
   <section class="puerta" id="puerta">
-    <p class="intro">Te lo cuento en un vídeo de 8 minutos: por qué hay gente que gana lo mismo que tú y acaba con mucho más.</p>
-    <p class="reclamo">Déjame tu email y lo ves ahora mismo.</p>
+    <p class="intro">Te lo cuento en un vídeo de 8 minutos: por qué hay gente que gana lo mismo que tú y acaba teniendo mucho más dinero que tú.</p>
+    <p class="reclamo">Escribe tu email y lo ves ahora mismo.</p>
     <form id="form-acceso" novalidate>
       <div class="campos">
         <input type="text" id="nombre" placeholder="Tu nombre" autocomplete="name">
