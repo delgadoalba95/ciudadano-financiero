@@ -303,9 +303,7 @@
   }
 
   // Si ya se apuntó otro día, no se le vuelve a pedir el email.
-  // Y con ?ver=1 se salta el formulario, para que Alba pueda revisarlo.
-  var saltar = new URLSearchParams(location.search).get("ver") === "1";
-  try { if (saltar || localStorage.getItem(RECUERDO)) mostrarVideo(); } catch (e) { if (saltar) mostrarVideo(); }
+  try { if (localStorage.getItem(RECUERDO)) mostrarVideo(); } catch (e) {}
 
   function emailValido(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v); }
 
