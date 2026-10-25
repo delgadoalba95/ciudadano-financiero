@@ -3847,6 +3847,7 @@
       var id = idDeLeccion(leccion);
       var meta = leccion.querySelector(".leccion-meta");
       if(!id || !meta) return;
+      if(meta.querySelector(".leccion-visto")) return;
       var tik = document.createElement("span");
       tik.className = "leccion-visto";
       tik.setAttribute("data-visto", id);
@@ -4268,7 +4269,9 @@
     if(!(await soyAdmin(access_token))) return;
 
     // Las herramientas que todavía están cerradas, abiertas solo para ella.
+    var ABIERTAS_PARA_ALBA = ["flujo", "balance"];
     document.querySelectorAll('.nav-item[data-bloqueado="1"]').forEach(function(btn){
+      if(ABIERTAS_PARA_ALBA.indexOf(btn.getAttribute("data-view")) === -1) return;
       btn.removeAttribute("data-bloqueado");
       var candado = btn.querySelector(".nav-candado");
       if(candado) candado.remove();
