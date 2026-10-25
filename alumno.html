@@ -372,6 +372,64 @@
   }
   .tarea textarea:focus { outline:2px solid var(--accent); outline-offset:1px; }
   .tarea-pista { margin: 9px 0 0; font-size:12px; color: var(--ink-faint); }
+  /* ---------- Buzón de dudas ---------- */
+  .buzon-boton {
+    position: fixed; right: 22px; bottom: 22px; z-index: 300;
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 13px 18px; border: 0; border-radius: 999px;
+    background: var(--header-bg, #122641); color: #F5F1E6;
+    font-family: inherit; font-size: 14px; font-weight: 600;
+    cursor: pointer; box-shadow: 0 10px 28px rgba(28,43,66,0.3);
+  }
+  .buzon-boton svg { width: 19px; height: 19px; flex: none; }
+  .buzon-boton[hidden], .buzon-panel[hidden] { display: none !important; }
+  .buzon-boton:hover { transform: translateY(-1px); }
+  .buzon-panel {
+    position: fixed; right: 22px; bottom: 22px; z-index: 301;
+    width: min(380px, calc(100vw - 32px));
+    border: 1px solid var(--rule); border-radius: 14px;
+    background: var(--surface-2); color: var(--ink);
+    box-shadow: 0 18px 50px rgba(28,43,66,0.28);
+    overflow: hidden;
+  }
+  .buzon-head {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 16px 16px 12px; border-bottom: 1px solid var(--rule);
+  }
+  .buzon-head h3 {
+    flex: 1; margin: 0; font-size: 14px; font-weight: 700;
+    letter-spacing: .02em;
+  }
+  .buzon-cerrar {
+    flex: none; border: 0; background: none; cursor: pointer;
+    font-size: 20px; line-height: 1; color: var(--ink-faint); padding: 0 2px;
+  }
+  .buzon-cuerpo { padding: 14px 16px 16px; }
+  .buzon-animo {
+    margin: 0 0 12px; font-size: 12.8px; line-height: 1.55; color: var(--ink-soft);
+  }
+  .buzon-animo strong { color: var(--ink); }
+  .buzon-panel textarea {
+    width: 100%; box-sizing: border-box; resize: vertical; min-height: 110px;
+    padding: 11px 12px; border: 1px solid var(--rule); border-radius: 8px;
+    background: var(--bg); color: var(--ink);
+    font-family: inherit; font-size: 13.5px; line-height: 1.55;
+  }
+  .buzon-panel textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .buzon-enviar {
+    width: 100%; margin-top: 10px; padding: 12px 16px;
+    border: 0; border-radius: 8px; background: var(--accent); color: #241b08;
+    font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+  .buzon-enviar:disabled { opacity: .5; cursor: default; }
+  .buzon-estado { margin: 10px 0 0; font-size: 12.5px; line-height: 1.5; min-height: 1.1em; }
+  .buzon-estado.ok { color: var(--positive); }
+  .buzon-estado.error { color: var(--stamp); }
+  @media (max-width: 720px) {
+    .buzon-boton { right: 14px; bottom: 14px; padding: 12px 15px; font-size: 13.5px; }
+    .buzon-panel { right: 14px; bottom: 14px; }
+  }
+
   /* Marcas de la vista previa de Alba: que no se le olvide que está viendo
      algo que las alumnas no ven. */
   .modulo-previa {
@@ -1737,6 +1795,28 @@
 </div>
 
 <script src="/supabase-config.js"></script>
+<!-- Buzón de dudas: siempre a mano dentro del curso. -->
+<button class="buzon-boton" id="buzon-boton" type="button" hidden>
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-2.9-.4L4 21l1.5-4.1A8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4Z"
+          stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path>
+  </svg>
+  Tengo una duda
+</button>
+
+<div class="buzon-panel" id="buzon-panel" hidden>
+  <div class="buzon-head">
+    <h3>Pregúntame lo que sea</h3>
+    <button class="buzon-cerrar" id="buzon-cerrar" type="button" aria-label="Cerrar">&times;</button>
+  </div>
+  <div class="buzon-cuerpo">
+    <p class="buzon-animo"><strong>No existe la pregunta tonta.</strong> Las alumnas que más preguntan son las que mejores resultados consiguen: preguntar es lo que convierte lo que ves en algo que sabes usar. Si algo no te cuadra, escríbemelo aquí.</p>
+    <textarea id="buzon-texto" placeholder="¿Qué no te ha quedado claro?"></textarea>
+    <button class="buzon-enviar" id="buzon-enviar" type="button">Enviar mi duda</button>
+    <p class="buzon-estado" id="buzon-estado"></p>
+  </div>
+</div>
+
 <script>
 (function(){
   var AUTH_STORAGE_KEY = "cf_alumno_session";
@@ -4316,6 +4396,72 @@
     pintarTareas();
   }
 
+
+  // ---------- Buzón de dudas ----------
+  // El mensaje va a una función de Supabase que saca de quién es por el token
+  // y le manda el email a hola@ciudadanofinanciero.com. Así nadie puede
+  // escribir una duda haciéndose pasar por otra persona.
+  (function conectarBuzon(){
+    var boton = document.getElementById("buzon-boton");
+    var panel = document.getElementById("buzon-panel");
+    var texto = document.getElementById("buzon-texto");
+    var enviar = document.getElementById("buzon-enviar");
+    var estado = document.getElementById("buzon-estado");
+    if(!boton) return;
+
+    function abrir(){ panel.hidden = false; boton.hidden = true; texto.focus(); }
+    function cerrar(){ panel.hidden = true; boton.hidden = false; }
+
+    boton.addEventListener("click", abrir);
+    document.getElementById("buzon-cerrar").addEventListener("click", cerrar);
+
+    enviar.addEventListener("click", async function(){
+      var mensaje = texto.value.trim();
+      estado.className = "buzon-estado";
+      if(mensaje.length < 5){
+        estado.className = "buzon-estado error";
+        estado.textContent = "Escribe un poco más para que pueda ayudarte.";
+        return;
+      }
+      if(!session){
+        estado.className = "buzon-estado error";
+        estado.textContent = "Recarga la página y vuelve a entrar.";
+        return;
+      }
+      enviar.disabled = true;
+      enviar.textContent = "Enviando...";
+      try{
+        var res = await fetch(window.SUPABASE_URL + "/rest/v1/rpc/enviar_duda", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": window.SUPABASE_ANON_KEY,
+            "Authorization": "Bearer " + session.access_token
+          },
+          body: JSON.stringify({ p_mensaje: mensaje, p_origen: VIEWS[vistaActual()] || "" })
+        });
+        if(!res.ok) throw new Error();
+        texto.value = "";
+        estado.className = "buzon-estado ok";
+        estado.textContent = "Recibida. Te contesto al email en cuanto pueda.";
+      }catch(e){
+        estado.className = "buzon-estado error";
+        estado.textContent = "No se ha podido enviar. Prueba otra vez o escríbeme a hola@ciudadanofinanciero.com.";
+      }finally{
+        enviar.disabled = false;
+        enviar.textContent = "Enviar mi duda";
+      }
+    });
+
+    function vistaActual(){
+      var activa = document.querySelector(".nav-item.active");
+      return activa ? activa.getAttribute("data-view") : "curso";
+    }
+
+    // Solo se ve una vez ha entrado.
+    window.mostrarBuzon = function(){ boton.hidden = false; };
+  })();
+
   // ---------- Boot ----------
   async function enterApp(){
     var iniciales = initials(session.email);
@@ -4342,6 +4488,7 @@
     }
     render();
     showOnly(appEl);
+    if(window.mostrarBuzon) window.mostrarBuzon();
     vistaPreviaDeAlba(session.access_token);
   }
 
