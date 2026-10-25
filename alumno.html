@@ -1810,7 +1810,7 @@
     <button class="buzon-cerrar" id="buzon-cerrar" type="button" aria-label="Cerrar">&times;</button>
   </div>
   <div class="buzon-cuerpo">
-    <p class="buzon-animo"><strong>No existe la pregunta tonta.</strong> Las alumnas que más preguntan son las que mejores resultados consiguen: preguntar es lo que convierte lo que ves en algo que sabes usar. Si algo no te cuadra, escríbemelo aquí.</p>
+    <p class="buzon-animo"><strong>No existe ninguna pregunta tonta.</strong> Los alumnos que más preguntan son los que mejores resultados consiguen. Si algo no te cuadra o quieres profundizar, escríbemelo aquí.</p>
     <textarea id="buzon-texto" placeholder="¿Qué no te ha quedado claro?"></textarea>
     <button class="buzon-enviar" id="buzon-enviar" type="button">Enviar mi duda</button>
     <p class="buzon-estado" id="buzon-estado"></p>
@@ -2262,7 +2262,7 @@
   function tipoDe(item){ return item.tipo === "pasivos" ? "pasivos" : "activos"; }
 
   var session = null; // { access_token, refresh_token, user_id, email }
-  var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [], flujo: {}, meses: [], test: null, tareas: {}, estrategia: "", interes: null };
+  var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [], flujo: {}, meses: [], test: null, tareas: {}, estrategia: "", tareaMod2: "", interes: null };
   var filasFlujo = [];
   var saveTimer = null;
 
@@ -3944,8 +3944,10 @@
   }
 
   function pintarTareas(){
-    var campo = document.getElementById("tarea-texto");
-    if(campo && campo.value !== state.estrategia) campo.value = state.estrategia || "";
+    TAREAS.forEach(function(t){
+      var campo = document.getElementById(t.texto);
+      if(campo && campo.value !== state[t.clave]) campo.value = state[t.clave] || "";
+    });
     pintarTarea();
     document.querySelectorAll(".leccion-visto[data-visto]").forEach(function(tik){
       var visto = !!state.tareas[tik.getAttribute("data-visto")];
@@ -3965,31 +3967,40 @@
     return limpio.split(/\s+/).length;
   }
 
+  // Cada tarea escrita: dónde está en la pantalla y en qué guarda lo escrito.
+  var TAREAS = [{ caja: "tarea-estrategia", texto: "tarea-texto", pista: "tarea-pista", clave: "estrategia" }];
+
   function pintarTarea(){
-    var caja = document.getElementById("tarea-estrategia");
-    if(!caja) return;
-    var n = contarPalabras(state.estrategia);
-    var hecha = n >= PALABRAS_MINIMAS;
-    caja.classList.toggle("hecha", hecha);
-    // Hecha la tarea, el aviso sobra: basta con el tik en verde.
-    var pista = document.getElementById("tarea-pista");
-    pista.hidden = hecha;
-    if(!hecha){
-      pista.textContent = PALABRAS_MINIMAS - n === 1
-        ? "Te falta 1 palabra para marcarla como hecha."
-        : "Te faltan " + (PALABRAS_MINIMAS - n) + " palabras para marcarla como hecha.";
-    }
+    TAREAS.forEach(function(t){
+      var caja = document.getElementById(t.caja);
+      if(!caja) return;
+      var n = contarPalabras(state[t.clave]);
+      var hecha = n >= PALABRAS_MINIMAS;
+      caja.classList.toggle("hecha", hecha);
+      // Hecha la tarea, el aviso sobra: basta con el tik en verde.
+      var pista = document.getElementById(t.pista);
+      pista.hidden = hecha;
+      if(!hecha){
+        pista.textContent = PALABRAS_MINIMAS - n === 1
+          ? "Te falta 1 palabra para marcarla como hecha."
+          : "Te faltan " + (PALABRAS_MINIMAS - n) + " palabras para marcarla como hecha.";
+      }
+    });
   }
 
-  (function conectarTarea(){
-    var campo = document.getElementById("tarea-texto");
-    if(!campo) return;
-    campo.addEventListener("input", function(){
-      state.estrategia = campo.value;
-      pintarTarea();
-      queueSave();
+  function conectarTareas(){
+    TAREAS.forEach(function(t){
+      var campo = document.getElementById(t.texto);
+      if(!campo || campo.getAttribute("data-conectada")) return;
+      campo.setAttribute("data-conectada", "1");
+      campo.addEventListener("input", function(){
+        state[t.clave] = campo.value;
+        pintarTarea();
+        queueSave();
+      });
     });
-  })();
+  }
+  conectarTareas();
 
   // ---------- Interés compuesto ----------
   // Los intereses se acumulan mes a mes: cada mes el saldo crece un doceavo
@@ -4345,6 +4356,27 @@
     return div;
   }
 
+  function cajaTarea(id, titulo, enunciado){
+    var caja = document.createElement("details");
+    caja.className = "tarea";
+    caja.id = id;
+    caja.innerHTML =
+      '<summary>' + titulo +
+        '<span class="tarea-tik" aria-hidden="true">' +
+          '<svg viewBox="0 0 24 24" fill="none">' +
+            '<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"></circle>' +
+            '<path d="M7.8 12.3 10.6 15l5.6-6" stroke="currentColor" stroke-width="2" ' +
+                  'stroke-linecap="round" stroke-linejoin="round"></path>' +
+          '</svg>' +
+        '</span>' +
+      '</summary>' +
+      '<p class="tarea-enunciado"></p>' +
+      '<textarea id="' + id + '-texto" rows="6" placeholder="Escribe aquí tu respuesta..."></textarea>' +
+      '<p class="tarea-pista" id="' + id + '-pista"></p>';
+    caja.querySelector(".tarea-enunciado").textContent = enunciado;
+    return caja;
+  }
+
   async function vistaPreviaDeAlba(access_token){
     if(!(await soyAdmin(access_token))) return;
 
@@ -4389,9 +4421,21 @@
       aviso.className = "modulo-previa";
       aviso.textContent = "Vista previa: esto solo lo ves tú. Las alumnas siguen viendo el módulo cerrado.";
       modulo.querySelector(".modulo-body").insertBefore(aviso, lista);
+
+      // La tarea escrita del módulo, si la hay.
+      if(Number(num) === 2 && !document.getElementById("tarea-mod2")){
+        modulo.querySelector(".modulo-body").appendChild(cajaTarea(
+          "tarea-mod2",
+          "Tarea módulo II",
+          "Determina qué decisiones vas a tomar para hacer crecer tus activos."
+        ));
+        TAREAS.push({ caja: "tarea-mod2", texto: "tarea-mod2-texto",
+                      pista: "tarea-mod2-pista", clave: "tareaMod2" });
+      }
     });
 
     conectarLecciones();
+    conectarTareas();
     construirTiks();
     pintarTareas();
   }
@@ -4443,7 +4487,7 @@
         if(!res.ok) throw new Error();
         texto.value = "";
         estado.className = "buzon-estado ok";
-        estado.textContent = "Recibida. Te contesto al email en cuanto pueda.";
+        estado.textContent = "Recibido. Te respondo pronto.";
       }catch(e){
         estado.className = "buzon-estado error";
         estado.textContent = "No se ha podido enviar. Prueba otra vez o escríbeme a hola@ciudadanofinanciero.com.";
@@ -4480,6 +4524,7 @@
         state.test = data.test || null;
         state.tareas = data.tareas || {};
         state.estrategia = typeof data.estrategia === "string" ? data.estrategia : "";
+        state.tareaMod2 = typeof data.tareaMod2 === "string" ? data.tareaMod2 : "";
         state.interes = data.interes || null;
         migrarRepartidos();
       }
