@@ -372,6 +372,21 @@
   }
   .tarea textarea:focus { outline:2px solid var(--accent); outline-offset:1px; }
   .tarea-pista { margin: 9px 0 0; font-size:12px; color: var(--ink-faint); }
+  /* Marcas de la vista previa de Alba: que no se le olvide que está viendo
+     algo que las alumnas no ven. */
+  .modulo-previa {
+    margin: 14px 0 0; padding: 9px 13px;
+    border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0;
+    background: rgba(169,131,46,0.12);
+    font-size: 12.5px; color: var(--ink-soft); line-height: 1.5;
+  }
+  .nav-previa {
+    margin-left: auto; flex: none;
+    font-family: "IBM Plex Mono", monospace; font-size: 9.5px;
+    letter-spacing: .06em; text-transform: uppercase;
+    background: var(--accent); color: #241b08;
+    padding: 2px 6px; border-radius: 999px; font-weight: 700;
+  }
   .leccion-bloqueada {
     display:flex; align-items:center; gap:14px; padding: 14px 16px;
     background: rgba(255,255,255,0.18);
@@ -4179,7 +4194,9 @@
     marcarTarea(id, true);
   });
 
-  document.querySelectorAll(".leccion-head").forEach(function(head){
+  function conectarLecciones(){
+  document.querySelectorAll(".leccion-head:not([data-conectada])").forEach(function(head){
+    head.setAttribute("data-conectada", "1");
     head.addEventListener("click", function(){
       var abierta = head.getAttribute("aria-expanded") === "true";
 
@@ -4192,7 +4209,109 @@
       abrirLeccion(head);
     });
   });
+  }
 
+  conectarLecciones();
+
+  // ---------- Vista previa de Alba ----------
+  // Los módulos cerrados no están en el HTML: sus vídeos viven en Supabase y
+  // solo los puede leer Alba. Así revisa un módulo antes de abrirlo sin que
+  // los enlaces de Loom lleguen al navegador de ninguna alumna.
+  async function soyAdmin(access_token){
+    try{
+      var res = await fetch(window.SUPABASE_URL + "/rest/v1/rpc/is_admin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": window.SUPABASE_ANON_KEY,
+          "Authorization": "Bearer " + access_token
+        }
+      });
+      if(!res.ok) return false;
+      return await res.json() === true;
+    }catch(e){ return false; }
+  }
+
+  function filaLeccion(l){
+    var src = "https://www.loom.com/embed/" + l.loom_id +
+              "?hideEmbedTopBar=true&hide_share=true&hide_owner=true&hide_title=true";
+    var fondo = l.miniatura
+      ? ' style="background-image:url(https://cdn.loom.com/sessions/thumbnails/' + l.miniatura + '.gif)"'
+      : "";
+    var div = document.createElement("div");
+    div.className = "leccion";
+    div.innerHTML =
+      '<button class="leccion-head" type="button" aria-expanded="false">' +
+        '<span class="leccion-play" aria-hidden="true">' +
+          '<svg viewBox="0 0 24 24" fill="none">' +
+            '<circle cx="12" cy="12" r="10.25" stroke="currentColor" stroke-width="1.5"></circle>' +
+            '<path d="M10 8.4 16.2 12 10 15.6V8.4Z" fill="currentColor"></path>' +
+          '</svg>' +
+        '</span>' +
+        '<span class="leccion-name"></span>' +
+        '<span class="leccion-meta"><span class="leccion-dur"></span></span>' +
+      '</button>' +
+      '<div class="leccion-body" hidden>' +
+        '<div class="video-wrap"' + fondo + '>' +
+          '<iframe allow="fullscreen" allowfullscreen></iframe>' +
+        '</div>' +
+      '</div>';
+    div.querySelector(".leccion-name").textContent = l.nombre;
+    div.querySelector(".leccion-dur").textContent = l.duracion;
+    var frame = div.querySelector("iframe");
+    frame.setAttribute("data-src", src);
+    frame.setAttribute("title", l.nombre);
+    return div;
+  }
+
+  async function vistaPreviaDeAlba(access_token){
+    if(!(await soyAdmin(access_token))) return;
+
+    // Las herramientas que todavía están cerradas, abiertas solo para ella.
+    document.querySelectorAll('.nav-item[data-bloqueado="1"]').forEach(function(btn){
+      btn.removeAttribute("data-bloqueado");
+      var candado = btn.querySelector(".nav-candado");
+      if(candado) candado.remove();
+      var ojo = document.createElement("span");
+      ojo.className = "nav-previa";
+      ojo.textContent = "Solo tú";
+      btn.appendChild(ojo);
+    });
+
+    // Y las lecciones de los módulos cerrados que haya guardadas.
+    var res = await fetch(window.SUPABASE_URL +
+      "/rest/v1/lecciones_ocultas?select=modulo,orden,nombre,loom_id,duracion,miniatura&order=modulo.asc,orden.asc", {
+      headers: {
+        "apikey": window.SUPABASE_ANON_KEY,
+        "Authorization": "Bearer " + access_token
+      }
+    });
+    if(!res.ok) return;
+    var filas = await res.json();
+    if(!filas.length) return;
+
+    var modulos = document.querySelectorAll("#view-curso .modulo");
+    var porModulo = {};
+    filas.forEach(function(l){ (porModulo[l.modulo] = porModulo[l.modulo] || []).push(l); });
+
+    Object.keys(porModulo).forEach(function(num){
+      var modulo = modulos[Number(num) - 1];
+      if(!modulo) return;
+      var lista = modulo.querySelector(".lecciones");
+      if(!lista) return;
+      lista.querySelectorAll(".leccion").forEach(function(x){ x.remove(); });
+      porModulo[num].forEach(function(l){ lista.appendChild(filaLeccion(l)); });
+
+      var aviso = document.createElement("p");
+      aviso.className = "modulo-previa";
+      aviso.textContent = "Vista previa: esto solo lo ves tú. Las alumnas siguen viendo el módulo cerrado.";
+      modulo.querySelector(".modulo-body").insertBefore(aviso, lista);
+    });
+
+    conectarLecciones();
+    construirTiks();
+    pintarTareas();
+  }
 
   // ---------- Boot ----------
   async function enterApp(){
@@ -4220,6 +4339,7 @@
     }
     render();
     showOnly(appEl);
+    vistaPreviaDeAlba(session.access_token);
   }
 
   async function boot(){
