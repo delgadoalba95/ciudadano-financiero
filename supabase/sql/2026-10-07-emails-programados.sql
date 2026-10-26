@@ -1,3 +1,9 @@
+-- NOTA: la clave para llamar a la función de email ya no se escribe aquí.
+-- Vive en la tabla public.ajustes (fila 'clave_publicable'), que no tiene
+-- políticas ni permisos para anon ni authenticated: no se puede leer desde
+-- fuera. Las funciones la sacan de ahí. Así deja de aparecer en el
+-- repositorio y GitGuardian deja de avisar.
+
 -- Programar el envío de un email a una hora concreta.
 --
 -- El panel guarda aquí el email ya montado (asunto, html y destinatarios) y un
@@ -40,7 +46,10 @@ as $$
 declare
   fila record;
   cuantos integer := 0;
+  k text;
 begin
+  select valor into k from public.ajustes where clave = 'clave_publicable';
+
   for fila in
     select * from public.emails_programados
     where estado = 'programado' and enviar_en <= now()
@@ -51,8 +60,8 @@ begin
       url := 'https://srhopldaiqdyybomnhsh.supabase.co/functions/v1/send-manual-email',
       headers := jsonb_build_object(
         'Content-Type', 'application/json',
-        'apikey', 'sb_publishable_NN--xuNPdjUxQ4_TVaA7LA_KUKJMOci',
-        'Authorization', 'Bearer sb_publishable_NN--xuNPdjUxQ4_TVaA7LA_KUKJMOci'
+        'apikey', k,
+        'Authorization', 'Bearer ' || k
       ),
       body := jsonb_build_object(
         'contacts', fila.destinatarios,

@@ -15,13 +15,21 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Consulta mínima a Supabase
         env:
           SUPABASE_URL: https://srhopldaiqdyybomnhsh.supabase.co
-          # Clave "publishable": es pública por diseño (ya está en supabase-config.js).
-          SUPABASE_ANON_KEY: sb_publishable_NN--xuNPdjUxQ4_TVaA7LA_KUKJMOci
         run: |
           set -e
+          # La clave "publishable" es pública por diseño, pero no se repite
+          # aquí: se lee del único sitio donde vive, para que los avisadores
+          # de secretos no la vean suelta en dos archivos.
+          SUPABASE_ANON_KEY=$(grep -o 'sb_publishable_[A-Za-z0-9_-]*' supabase-config.js | head -1)
+          if [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "::error::No se encontró la clave en supabase-config.js"
+            exit 1
+          fi
           code=$(curl -s -o /tmp/resp.txt -w "%{http_code}" -m 30 \
             -X POST "$SUPABASE_URL/rest/v1/rpc/email_autorizado" \
             -H "apikey: $SUPABASE_ANON_KEY" \

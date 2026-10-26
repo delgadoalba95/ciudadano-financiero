@@ -1,3 +1,9 @@
+-- NOTA: la clave para llamar a la función de email ya no se escribe aquí.
+-- Vive en la tabla public.ajustes (fila 'clave_publicable'), que no tiene
+-- políticas ni permisos para anon ni authenticated: no se puede leer desde
+-- fuera. Las funciones la sacan de ahí. Así deja de aparecer en el
+-- repositorio y GitGuardian deja de avisar.
+
 -- Buzón de dudas del área de alumnas
 -- -----------------------------------------------------------------------
 -- La alumna escribe su duda desde el curso y a Alba le llega un email a
@@ -39,7 +45,10 @@ as $$
 declare
   quien text;
   texto text;
+  k text;
 begin
+  select valor into k from public.ajustes where clave = 'clave_publicable';
+
   quien := lower(trim(coalesce(auth.jwt() ->> 'email', '')));
   if quien = '' then
     raise exception 'Hay que haber entrado para escribir una duda.';
@@ -60,8 +69,8 @@ begin
     url := 'https://srhopldaiqdyybomnhsh.supabase.co/functions/v1/send-manual-email',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'apikey', 'sb_publishable_NN--xuNPdjUxQ4_TVaA7LA_KUKJMOci',
-      'Authorization', 'Bearer sb_publishable_NN--xuNPdjUxQ4_TVaA7LA_KUKJMOci'
+      'apikey', k,
+      'Authorization', 'Bearer ' || k
     ),
     body := jsonb_build_object(
       'contacts', jsonb_build_array(
