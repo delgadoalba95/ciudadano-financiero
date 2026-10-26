@@ -23,6 +23,11 @@ create table if not exists public.lecciones_ocultas (
 create unique index if not exists lecciones_ocultas_orden_idx
   on public.lecciones_ocultas (modulo, orden);
 
+-- Cuándo se abre cada módulo. Mientras esté en el futuro (o a null), solo lo
+-- ve Alba; a partir de esa hora lo ve cualquier alumna. No hay que tocar nada
+-- el día que toca: lo decide la propia base de datos.
+alter table public.lecciones_ocultas add column if not exists publicar_en timestamptz;
+
 alter table public.lecciones_ocultas enable row level security;
 
 -- Las alumnas también están autenticadas: "authenticated" a secas no vale.
@@ -34,6 +39,12 @@ create policy "lecciones_ocultas_admin" on public.lecciones_ocultas
 grant select, insert, update, delete on public.lecciones_ocultas to authenticated;
 grant select, insert, update, delete on public.lecciones_ocultas to service_role;
 
+-- A partir de su hora, el módulo lo puede leer cualquier alumna.
+drop policy if exists "lecciones_publicadas" on public.lecciones_ocultas;
+create policy "lecciones_publicadas" on public.lecciones_ocultas
+  for select to authenticated
+  using (publicar_en is not null and publicar_en <= now());
+
 -- Módulo II, en su orden.
 insert into public.lecciones_ocultas (modulo, orden, nombre, loom_id, duracion, miniatura) values
   (2, 1, 'Activos y Pasivos en tus finanzas personales', '8c22301d7f7644e88fd06586f8ea0541', '36:29', '8c22301d7f7644e88fd06586f8ea0541-90c72ff7b1a491d1'),
@@ -41,4 +52,7 @@ insert into public.lecciones_ocultas (modulo, orden, nombre, loom_id, duracion, 
   (2, 3, 'Tu balance personal',                           'bc3f8fafd83742c3bcfa6c93efcbaa18', '08:12', 'bc3f8fafd83742c3bcfa6c93efcbaa18-a81ef2187ced3482')
 on conflict (modulo, orden) do nothing;
 
-select modulo, orden, nombre, duracion from public.lecciones_ocultas order by modulo, orden;
+-- Módulo II: se abre el 27 de octubre de 2026 a las 10:00 de Madrid.
+update public.lecciones_ocultas set publicar_en = timestamptz '2026-10-27 10:00:00+01' where modulo = 2;
+
+select modulo, orden, nombre, duracion, publicar_en from public.lecciones_ocultas order by modulo, orden;
