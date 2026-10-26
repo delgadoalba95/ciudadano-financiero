@@ -36,7 +36,7 @@ grant select, insert, update, delete on public.lecciones_ocultas to service_role
 
 -- Módulo II, en su orden.
 insert into public.lecciones_ocultas (modulo, orden, nombre, loom_id, duracion, miniatura) values
-  (2, 1, 'Activos y Pasivos en tus finanzas personales', '4ba7c7bed3d44206a370d7bf81cfe929', '27:53', '4ba7c7bed3d44206a370d7bf81cfe929-7fd7766fe0d07333'),
+  (2, 1, 'Activos y Pasivos en tus finanzas personales', '8c22301d7f7644e88fd06586f8ea0541', '36:29', '8c22301d7f7644e88fd06586f8ea0541-90c72ff7b1a491d1'),
   (2, 2, 'Tu flujo de caja personal',                     '6c18e26ffb064a9a8deff8d4b734366f', '07:19', '6c18e26ffb064a9a8deff8d4b734366f-b482e44398f82fde'),
   (2, 3, 'Tu balance personal',                           'bc3f8fafd83742c3bcfa6c93efcbaa18', '08:12', 'bc3f8fafd83742c3bcfa6c93efcbaa18-a81ef2187ced3482')
 on conflict (modulo, orden) do nothing;
