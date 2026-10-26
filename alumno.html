@@ -430,21 +430,6 @@
     .buzon-panel { right: 14px; bottom: 14px; }
   }
 
-  /* Marcas de la vista previa de Alba: que no se le olvide que está viendo
-     algo que las alumnas no ven. */
-  .modulo-previa {
-    margin: 14px 0 0; padding: 9px 13px;
-    border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0;
-    background: rgba(169,131,46,0.12);
-    font-size: 12.5px; color: var(--ink-soft); line-height: 1.5;
-  }
-  .nav-previa {
-    margin-left: auto; flex: none;
-    font-family: "IBM Plex Mono", monospace; font-size: 9.5px;
-    letter-spacing: .06em; text-transform: uppercase;
-    background: var(--accent); color: #241b08;
-    padding: 2px 6px; border-radius: 999px; font-weight: 700;
-  }
   .leccion-bloqueada {
     display:flex; align-items:center; gap:14px; padding: 14px 16px;
     background: rgba(255,255,255,0.18);
@@ -4305,24 +4290,12 @@
 
   conectarLecciones();
 
-  // ---------- Vista previa de Alba ----------
-  // Los módulos cerrados no están en el HTML: sus vídeos viven en Supabase y
-  // solo los puede leer Alba. Así revisa un módulo antes de abrirlo sin que
-  // los enlaces de Loom lleguen al navegador de ninguna alumna.
-  async function soyAdmin(access_token){
-    try{
-      var res = await fetch(window.SUPABASE_URL + "/rest/v1/rpc/is_admin", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "apikey": window.SUPABASE_ANON_KEY,
-          "Authorization": "Bearer " + access_token
-        }
-      });
-      if(!res.ok) return false;
-      return await res.json() === true;
-    }catch(e){ return false; }
-  }
+  // ---------- Módulos que se abren solos ----------
+  // Los módulos cerrados no están en el HTML a propósito: si estuvieran,
+  // cualquier alumna podría leer el código de la página y sacar los enlaces
+  // de Loom antes de tiempo. Viven en Supabase con una fecha de apertura, y
+  // la propia base de datos decide a quién se los da y a partir de cuándo.
+  // Por eso no hay que tocar nada el día que toca abrirlos.
 
   function filaLeccion(l){
     var src = "https://www.loom.com/embed/" + l.loom_id +
@@ -4356,6 +4329,61 @@
     return div;
   }
 
+  // La tarea escrita de cada módulo, cuando el módulo ya está abierto.
+  var TAREAS_DE_MODULO = {
+    2: {
+      id: "tarea-mod2",
+      titulo: "Tarea módulo II",
+      clave: "tareaMod2",
+      enunciado: "Escribe qué porcentaje (%) de tu (1) Flujo de Caja y de tu (2) Balance " +
+                 "personal estás destinando a Activos. Y describe cómo puedes mejorar este porcentaje."
+    }
+  };
+
+  async function abrirModulosPublicados(access_token){
+    var res;
+    try{
+      res = await fetch(window.SUPABASE_URL +
+        "/rest/v1/lecciones_ocultas?select=modulo,orden,nombre,loom_id,duracion,miniatura" +
+        "&publicar_en=lte.now()&order=modulo.asc,orden.asc", {
+        headers: {
+          "apikey": window.SUPABASE_ANON_KEY,
+          "Authorization": "Bearer " + access_token
+        }
+      });
+    }catch(e){ return; }
+    if(!res.ok) return;
+
+    var filas = await res.json();
+    if(!filas.length) return;
+
+    var modulos = document.querySelectorAll("#view-curso .modulo");
+    var porModulo = {};
+    filas.forEach(function(l){ (porModulo[l.modulo] = porModulo[l.modulo] || []).push(l); });
+
+    Object.keys(porModulo).forEach(function(num){
+      var modulo = modulos[Number(num) - 1];
+      if(!modulo) return;
+      var lista = modulo.querySelector(".lecciones");
+      if(!lista) return;
+      lista.querySelectorAll(".leccion").forEach(function(x){ x.remove(); });
+      porModulo[num].forEach(function(l){ lista.appendChild(filaLeccion(l)); });
+
+      var tarea = TAREAS_DE_MODULO[Number(num)];
+      if(tarea && !document.getElementById(tarea.id)){
+        modulo.querySelector(".modulo-body").appendChild(
+          cajaTarea(tarea.id, tarea.titulo, tarea.enunciado));
+        TAREAS.push({ caja: tarea.id, texto: tarea.id + "-texto",
+                      pista: tarea.id + "-pista", clave: tarea.clave });
+      }
+    });
+
+    conectarLecciones();
+    conectarTareas();
+    construirTiks();
+    pintarTareas();
+  }
+
   function cajaTarea(id, titulo, enunciado){
     var caja = document.createElement("details");
     caja.className = "tarea";
@@ -4377,69 +4405,6 @@
     return caja;
   }
 
-  async function vistaPreviaDeAlba(access_token){
-    if(!(await soyAdmin(access_token))) return;
-
-    // Las herramientas que todavía están cerradas, abiertas solo para ella.
-    var ABIERTAS_PARA_ALBA = ["flujo", "balance"];
-    document.querySelectorAll('.nav-item[data-bloqueado="1"]').forEach(function(btn){
-      if(ABIERTAS_PARA_ALBA.indexOf(btn.getAttribute("data-view")) === -1) return;
-      btn.removeAttribute("data-bloqueado");
-      var candado = btn.querySelector(".nav-candado");
-      if(candado) candado.remove();
-      var ojo = document.createElement("span");
-      ojo.className = "nav-previa";
-      ojo.textContent = "Solo tú";
-      btn.appendChild(ojo);
-    });
-
-    // Y las lecciones de los módulos cerrados que haya guardadas.
-    var res = await fetch(window.SUPABASE_URL +
-      "/rest/v1/lecciones_ocultas?select=modulo,orden,nombre,loom_id,duracion,miniatura&order=modulo.asc,orden.asc", {
-      headers: {
-        "apikey": window.SUPABASE_ANON_KEY,
-        "Authorization": "Bearer " + access_token
-      }
-    });
-    if(!res.ok) return;
-    var filas = await res.json();
-    if(!filas.length) return;
-
-    var modulos = document.querySelectorAll("#view-curso .modulo");
-    var porModulo = {};
-    filas.forEach(function(l){ (porModulo[l.modulo] = porModulo[l.modulo] || []).push(l); });
-
-    Object.keys(porModulo).forEach(function(num){
-      var modulo = modulos[Number(num) - 1];
-      if(!modulo) return;
-      var lista = modulo.querySelector(".lecciones");
-      if(!lista) return;
-      lista.querySelectorAll(".leccion").forEach(function(x){ x.remove(); });
-      porModulo[num].forEach(function(l){ lista.appendChild(filaLeccion(l)); });
-
-      var aviso = document.createElement("p");
-      aviso.className = "modulo-previa";
-      aviso.textContent = "Vista previa: esto solo lo ves tú. Las alumnas siguen viendo el módulo cerrado.";
-      modulo.querySelector(".modulo-body").insertBefore(aviso, lista);
-
-      // La tarea escrita del módulo, si la hay.
-      if(Number(num) === 2 && !document.getElementById("tarea-mod2")){
-        modulo.querySelector(".modulo-body").appendChild(cajaTarea(
-          "tarea-mod2",
-          "Tarea módulo II",
-          "Escribe qué porcentaje (%) de tu (1) Flujo de Caja y de tu (2) Balance personal "
-          + "estás destinando a Activos. Y describe cómo puedes mejorar este porcentaje."
-        ));
-        TAREAS.push({ caja: "tarea-mod2", texto: "tarea-mod2-texto",
-                      pista: "tarea-mod2-pista", clave: "tareaMod2" });
-      }
-    });
-
-    conectarLecciones();
-    conectarTareas();
-    construirTiks();
-    pintarTareas();
-  }
 
 
   // ---------- Buzón de dudas ----------
@@ -4535,7 +4500,7 @@
     render();
     showOnly(appEl);
     if(window.mostrarBuzon) window.mostrarBuzon();
-    vistaPreviaDeAlba(session.access_token);
+    abrirModulosPublicados(session.access_token);
   }
 
   async function boot(){
