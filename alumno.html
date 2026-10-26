@@ -4329,6 +4329,18 @@
     return div;
   }
 
+  // Herramientas que se abren junto con su módulo. Flujo de caja y Balance
+  // son justo las dos clases del módulo II, así que se abren con él.
+  var HERRAMIENTAS_DE_MODULO = { 2: ["flujo", "balance"] };
+
+  function abrirHerramienta(vista){
+    var btn = document.querySelector('.nav-item[data-view="' + vista + '"]');
+    if(!btn) return;
+    btn.removeAttribute("data-bloqueado");
+    var candado = btn.querySelector(".nav-candado");
+    if(candado) candado.remove();
+  }
+
   // La tarea escrita de cada módulo, cuando el módulo ya está abierto.
   var TAREAS_DE_MODULO = {
     2: {
@@ -4368,6 +4380,8 @@
       if(!lista) return;
       lista.querySelectorAll(".leccion").forEach(function(x){ x.remove(); });
       porModulo[num].forEach(function(l){ lista.appendChild(filaLeccion(l)); });
+
+      (HERRAMIENTAS_DE_MODULO[Number(num)] || []).forEach(abrirHerramienta);
 
       var tarea = TAREAS_DE_MODULO[Number(num)];
       if(tarea && !document.getElementById(tarea.id)){
