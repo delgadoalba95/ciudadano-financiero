@@ -46,8 +46,10 @@ declare
   quien text;
   texto text;
   k text;
+  interna text;
 begin
   select valor into k from public.ajustes where clave = 'clave_publicable';
+  select valor into interna from public.ajustes where clave = 'clave_interna_email';
 
   quien := lower(trim(coalesce(auth.jwt() ->> 'email', '')));
   if quien = '' then
@@ -66,11 +68,12 @@ begin
   insert into public.dudas (email, mensaje, origen) values (quien, texto, p_origen);
 
   perform net.http_post(
-    url := 'https://srhopldaiqdyybomnhsh.supabase.co/functions/v1/send-manual-email',
+    url := 'https://srhopldaiqdyybomnhsh.supabase.co/functions/v1/enviar-email',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'apikey', k,
-      'Authorization', 'Bearer ' || k
+      'Authorization', 'Bearer ' || k,
+      'x-cf-clave', interna
     ),
     body := jsonb_build_object(
       'contacts', jsonb_build_array(

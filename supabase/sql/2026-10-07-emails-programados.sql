@@ -8,7 +8,7 @@
 --
 -- El panel guarda aquí el email ya montado (asunto, html y destinatarios) y un
 -- trabajo de pg_cron revisa cada minuto si toca mandar alguno. Cuando toca,
--- llama a la misma función de siempre (send-manual-email), así que el email
+-- llama a la función enviar-email, así que el email
 -- sale igual que si se hubiera pulsado Enviar y queda registrado en email_log.
 
 create extension if not exists pg_cron;
@@ -47,8 +47,10 @@ declare
   fila record;
   cuantos integer := 0;
   k text;
+  interna text;
 begin
   select valor into k from public.ajustes where clave = 'clave_publicable';
+  select valor into interna from public.ajustes where clave = 'clave_interna_email';
 
   for fila in
     select * from public.emails_programados
@@ -57,11 +59,12 @@ begin
     limit 20
   loop
     perform net.http_post(
-      url := 'https://srhopldaiqdyybomnhsh.supabase.co/functions/v1/send-manual-email',
+      url := 'https://srhopldaiqdyybomnhsh.supabase.co/functions/v1/enviar-email',
       headers := jsonb_build_object(
         'Content-Type', 'application/json',
         'apikey', k,
-        'Authorization', 'Bearer ' || k
+        'Authorization', 'Bearer ' || k,
+        'x-cf-clave', interna
       ),
       body := jsonb_build_object(
         'contacts', fila.destinatarios,
