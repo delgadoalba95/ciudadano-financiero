@@ -114,6 +114,17 @@
     border-radius: 3px;
     padding: 11px 13px;
   }
+  /* El ojito va dentro del campo, pegado a la derecha. */
+  .campo-ojo { position: relative; }
+  .campo-ojo input { padding-right: 44px; }
+  .campo-ojo .ojo {
+    position: absolute; right: 5px; top: 50%; transform: translateY(-50%);
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    border: 0; background: none; cursor: pointer; color: var(--ink-faint); padding: 0;
+  }
+  .campo-ojo .ojo:hover { color: var(--ink); }
+  .campo-ojo .ojo svg { width: 18px; height: 18px; }
+
   .login-field input:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 1px;
@@ -640,7 +651,10 @@
     </div>
     <div class="login-field">
       <label for="login-password">Contraseña</label>
-      <input type="password" id="login-password" autocomplete="current-password">
+      <div class="campo-ojo">
+        <input type="password" id="login-password" autocomplete="current-password">
+        <button type="button" class="ojo" data-ojo="login-password" aria-label="Ver la contraseña"></button>
+      </div>
     </div>
     <button class="btn" id="login-btn">Entrar</button>
   </div>
@@ -996,6 +1010,29 @@
     if (!res.ok) throw new Error("No se pudieron cargar los contactos. Prueba a recargar la página.");
     return res.json();
   }
+
+
+  // El ojito enseña u oculta lo escrito en los campos de contraseña.
+  (function conectarOjos(){
+    var ABIERTO = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+      '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" ' +
+      'stroke="currentColor" stroke-width="1.6"></path>' +
+      '<circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"></circle></svg>';
+    var TACHADO = ABIERTO.replace("</svg>",
+      '<path d="M4 20 20 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>');
+
+    document.querySelectorAll(".campo-ojo .ojo").forEach(function(btn){
+      btn.innerHTML = ABIERTO;
+      btn.addEventListener("click", function(){
+        var campo = document.getElementById(btn.getAttribute("data-ojo"));
+        var visible = campo.type === "text";
+        campo.type = visible ? "password" : "text";
+        btn.innerHTML = visible ? ABIERTO : TACHADO;
+        btn.setAttribute("aria-label", visible ? "Ver la contraseña" : "Ocultar la contraseña");
+        campo.focus();
+      });
+    });
+  })();
 
   const unavailableScreen = document.getElementById("unavailable-screen");
 

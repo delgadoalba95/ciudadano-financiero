@@ -1166,7 +1166,10 @@
     </div>
     <div class="gate-field" style="margin-top:16px;">
       <label for="recovery-password">Contraseña nueva</label>
-      <input type="password" id="recovery-password" autocomplete="new-password" placeholder="Al menos 6 caracteres">
+      <div class="gate-input-ojo">
+        <input type="password" id="recovery-password" autocomplete="new-password" placeholder="Al menos 6 caracteres">
+        <button type="button" class="ojo" data-ojo="recovery-password" aria-label="Ver la contraseña"></button>
+      </div>
     </div>
     <button class="gate-btn" id="recovery-btn">Guardar contraseña nueva</button>
     <div class="gate-note" id="recovery-note"></div>
