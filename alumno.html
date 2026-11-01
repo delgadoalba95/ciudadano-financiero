@@ -4532,6 +4532,10 @@
     showOnly(appEl);
     if(window.mostrarBuzon) window.mostrarBuzon();
     abrirModulosPublicados(session.access_token);
+    // Inmuebles abierto solo para Alba, para poder grabar el vídeo antes de
+    // abrirlo a los alumnos. Quitar estas dos líneas cuando se abra para todos.
+    if((session.email || "").trim().toLowerCase() === "delgadoalba95@gmail.com")
+      abrirHerramienta("inmobiliaria");
   }
 
   async function boot(){
