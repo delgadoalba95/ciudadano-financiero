@@ -2264,7 +2264,7 @@
   function tipoDe(item){ return item.tipo === "pasivos" ? "pasivos" : "activos"; }
 
   var session = null; // { access_token, refresh_token, user_id, email }
-  var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [], flujo: {}, meses: [], test: null, tareas: {}, estrategia: "", tareaMod2: "", interes: null };
+  var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [], flujo: {}, meses: [], test: null, tareas: {}, estrategia: "", tareaMod2: "", tareaMod3: "", interes: null };
   var filasFlujo = [];
   var saveTimer = null;
 
@@ -4366,6 +4366,12 @@
       clave: "tareaMod2",
       enunciado: "Escribe qué porcentaje (%) de tu (1) Flujo de Caja y de tu (2) Balance " +
                  "personal estás destinando a Activos. Y describe cómo puedes mejorar este porcentaje."
+    },
+    3: {
+      id: "tarea-mod3",
+      titulo: "Tarea módulo III",
+      clave: "tareaMod3",
+      enunciado: ""
     }
   };
 
@@ -4374,7 +4380,7 @@
     try{
       res = await fetch(window.SUPABASE_URL +
         "/rest/v1/lecciones_ocultas?select=modulo,orden,nombre,loom_id,duracion,miniatura" +
-        "&publicar_en=lte.now()&order=modulo.asc,orden.asc", {
+        "&order=modulo.asc,orden.asc", {
         headers: {
           "apikey": window.SUPABASE_ANON_KEY,
           "Authorization": "Bearer " + access_token
@@ -4432,7 +4438,9 @@
       '<p class="tarea-enunciado"></p>' +
       '<textarea id="' + id + '-texto" rows="6" placeholder="Escribe aquí tu respuesta..."></textarea>' +
       '<p class="tarea-pista" id="' + id + '-pista"></p>';
-    caja.querySelector(".tarea-enunciado").textContent = enunciado;
+    var texto = caja.querySelector(".tarea-enunciado");
+    texto.textContent = enunciado;
+    texto.hidden = !enunciado;
     return caja;
   }
 
@@ -4522,6 +4530,7 @@
         state.tareas = data.tareas || {};
         state.estrategia = typeof data.estrategia === "string" ? data.estrategia : "";
         state.tareaMod2 = typeof data.tareaMod2 === "string" ? data.tareaMod2 : "";
+        state.tareaMod3 = typeof data.tareaMod3 === "string" ? data.tareaMod3 : "";
         state.interes = data.interes || null;
         migrarRepartidos();
       }
