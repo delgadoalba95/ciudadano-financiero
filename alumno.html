@@ -339,6 +339,8 @@
   .leccion-visto { display:inline-flex; color: var(--ink-faint); opacity:.4; }
   .leccion-visto svg { width:17px; height:17px; }
   .leccion-visto.visto { color: var(--positive); opacity:1; }
+  .leccion-visto.visto circle { fill: var(--positive); stroke: var(--positive); }
+  .leccion-visto.visto path { stroke: var(--positive-bg); stroke-width:2.4; }
   .leccion-dur {
     font-family:"IBM Plex Mono", monospace; font-size:12px; font-weight:500;
     color: var(--ink-faint); letter-spacing:.04em;
@@ -377,6 +379,8 @@
   .tarea-tik { margin-left:auto; flex:none; display:inline-flex; color: var(--ink-faint); opacity:.4; }
   .tarea-tik svg { width:18px; height:18px; }
   .tarea.hecha .tarea-tik { color: var(--positive); opacity:1; }
+  .tarea.hecha .tarea-tik circle { fill: var(--positive); stroke: var(--positive); }
+  .tarea.hecha .tarea-tik path { stroke: var(--positive-bg); stroke-width:2.4; }
   .tarea-enunciado { margin: 13px 0 12px; font-size:13px; line-height:1.55; color: var(--ink); }
   .tarea textarea {
     width:100%; box-sizing:border-box; resize:vertical; min-height:110px;
@@ -1399,14 +1403,14 @@
               <div class="leccion">
                 <div class="leccion-bloqueada">
                   <span class="leccion-candado" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4.75" y="10.25" width="14.5" height="9" rx="2" stroke="currentColor" stroke-width="1.5"></rect><path d="M8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.5"></path></svg></span>
-                  <span class="leccion-name">Rentabilidad inmobiliaria</span>
+                  <span class="leccion-name">Inmuebles y vehículos</span>
                   <span class="bloqueado-tag">Bloqueado</span>
                 </div>
               </div>
               <div class="leccion">
                 <div class="leccion-bloqueada">
                   <span class="leccion-candado" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4.75" y="10.25" width="14.5" height="9" rx="2" stroke="currentColor" stroke-width="1.5"></rect><path d="M8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.5"></path></svg></span>
-                  <span class="leccion-name">ETFs</span>
+                  <span class="leccion-name">ETFs y ETCs</span>
                   <span class="bloqueado-tag">Bloqueado</span>
                 </div>
               </div>
@@ -1423,6 +1427,13 @@
                 <div class="leccion-bloqueada">
                   <span class="leccion-candado" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4.75" y="10.25" width="14.5" height="9" rx="2" stroke="currentColor" stroke-width="1.5"></rect><path d="M8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.5"></path></svg></span>
                   <span class="leccion-name">Análisis Técnico</span>
+                  <span class="bloqueado-tag">Bloqueado</span>
+                </div>
+              </div>
+              <div class="leccion">
+                <div class="leccion-bloqueada">
+                  <span class="leccion-candado" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4.75" y="10.25" width="14.5" height="9" rx="2" stroke="currentColor" stroke-width="1.5"></rect><path d="M8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.5"></path></svg></span>
+                  <span class="leccion-name">Análisis fundamental</span>
                   <span class="bloqueado-tag">Bloqueado</span>
                 </div>
               </div>
@@ -4401,8 +4412,15 @@
       if(!modulo) return;
       var lista = modulo.querySelector(".lecciones");
       if(!lista) return;
-      lista.querySelectorAll(".leccion").forEach(function(x){ x.remove(); });
+      var yaGrabadas = {};
+      porModulo[num].forEach(function(l){ yaGrabadas[l.nombre] = true; });
+      lista.querySelectorAll(".leccion").forEach(function(x){
+        var nombre = x.querySelector(".leccion-name");
+        if(nombre && yaGrabadas[nombre.textContent.trim()]) x.remove();
+      });
+      var pendientes = [].slice.call(lista.querySelectorAll(".leccion"));
       porModulo[num].forEach(function(l){ lista.appendChild(filaLeccion(l)); });
+      pendientes.forEach(function(x){ lista.appendChild(x); });
 
       (HERRAMIENTAS_DE_MODULO[Number(num)] || []).forEach(abrirHerramienta);
 
