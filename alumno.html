@@ -381,7 +381,10 @@
   .tarea.hecha .tarea-tik { color: var(--positive); opacity:1; }
   .tarea.hecha .tarea-tik circle { fill: var(--positive); stroke: var(--positive); }
   .tarea.hecha .tarea-tik path { stroke: var(--positive-bg); stroke-width:2.4; }
-  .tarea-enunciado { margin: 13px 0 12px; font-size:13px; line-height:1.55; color: var(--ink); }
+  .tarea-enunciado {
+    margin: 13px 0 12px; font-size:13px; line-height:1.55; color: var(--ink);
+    white-space: pre-line;
+  }
   .tarea textarea {
     width:100%; box-sizing:border-box; resize:vertical; min-height:110px;
     padding: 12px 13px; border:1px solid var(--rule); border-radius:8px;
@@ -4382,7 +4385,11 @@
       id: "tarea-mod3",
       titulo: "Tarea módulo III",
       clave: "tareaMod3",
-      enunciado: ""
+      enunciado: "Haz estos 3 ejercicios:\n" +
+                 "(1) Elige un inmueble y escribe la rentabilidad que te salga aquí.\n" +
+                 "(2) Elige un ETC en el que invertirías y escribe por qué, a nivel fundamental.\n" +
+                 "(3) Elige un ETF y escribe por qué ese.\n\n" +
+                 "Además, al acabar este módulo tienes que tener una cuenta de inversión."
     }
   };
 
