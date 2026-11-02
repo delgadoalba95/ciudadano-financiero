@@ -8,11 +8,12 @@
 --      set publicar_en = timestamptz '2026-11-XX 10:00:00+01'
 --    where modulo = 3;
 --
--- De momento solo existe el primer vídeo. Los otros dos se añaden aquí
--- mismo (orden 2 y 3) cuando estén grabados.
+-- Falta por grabar el tercero (ETFs y ETCs), que se añade aquí mismo con
+-- orden 3 cuando esté listo.
 
 insert into public.lecciones_ocultas (modulo, orden, nombre, loom_id, duracion, miniatura, publicar_en) values
-  (3, 1, 'Productos financieros de alta rentabilidad', 'ab50f2f3c0c646c0889ce17a58254d40', '19:25', 'ab50f2f3c0c646c0889ce17a58254d40-f009ddc4909657fd', null)
+  (3, 1, 'Productos financieros de alta rentabilidad', 'ab50f2f3c0c646c0889ce17a58254d40', '19:25', 'ab50f2f3c0c646c0889ce17a58254d40-f009ddc4909657fd', null),
+  (3, 2, 'Inmuebles y vehículos', '0bff715fb72745ac87ef61569efc9bb9', '20:34', '0bff715fb72745ac87ef61569efc9bb9-6dc200883c5af10f', null)
 on conflict (modulo, orden) do update
   set nombre    = excluded.nombre,
       loom_id   = excluded.loom_id,
