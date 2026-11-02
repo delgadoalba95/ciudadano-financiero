@@ -477,8 +477,10 @@
   .bloqueo-aviso p { margin:0; color: var(--ink-faint); font-size:13.5px; line-height:1.6; }
   .leccion-body { padding: 16px; background: rgba(255,255,255,0.5); }
   .leccion-body[hidden] { display:none; }
+  /* Los vídeos de Loom son 1152x720, o sea 1,6 — no 16:9. Con 56,25% sobraba
+     ancho y el reproductor lo rellenaba con negro a los lados. */
   .video-wrap {
-    position:relative; padding-bottom:56.25%; height:0; overflow:hidden;
+    position:relative; padding-bottom:62.5%; height:0; overflow:hidden;
     border-radius:8px; border:1px solid var(--rule);
     background:#000 center/cover no-repeat;
   }
