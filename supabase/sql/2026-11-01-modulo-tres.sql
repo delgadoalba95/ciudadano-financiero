@@ -13,7 +13,8 @@
 insert into public.lecciones_ocultas (modulo, orden, nombre, loom_id, duracion, miniatura, publicar_en) values
   (3, 1, 'Productos financieros de alta rentabilidad', 'ab50f2f3c0c646c0889ce17a58254d40', '19:25', 'ab50f2f3c0c646c0889ce17a58254d40-f009ddc4909657fd', null),
   (3, 2, 'Inmuebles y vehículos', '0bff715fb72745ac87ef61569efc9bb9', '20:34', '0bff715fb72745ac87ef61569efc9bb9-6dc200883c5af10f', null),
-  (3, 3, 'ETFs y ETCs', '1134249d473646fc839b53558b92ccd5', '34:39', '1134249d473646fc839b53558b92ccd5-1441f3c12aa37977', null)
+  (3, 3, 'ETFs y ETCs', '1134249d473646fc839b53558b92ccd5', '34:39', '1134249d473646fc839b53558b92ccd5-1441f3c12aa37977', null),
+  (3, 4, 'Análisis fundamental', '89456f176b2d47b18c9e5f4e78d2fa2b', '19:39', '89456f176b2d47b18c9e5f4e78d2fa2b-f7280d6294d0e765', null)
 on conflict (modulo, orden) do update
   set nombre    = excluded.nombre,
       loom_id   = excluded.loom_id,
