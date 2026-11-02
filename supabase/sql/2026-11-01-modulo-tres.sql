@@ -21,4 +21,9 @@ on conflict (modulo, orden) do update
       duracion  = excluded.duracion,
       miniatura = excluded.miniatura;
 
+-- Módulo III: se abre el 3 de noviembre de 2026 a las 10:00 de Madrid,
+-- para todos a la vez (Alba incluida). Con la fecha puesta en el futuro
+-- no lo ve nadie hasta esa hora.
+update public.lecciones_ocultas set publicar_en = timestamptz '2026-11-03 10:00:00+01' where modulo = 3;
+
 select modulo, orden, nombre, duracion, publicar_en from public.lecciones_ocultas order by modulo, orden;

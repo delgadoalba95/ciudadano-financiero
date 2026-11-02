@@ -4364,7 +4364,7 @@
 
   // Herramientas que se abren junto con su módulo. Flujo de caja y Balance
   // son justo las dos clases del módulo II, así que se abren con él.
-  var HERRAMIENTAS_DE_MODULO = { 2: ["flujo", "balance"] };
+  var HERRAMIENTAS_DE_MODULO = { 2: ["flujo", "balance"], 3: ["inmobiliaria"] };
 
   function abrirHerramienta(vista){
     var btn = document.querySelector('.nav-item[data-view="' + vista + '"]');
@@ -4400,7 +4400,7 @@
     try{
       res = await fetch(window.SUPABASE_URL +
         "/rest/v1/lecciones_ocultas?select=modulo,orden,nombre,loom_id,duracion,miniatura" +
-        "&order=modulo.asc,orden.asc", {
+        "&publicar_en=lte.now()&order=modulo.asc,orden.asc", {
         headers: {
           "apikey": window.SUPABASE_ANON_KEY,
           "Authorization": "Bearer " + access_token
@@ -4568,10 +4568,6 @@
     showOnly(appEl);
     if(window.mostrarBuzon) window.mostrarBuzon();
     abrirModulosPublicados(session.access_token);
-    // Inmuebles abierto solo para Alba, para poder grabar el vídeo antes de
-    // abrirlo a los alumnos. Quitar estas dos líneas cuando se abra para todos.
-    if((session.email || "").trim().toLowerCase() === "delgadoalba95@gmail.com")
-      abrirHerramienta("inmobiliaria");
   }
 
   async function boot(){
