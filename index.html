@@ -622,31 +622,25 @@
 
   /* ---------- Lo que dicen ---------- */
   .testi-sub { color: var(--ink-faint); font-size: 0.92rem; margin: 8px 0 0; }
+  #testimonios { padding: 46px 0; }
+  #testimonios .head { margin-bottom: 22px; }
   .testi-grid {
-    margin-top: 34px;
-    display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+    margin-top: 22px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px 26px;
   }
-  .testi {
-    background: var(--surface-2);
-    border: 1px solid var(--rule);
-    border-radius: 10px;
-    padding: 24px 24px 18px;
-  }
-  .testi.ancho { grid-column: 1 / -1; }
+  .testi { border-left: 2px solid var(--rule); padding: 2px 0 2px 14px; }
   .testi p {
     font-family: "Newsreader", Georgia, serif;
-    font-size: 1.08rem; line-height: 1.45;
-    margin: 0 0 12px; color: var(--ink);
+    font-size: 0.99rem; line-height: 1.4;
+    margin: 0 0 4px; color: var(--ink);
   }
-  .testi.ancho p { font-size: 1.22rem; }
   .testi cite {
-    font-style: normal; font-size: 0.82rem;
+    font-style: normal; font-size: 0.78rem;
     color: var(--ink-faint); letter-spacing: 0.03em;
   }
   @media (max-width: 680px) {
+    #testimonios { padding: 38px 0; }
     .testi-grid { grid-template-columns: 1fr; gap: 14px; }
-    .testi { padding: 20px 20px 16px; }
-    .testi.ancho p { font-size: 1.1rem; }
   }
 
   /* ---------- Aviso de la lista de espera ---------- */
@@ -670,6 +664,25 @@
   .aviso h2 { font-size: 1.32rem; font-weight: 600; margin: 0 0 12px; line-height: 1.3; }
   .aviso p { color: var(--ink-soft); font-size: 0.98rem; margin: 0 0 22px; }
   .aviso .btn { width: 100%; justify-content: center; }
+  .aviso input[type="text"], .aviso input[type="email"] {
+    width: 100%; box-sizing: border-box;
+    padding: 11px 13px; margin-bottom: 9px;
+    font: inherit; font-size: 0.95rem;
+    color: var(--ink); background: var(--bg);
+    border: 1px solid var(--rule); border-radius: 3px;
+  }
+  .aviso input::placeholder { color: var(--ink-faint); }
+  .aviso input.campo-mal { border-color: var(--stamp); }
+  .aviso-consent {
+    display: flex; gap: 9px; align-items: flex-start;
+    text-align: left; margin: 4px 0 14px;
+    font-size: 0.8rem; line-height: 1.4; color: var(--ink-soft);
+  }
+  .aviso-consent input { margin-top: 2px; flex: none; }
+  .aviso .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+  .aviso-estado { font-size: 0.86rem; margin: 11px 0 0; min-height: 1em; }
+  .aviso-estado.ok { color: var(--positive); }
+  .aviso-estado.err { color: var(--stamp); }
   .aviso-cerrar {
     position: absolute; top: 9px; right: 9px;
     width: 34px; height: 34px;
@@ -1145,16 +1158,12 @@
         <p class="testi-sub">Alumnos de la primera edición.</p>
       </div>
       <div class="testi-grid">
-        <div class="testi ancho">
+        <div class="testi">
           <p>&ldquo;Una clase magistral sobre el mundo de las empresas y sus fluctuaciones en los mercados.&rdquo;</p>
           <cite>Marta</cite>
         </div>
         <div class="testi">
-          <p>&ldquo;Explicas de forma muy clara y muy sencilla.&rdquo;</p>
-          <cite>Jorge</cite>
-        </div>
-        <div class="testi">
-          <p>&ldquo;Esto genera un cambio de mentalidad muy grande.&rdquo;</p>
+          <p>&ldquo;Explicas de forma muy clara y muy sencilla. Esto genera un cambio de mentalidad muy grande.&rdquo;</p>
           <cite>Jorge</cite>
         </div>
         <div class="testi">
@@ -1162,7 +1171,7 @@
           <cite>Gloria</cite>
         </div>
         <div class="testi">
-          <p>&ldquo;Me ha gustado mucho.&rdquo;</p>
+          <p>&ldquo;Me ha gustado la parte de inversión.&rdquo;</p>
           <cite>Rubén</cite>
         </div>
       </div>
@@ -1237,7 +1246,16 @@
     <button class="aviso-cerrar" type="button" id="aviso-cerrar" aria-label="Cerrar">&times;</button>
     <h2 id="aviso-titulo">Lista de espera para aprender a gestionar e invertir tu dinero.</h2>
     <p>Porque si no estás invirtiendo, estás perdiendo dinero.</p>
-    <a class="btn btn-primary" href="#lista-espera" id="aviso-ir">Apuntarme a la lista de espera →</a>
+    <form id="aviso-form" novalidate>
+      <input type="text" id="av-nombre" placeholder="Tu nombre" autocomplete="name">
+      <input type="email" id="av-email" placeholder="Tu email" autocomplete="email">
+      <label class="aviso-consent">
+        <input type="checkbox" id="av-consent">
+        <span>Acepto recibir el aviso de lanzamiento y contenido sobre educación financiera por email.</span>
+      </label>
+      <button type="submit" class="btn btn-primary" id="av-submit" disabled>Apuntarme a la lista de espera →</button>
+      <p class="aviso-estado" id="av-estado"></p>
+    </form>
   </div>
 </div>
 
@@ -1565,7 +1583,51 @@ document.querySelectorAll(".legal-modal-backdrop").forEach((backdrop) => {
   document.getElementById("aviso-cerrar").addEventListener("click", cerrar);
   // Pinchar fuera de la tarjeta también cierra.
   fondo.addEventListener("click", function (e) { if (e.target === fondo) cerrar(); });
-  document.getElementById("aviso-ir").addEventListener("click", cerrar);
+  // El alta se hace aquí mismo, sin mandar a nadie a otra parte.
+  var fNombre = document.getElementById("av-nombre");
+  var fEmail = document.getElementById("av-email");
+  var fConsent = document.getElementById("av-consent");
+  var fBoton = document.getElementById("av-submit");
+  var fEstado = document.getElementById("av-estado");
+  var formulario = document.getElementById("aviso-form");
+
+  function emailValido(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()); }
+
+  function revisar() {
+    var ok = emailValido(fEmail.value);
+    fEmail.classList.toggle("campo-mal", fEmail.value.length > 0 && !ok);
+    fBoton.disabled = !(fNombre.value.trim().length > 1 && ok && fConsent.checked);
+  }
+
+  [fNombre, fEmail].forEach(function (el) { el.addEventListener("input", revisar); });
+  fConsent.addEventListener("change", revisar);
+
+  formulario.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    if (fBoton.disabled) return;
+    fBoton.disabled = true;
+    fBoton.textContent = "Guardando...";
+    fEstado.textContent = "";
+    fEstado.className = "aviso-estado";
+    try {
+      await submitContact({
+        nombre: fNombre.value.trim(),
+        email: fEmail.value.trim(),
+        whatsapp: null,
+        consent: true,
+        source: "aviso"
+      });
+      formulario.reset();
+      fEstado.textContent = "¡Listo! Te avisaremos en cuanto abramos matrícula.";
+      fEstado.className = "aviso-estado ok";
+      fBoton.textContent = "Apuntarme a la lista de espera →";
+    } catch (err) {
+      fEstado.textContent = "Algo ha fallado. Inténtalo de nuevo en un momento.";
+      fEstado.className = "aviso-estado err";
+      fBoton.textContent = "Apuntarme a la lista de espera →";
+      fBoton.disabled = false;
+    }
+  });
 })();
 </script>
 
