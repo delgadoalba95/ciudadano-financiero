@@ -633,33 +633,20 @@
      Se recorta por abajo (el sofá gris no fundía) y se difumina el canto. */
   .sobre .retrato {
     margin: 0;
-    aspect-ratio: 568 / 525;
-    overflow: hidden;
     border-radius: 12px;
+    overflow: hidden;
     background: #ECE3CB;
     isolation: isolate;
   }
   .sobre .retrato img {
-    display: block; width: 100%; height: 100%;
-    object-fit: cover; object-position: top center;
+    display: block; width: 100%; height: auto;
     filter: brightness(1.13) saturate(0.97);
     mix-blend-mode: multiply;
-    -webkit-mask-image: linear-gradient(#000 93%, transparent 100%);
-            mask-image: linear-gradient(#000 93%, transparent 100%);
   }
   .sobre h2 { margin-top: 10px; }
   .sobre p { color: var(--ink-soft); font-size: 1.01rem; margin: 0 0 14px; }
   .sobre p:last-of-type { margin-bottom: 0; }
   .sobre p strong { color: var(--ink); font-weight: 600; }
-  .creds { list-style: none; margin: 26px 0 0; padding: 0; }
-  .creds li {
-    position: relative; padding-left: 1.5rem; margin-bottom: 0.6rem;
-    color: var(--ink-soft); font-size: 0.97rem;
-  }
-  .creds li::before {
-    content: "—"; position: absolute; left: 0;
-    color: var(--accent); font-weight: 700;
-  }
   @media (max-width: 760px) {
     .sobre { grid-template-columns: 1fr; gap: 26px; }
     .sobre .retrato { max-width: 230px; }
@@ -1071,21 +1058,15 @@
   <section id="quien-soy">
     <div class="wrap sobre">
       <figure class="retrato">
-        <img src="fotos/alba.jpg" alt="Alba D. Iranzo"
+        <img src="fotos/alba.jpg" alt="Alba"
              onerror="this.closest('.retrato').remove()">
       </figure>
       <div>
         <p class="eyebrow">Quién te enseña</p>
         <h2>Quién soy</h2>
-        <p>Me llamo Alba D. Iranzo y soy inversora y consultora estratégica. Vengo de la banca de inversión y llevo más de quince años analizando empresas. Mi padre me enseñó a leer un balance a los catorce años.</p>
-        <p>Hace cuatro años dejé la banca para emprender. Varios proyectos, tres países y cuatro ciudades después, tengo clara una cosa: <strong>&laquo;entender el dinero no es un talento con el que se nace. Es un método, y se aprende&raquo;.</strong></p>
-        <p><strong>Monté Ciudadano Financiero porque ese método casi nadie lo enseña. Yo lo creé con todo lo que aprendí en casa, con mi curiosidad insaciable, con mi experiencia en el mercado bursátil, con mis errores y tras varias formaciones. Y este método, es exactamente lo que vas a aprender aquí.</strong></p>
-        <ul class="creds">
-          <li>Ex banca de inversión</li>
-          <li>Consultoría estratégica</li>
-          <li>Más de 15 años analizando empresas</li>
-          <li>Seis proyectos propios, en 3 países</li>
-        </ul>
+        <p>Me llamo Alba y soy inversora y consultora estratégica. Vengo de la banca de inversión y llevo más de quince años analizando empresas. Mi padre me enseñó a leer un balance a los catorce años.</p>
+        <p>Hace cuatro años dejé la banca para emprender. Varios proyectos, tres países y cuatro ciudades después, tengo clara una cosa: <strong>entender el dinero no es un talento con el que se nace. Es un método, y se aprende.</strong></p>
+        <p>Monté Ciudadano Financiero porque ese método casi nadie lo enseña. Yo lo creé con todo lo que aprendí en casa, con mi curiosidad insaciable, con mi experiencia en el mercado bursátil, con mis errores y tras varias formaciones. <strong>Y este método, es exactamente lo que vas a aprender aquí.</strong></p>
       </div>
     </div>
   </section>
