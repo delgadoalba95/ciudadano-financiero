@@ -620,6 +620,35 @@
   }
   .honest-note strong { color: var(--ink); }
 
+  /* ---------- Lo que dicen ---------- */
+  .testi-sub { color: var(--ink-faint); font-size: 0.92rem; margin: 8px 0 0; }
+  .testi-grid {
+    margin-top: 34px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+  }
+  .testi {
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 24px 24px 18px;
+  }
+  .testi.ancho { grid-column: 1 / -1; }
+  .testi p {
+    font-family: "Newsreader", Georgia, serif;
+    font-size: 1.08rem; line-height: 1.45;
+    margin: 0 0 12px; color: var(--ink);
+  }
+  .testi.ancho p { font-size: 1.22rem; }
+  .testi cite {
+    font-style: normal; font-size: 0.82rem;
+    color: var(--ink-faint); letter-spacing: 0.03em;
+  }
+  @media (max-width: 680px) {
+    .testi-grid { grid-template-columns: 1fr; gap: 14px; }
+    .testi { padding: 20px 20px 16px; }
+    .testi.ancho p { font-size: 1.1rem; }
+  }
+
   /* ---------- Aviso de la lista de espera ---------- */
   .aviso-fondo {
     position: fixed; inset: 0; z-index: 90;
@@ -1104,6 +1133,38 @@
         <p>Me llamo Alba, soy inversora y consultora estratégica. Vengo de la banca de inversión y llevo más de quince años analizando empresas. Mi padre me enseñó a leer un balance a los catorce años.</p>
         <p>Hace cuatro años dejé la banca para emprender. Varios proyectos después, tengo clara una cosa: <strong>entender el dinero no es un talento con el que se nace.<br>Es un método, y se aprende.</strong></p>
         <p>Creé Ciudadano Financiero porque falta educación financiera. Y en este método, que junta mi experiencia en el mercado bursátil, mis aprendizajes y varias formaciones, <strong>vas a aprender a gestionar e invertir tu dinero como nunca antes te han enseñado.</strong></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="testimonios">
+    <div class="wrap">
+      <div class="head">
+        <p class="eyebrow">Lo que dicen</p>
+        <h2>Quienes ya lo han probado</h2>
+        <p class="testi-sub">Alumnos de la primera edición.</p>
+      </div>
+      <div class="testi-grid">
+        <div class="testi ancho">
+          <p>&ldquo;Una clase magistral sobre el mundo de las empresas y sus fluctuaciones en los mercados.&rdquo;</p>
+          <cite>Marta</cite>
+        </div>
+        <div class="testi">
+          <p>&ldquo;Explicas de forma muy clara y muy sencilla.&rdquo;</p>
+          <cite>Jorge</cite>
+        </div>
+        <div class="testi">
+          <p>&ldquo;Esto genera un cambio de mentalidad muy grande.&rdquo;</p>
+          <cite>Jorge</cite>
+        </div>
+        <div class="testi">
+          <p>&ldquo;Brutal el curso de Ciudadano Financiero.&rdquo;</p>
+          <cite>Gloria</cite>
+        </div>
+        <div class="testi">
+          <p>&ldquo;Me ha gustado mucho.&rdquo;</p>
+          <cite>Rubén</cite>
+        </div>
       </div>
     </div>
   </section>
