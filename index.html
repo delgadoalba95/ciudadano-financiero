@@ -620,6 +620,44 @@
   }
   .honest-note strong { color: var(--ink); }
 
+  /* ---------- Aviso de la lista de espera ---------- */
+  .aviso-fondo {
+    position: fixed; inset: 0; z-index: 90;
+    background: rgba(18, 38, 65, 0.55);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .aviso-fondo[hidden] { display: none !important; }
+  .aviso {
+    position: relative;
+    width: 100%; max-width: 430px;
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 34px 30px 30px;
+    box-shadow: 0 18px 46px var(--shadow);
+    text-align: center;
+  }
+  .aviso h2 { font-size: 1.32rem; font-weight: 600; margin: 0 0 12px; line-height: 1.3; }
+  .aviso p { color: var(--ink-soft); font-size: 0.98rem; margin: 0 0 22px; }
+  .aviso .btn { width: 100%; justify-content: center; }
+  .aviso-cerrar {
+    position: absolute; top: 9px; right: 9px;
+    width: 34px; height: 34px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: none; border: 0; border-radius: 50%;
+    color: var(--ink-faint); cursor: pointer; font-size: 20px; line-height: 1;
+  }
+  .aviso-cerrar:hover { color: var(--ink); background: var(--surface); }
+  @media (max-width: 420px) {
+    .aviso { padding: 30px 20px 24px; }
+    .aviso h2 { font-size: 1.18rem; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .aviso { animation: avisoEntra 0.22s ease-out; }
+    @keyframes avisoEntra { from { opacity: 0; transform: translateY(10px); } }
+  }
+
   /* ---------- Quién te enseña ---------- */
   .sobre {
     display: grid;
@@ -1133,6 +1171,15 @@
 
 </main>
 
+<div class="aviso-fondo" id="aviso-lista" hidden>
+  <div class="aviso" role="dialog" aria-modal="true" aria-labelledby="aviso-titulo">
+    <button class="aviso-cerrar" type="button" id="aviso-cerrar" aria-label="Cerrar">&times;</button>
+    <h2 id="aviso-titulo">Lista de espera para aprender a gestionar e invertir tu dinero.</h2>
+    <p>Porque si no estás invirtiendo, estás perdiendo dinero.</p>
+    <a class="btn btn-primary" href="#lista-espera" id="aviso-ir">Apuntarme a la lista de espera →</a>
+  </div>
+</div>
+
 <footer class="site">
   <div class="wrap footer-inner">
     <div class="footer-mark">
@@ -1410,6 +1457,54 @@ document.querySelectorAll(".legal-modal-backdrop").forEach((backdrop) => {
     if (document.visibilityState === "hidden") enviar();
   });
   window.addEventListener("pagehide", enviar);
+})();
+</script>
+
+<script>
+// Aviso de la lista de espera: sale una sola vez por sesión, cuando se cumplen
+// las dos cosas a la vez — 15 segundos en la página y haber bajado un poco.
+(function () {
+  var fondo = document.getElementById("aviso-lista");
+  if (!fondo) return;
+
+  var RECUERDO = "cf_aviso_lista";
+  try { if (sessionStorage.getItem(RECUERDO)) return; } catch (e) { /* sin memoria, sale igual */ }
+
+  var SEGUNDOS = 15, BAJADA_MINIMA = 300;
+  var pasoElTiempo = false, bajo = false, mostrado = false, scrollPrevio = 0;
+
+  function cerrar() {
+    fondo.hidden = true;
+    document.body.style.overflow = scrollPrevio;
+    document.removeEventListener("keydown", porTecla);
+  }
+
+  function porTecla(e) { if (e.key === "Escape") cerrar(); }
+
+  function mostrar() {
+    // Se mira la posición además del evento: quien entra ya desplazado
+    // (por un enlace con ancla, o al recargar) no genera ningún scroll.
+    if (!bajo && window.scrollY > BAJADA_MINIMA) bajo = true;
+    if (mostrado || !pasoElTiempo || !bajo) return;
+    mostrado = true;
+    try { sessionStorage.setItem(RECUERDO, "1"); } catch (e) {}
+    scrollPrevio = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    fondo.hidden = false;
+    document.addEventListener("keydown", porTecla);
+    document.getElementById("aviso-cerrar").focus();
+  }
+
+  setTimeout(function () { pasoElTiempo = true; mostrar(); }, SEGUNDOS * 1000);
+
+  window.addEventListener("scroll", function () {
+    if (window.scrollY > BAJADA_MINIMA) { bajo = true; mostrar(); }
+  }, { passive: true });
+
+  document.getElementById("aviso-cerrar").addEventListener("click", cerrar);
+  // Pinchar fuera de la tarjeta también cierra.
+  fondo.addEventListener("click", function (e) { if (e.target === fondo) cerrar(); });
+  document.getElementById("aviso-ir").addEventListener("click", cerrar);
 })();
 </script>
 
