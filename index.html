@@ -620,6 +620,38 @@
   }
   .honest-note strong { color: var(--ink); }
 
+  /* ---------- Quién te enseña ---------- */
+  .sobre {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+  .sobre .retrato {
+    margin: 0;
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .sobre .retrato img { display: block; width: 100%; height: auto; }
+  .sobre h2 { margin-top: 10px; }
+  .sobre p { color: var(--ink-soft); font-size: 1.01rem; margin: 0 0 14px; }
+  .sobre p:last-of-type { margin-bottom: 0; }
+  .creds { list-style: none; margin: 26px 0 0; padding: 0; }
+  .creds li {
+    position: relative; padding-left: 1.5rem; margin-bottom: 0.6rem;
+    color: var(--ink-soft); font-size: 0.97rem;
+  }
+  .creds li::before {
+    content: "—"; position: absolute; left: 0;
+    color: var(--accent); font-weight: 700;
+  }
+  @media (max-width: 760px) {
+    .sobre { grid-template-columns: 1fr; gap: 26px; }
+    .sobre .retrato { max-width: 230px; }
+  }
+
   /* pricing */
   .price-card {
     margin-top: 34px;
@@ -1019,6 +1051,28 @@
             <p>Ejemplos reales de principio a fin y cómo montar tu propia cartera de inversión.</p>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="quien-soy">
+    <div class="wrap sobre">
+      <figure class="retrato">
+        <img src="fotos/alba.jpg" alt="Alba D. Iranzo"
+             onerror="this.closest('.retrato').remove()">
+      </figure>
+      <div>
+        <p class="eyebrow">Quién te enseña</p>
+        <h2>Quién soy</h2>
+        <p>Me llamo Alba D. Iranzo. Vengo de la banca de inversión y de la consultoría estratégica, y llevo más de quince años analizando empresas por sus números. Mi padre me enseñó a leer un balance a los catorce años.</p>
+        <p>Hace casi cuatro años dejé la banca para emprender. Varios proyectos, tres países y cuatro ciudades después, tengo clara una cosa: entender el dinero no es un talento con el que se nace. Es un método, y se aprende.</p>
+        <p>Monté Ciudadano Financiero porque ese método casi nadie lo enseña. A mí me lo enseñaron en casa primero y en el trabajo después, y es exactamente lo que vas a aprender aquí.</p>
+        <ul class="creds">
+          <li>Ex banca de inversión</li>
+          <li>Consultoría estratégica</li>
+          <li>Más de 15 años analizando empresas</li>
+          <li>Seis proyectos propios, en 3 países</li>
+        </ul>
       </div>
     </div>
   </section>
