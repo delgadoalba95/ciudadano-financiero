@@ -627,14 +627,26 @@
     gap: 40px;
     align-items: start;
   }
+  /* El retrato se funde con el fondo: la pared gris de la foto se multiplica
+     contra el crema y desaparece el recuadro. El fondo del marco es crema fijo
+     y está aislado, para que el resultado sea el mismo en claro y en oscuro.
+     Se recorta por abajo (el sofá gris no fundía) y se difumina el canto. */
   .sobre .retrato {
     margin: 0;
-    border: 1px solid var(--rule);
-    border-radius: 12px;
+    aspect-ratio: 568 / 525;
     overflow: hidden;
-    background: var(--surface);
+    border-radius: 12px;
+    background: #ECE3CB;
+    isolation: isolate;
   }
-  .sobre .retrato img { display: block; width: 100%; height: auto; }
+  .sobre .retrato img {
+    display: block; width: 100%; height: 100%;
+    object-fit: cover; object-position: top center;
+    filter: brightness(1.13) saturate(0.97);
+    mix-blend-mode: multiply;
+    -webkit-mask-image: linear-gradient(#000 93%, transparent 100%);
+            mask-image: linear-gradient(#000 93%, transparent 100%);
+  }
   .sobre h2 { margin-top: 10px; }
   .sobre p { color: var(--ink-soft); font-size: 1.01rem; margin: 0 0 14px; }
   .sobre p:last-of-type { margin-bottom: 0; }
