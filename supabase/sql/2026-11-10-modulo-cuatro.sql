@@ -29,3 +29,16 @@ update public.lecciones_ocultas set duracion = '19:39' where modulo=3 and orden=
 update public.lecciones_ocultas set duracion = '34:06' where modulo=3 and orden=3;
 update public.lecciones_ocultas set duracion = '18:41' where modulo=3 and orden=4;
 update public.lecciones_ocultas set duracion = '60:12' where modulo=4 and orden=1;
+
+-- Las otras dos lecciones del módulo IV.
+insert into public.lecciones_ocultas (modulo, orden, nombre, loom_id, duracion, miniatura, publicar_en) values
+  (4, 2, 'Criptomonedas y acciones', 'a71d0960ca4948e7a1072c4a6c631c0d', '16:57', 'a71d0960ca4948e7a1072c4a6c631c0d-b9d6fff51067d317', null),
+  (4, 3, 'Herramientas de análisis e inversión', 'ed52a7ae90c44f64b3e01a78c940daec', '09:17', 'ed52a7ae90c44f64b3e01a78c940daec-e6461570b8d48afc', null)
+on conflict (modulo, orden) do update
+  set nombre    = excluded.nombre,
+      loom_id   = excluded.loom_id,
+      duracion  = excluded.duracion,
+      miniatura = excluded.miniatura;
+
+-- Módulo IV abierto para todos, Alba incluida.
+update public.lecciones_ocultas set publicar_en = now() where modulo = 4;
