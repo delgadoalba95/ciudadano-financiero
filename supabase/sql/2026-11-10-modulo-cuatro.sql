@@ -20,3 +20,12 @@ on conflict (modulo, orden) do update
       miniatura = excluded.miniatura;
 
 select modulo, orden, nombre, duracion, publicar_en from public.lecciones_ocultas order by modulo, orden;
+
+-- Duraciones reales de todas las lecciones, medidas en el reproductor.
+-- La API pública de Loom devuelve la duración de ANTES del recorte, y por
+-- eso cuatro fichas marcaban más tiempo del que dura el vídeo.
+update public.lecciones_ocultas set duracion = '35:58' where modulo=2 and orden=1;
+update public.lecciones_ocultas set duracion = '19:39' where modulo=3 and orden=2;
+update public.lecciones_ocultas set duracion = '34:06' where modulo=3 and orden=3;
+update public.lecciones_ocultas set duracion = '18:41' where modulo=3 and orden=4;
+update public.lecciones_ocultas set duracion = '60:12' where modulo=4 and orden=1;
