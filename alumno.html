@@ -2280,7 +2280,7 @@
   function tipoDe(item){ return item.tipo === "pasivos" ? "pasivos" : "activos"; }
 
   var session = null; // { access_token, refresh_token, user_id, email }
-  var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [], flujo: {}, meses: [], test: null, tareas: {}, estrategia: "", tareaMod2: "", tareaMod3: "", interes: null };
+  var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [], flujo: {}, meses: [], test: null, tareas: {}, estrategia: "", tareaMod2: "", tareaMod3: "", tareaMod4: "", interes: null };
   var filasFlujo = [];
   var saveTimer = null;
 
@@ -4383,6 +4383,14 @@
       enunciado: "Escribe qué porcentaje (%) de tu (1) Flujo de Caja y de tu (2) Balance " +
                  "personal estás destinando a Activos. Y describe cómo puedes mejorar este porcentaje."
     },
+    4: {
+      id: "tarea-mod4",
+      titulo: "Tarea módulo IV",
+      clave: "tareaMod4",
+      enunciado: "Escribe qué 2 oportunidades buenas has visto en el mercado de cripto y " +
+                 "acciones, y por qué es buen momento de entrada (o por qué no es buen " +
+                 "momento de entrada todavía)."
+    },
     3: {
       id: "tarea-mod3",
       titulo: "Tarea módulo III",
@@ -4558,6 +4566,7 @@
         state.estrategia = typeof data.estrategia === "string" ? data.estrategia : "";
         state.tareaMod2 = typeof data.tareaMod2 === "string" ? data.tareaMod2 : "";
         state.tareaMod3 = typeof data.tareaMod3 === "string" ? data.tareaMod3 : "";
+        state.tareaMod4 = typeof data.tareaMod4 === "string" ? data.tareaMod4 : "";
         state.interes = data.interes || null;
         migrarRepartidos();
       }
