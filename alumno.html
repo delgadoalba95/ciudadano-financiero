@@ -319,9 +319,13 @@
     margin-top: 16px; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden;
   }
   .leccion + .leccion { border-top: 1px solid var(--rule); }
+  /* La cabecera y el tik comparten fila: así el tik queda centrado en la
+     cabecera aunque la lección esté desplegada. */
+  .leccion-fila { position: relative; display: flex; align-items: stretch; }
+  .leccion-fila .leccion-head { flex: 1; }
   .leccion-head {
     width:100%; display:flex; align-items:center; gap:14px; text-align:left;
-    background: rgba(255,255,255,0.38); border:0; cursor:pointer; padding: 14px 16px;
+    background: rgba(255,255,255,0.38); border:0; cursor:pointer; padding: 14px 52px 14px 16px;
     font-family: inherit; color: var(--ink); transition: background .15s ease;
   }
   .leccion-head:hover { background: rgba(255,255,255,0.72); }
@@ -335,8 +339,19 @@
   .leccion-meta { flex:none; display:flex; align-items:center; gap:14px; }
   .leccion-clip { display:inline-flex; color: var(--ink-faint); }
   .leccion-clip svg { width:15px; height:15px; }
-  /* Tik de "ya la has visto": se enciende solo al llegar al final del vídeo. */
-  .leccion-visto { display:inline-flex; color: var(--ink-faint); opacity:.4; }
+  /* Tik de "ya la has visto": se enciende solo al llegar al final del vídeo,
+     y además se puede pulsar para marcarla o desmarcarla a mano. Va fuera del
+     botón que abre la lección para que pulsarlo no despliegue el vídeo. */
+  .leccion-visto {
+    position:absolute; top:50%; right:12px; transform:translateY(-50%);
+    box-sizing:border-box; width:32px; min-width:32px; height:32px;
+    padding:0; border:0; border-radius:50%; flex:none;
+    display:inline-flex; align-items:center; justify-content:center;
+    background:none; cursor:pointer; color: var(--ink-faint); opacity:.4;
+    transition: opacity .15s ease, background .15s ease;
+  }
+  .leccion-visto:hover { opacity:.9; background: rgba(255,255,255,0.95); }
+  .leccion-visto:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
   .leccion-visto svg { width:17px; height:17px; }
   .leccion-visto.visto { color: var(--positive); opacity:1; }
   .leccion-visto.visto circle { fill: var(--positive); stroke: var(--positive); }
@@ -493,7 +508,8 @@
   .video-wrap iframe { position:absolute; top:0; left:0; width:100%; height:100%; border:0; }
   @media (max-width: 640px) {
     .modulo-body { margin-left: 0; }
-    .leccion-head { padding: 13px 12px; gap: 11px; }
+    .leccion-head { padding: 13px 46px 13px 12px; gap: 11px; }
+    .leccion-visto { right: 8px; }
     .leccion-pendiente { padding: 13px 12px; gap: 11px; }
     .leccion-name { font-size: 12px; }
   }
@@ -3952,12 +3968,22 @@
       var id = idDeLeccion(leccion);
       var meta = leccion.querySelector(".leccion-meta");
       if(!id || !meta) return;
-      if(meta.querySelector(".leccion-visto")) return;
-      var tik = document.createElement("span");
+      if(leccion.querySelector(".leccion-visto")) return;
+      var head = leccion.querySelector(".leccion-head");
+      if(!head) return;
+      var fila = leccion.querySelector(".leccion-fila");
+      if(!fila){
+        fila = document.createElement("div");
+        fila.className = "leccion-fila";
+        head.parentNode.insertBefore(fila, head);
+        fila.appendChild(head);
+      }
+      var tik = document.createElement("button");
+      tik.type = "button";
       tik.className = "leccion-visto";
       tik.setAttribute("data-visto", id);
       tik.innerHTML = SVG_TIK;
-      meta.appendChild(tik);
+      fila.appendChild(tik);
     });
   }
 
@@ -3977,7 +4003,10 @@
     document.querySelectorAll(".leccion-visto[data-visto]").forEach(function(tik){
       var visto = !!state.tareas[tik.getAttribute("data-visto")];
       tik.classList.toggle("visto", visto);
-      tik.setAttribute("title", visto ? "Ya la has visto" : "Todavía sin ver");
+      tik.setAttribute("aria-pressed", visto ? "true" : "false");
+      var texto = visto ? "Vista. Pulsa para desmarcarla" : "Marcar como vista";
+      tik.setAttribute("title", texto);
+      tik.setAttribute("aria-label", texto);
     });
   }
 
@@ -4309,6 +4338,17 @@
     var id = tareaDelFrame(e.source);
     if(!id || state.tareas[id]) return;
     marcarTarea(id, true);
+  });
+
+  // Se escucha en todo el documento porque las lecciones de los módulos que
+  // se abren solos se crean después.
+  document.addEventListener("click", function(e){
+    var tik = e.target.closest && e.target.closest(".leccion-visto[data-visto]");
+    if(!tik) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var id = tik.getAttribute("data-visto");
+    marcarTarea(id, !state.tareas[id]);
   });
 
   function conectarLecciones(){
