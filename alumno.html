@@ -3929,7 +3929,8 @@
   // varios a la vez se estorban y cada uno pasa de un minuto. Por eso se carga
   // únicamente el de la clase que se abre, y mientras tanto se ve la miniatura.
   function cerrarLeccion(head){
-    var body = head.nextElementSibling;
+    var body = cuerpoDeLeccion(head);
+    if(!body) return;
     var frame = body.querySelector("iframe");
 
     head.setAttribute("aria-expanded", "false");
@@ -3943,8 +3944,16 @@
     }
   }
 
+  // La cabecera puede estar envuelta en .leccion-fila junto al tik, así que
+  // el vídeo no es su hermano: se busca dentro de la lección.
+  function cuerpoDeLeccion(head){
+    var leccion = head.closest(".leccion");
+    return leccion ? leccion.querySelector(".leccion-body") : null;
+  }
+
   function abrirLeccion(head){
-    var body = head.nextElementSibling;
+    var body = cuerpoDeLeccion(head);
+    if(!body) return;
     var frame = body.querySelector("iframe");
 
     head.setAttribute("aria-expanded", "true");
