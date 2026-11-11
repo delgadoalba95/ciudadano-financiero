@@ -415,6 +415,15 @@
     margin-bottom: 24px;
     flex-wrap: wrap;
   }
+  .tareas-aviso { font-size: 0.86rem; color: var(--ink-faint); margin: 0 0 18px; max-width: 60ch; }
+  .alumno-tareas { border: 1px solid var(--rule); border-radius: 10px; padding: 18px 20px; margin-bottom: 14px; background: var(--surface-2, #fff); }
+  .alumno-tareas h3 { font-size: 0.95rem; margin: 0 0 4px; }
+  .alumno-tareas .cuando { font-size: 0.78rem; color: var(--ink-faint); margin: 0 0 14px; }
+  .tarea-resp { margin: 0 0 14px; }
+  .tarea-resp:last-child { margin-bottom: 0; }
+  .tarea-resp .rotulo { font-size: 0.74rem; letter-spacing: .09em; text-transform: uppercase; color: var(--accent, #A9832E); font-weight: 600; margin: 0 0 4px; }
+  .tarea-resp .texto { font-size: 0.9rem; line-height: 1.5; white-space: pre-wrap; margin: 0; }
+  .tarea-resp.sin .texto { color: var(--ink-faint); font-style: italic; }
   .stat-card {
     background: var(--surface-2);
     border: 1px solid var(--rule);
@@ -687,6 +696,7 @@
       <button class="panel-tab" id="tab-btn-emails">Emails enviados</button>
       <button class="panel-tab" id="tab-btn-comportamiento">Comportamiento</button>
       <button class="panel-tab" id="tab-btn-alumnos">Alumnos</button>
+      <button class="panel-tab" id="tab-btn-tareas">Tareas</button>
     </div>
 
     <div id="tab-contacts">
@@ -833,6 +843,16 @@
       <div id="alumnos-load-error" style="display:none;"></div>
       <div id="alumnos-empty-state" style="display:none;">Todavía no has autorizado a ningún alumno. Añade su email arriba para darle acceso a la plataforma.</div>
       <div class="contact-list" id="alumnos-list"></div>
+    </div>
+
+    <div id="tab-tareas" style="display:none;">
+      <p class="tareas-aviso">
+        Lo que ha escrito cada alumno en las tareas del curso. Aquí no se ve su balance
+        ni su flujo de caja: para leer las tareas no hace falta abrir sus números.
+      </p>
+      <div id="tareas-error" style="display:none; color:var(--stamp); font-size:0.85rem; margin-bottom:14px;"></div>
+      <div id="tareas-vacio" style="display:none;">Todavía no hay ninguna tarea escrita.</div>
+      <div id="tareas-lista"></div>
     </div>
   </main>
 </div>
@@ -1114,21 +1134,84 @@
   const tabBtnEmails = document.getElementById("tab-btn-emails");
   const tabBtnAlumnos = document.getElementById("tab-btn-alumnos");
   const tabBtnComportamiento = document.getElementById("tab-btn-comportamiento");
-  const allTabBtns = [tabBtnContacts, tabBtnEmails, tabBtnComportamiento, tabBtnAlumnos];
+  const tabBtnTareas = document.getElementById("tab-btn-tareas");
+  const allTabBtns = [tabBtnContacts, tabBtnEmails, tabBtnComportamiento, tabBtnAlumnos, tabBtnTareas];
   const allTabPanes = {
     contacts: document.getElementById("tab-contacts"),
     emails: document.getElementById("tab-emails"),
     comportamiento: document.getElementById("tab-comportamiento"),
-    alumnos: document.getElementById("tab-alumnos")
+    alumnos: document.getElementById("tab-alumnos"),
+    tareas: document.getElementById("tab-tareas")
   };
   function activateTab(name) {
     allTabBtns.forEach(b => b.classList.remove("active"));
     Object.values(allTabPanes).forEach(p => p.style.display = "none");
     ({ contacts: tabBtnContacts, emails: tabBtnEmails, comportamiento: tabBtnComportamiento,
-       alumnos: tabBtnAlumnos })[name].classList.add("active");
+       alumnos: tabBtnAlumnos, tareas: tabBtnTareas })[name].classList.add("active");
     allTabPanes[name].style.display = "block";
   }
   tabBtnContacts.addEventListener("click", () => activateTab("contacts"));
+
+  // ---------- Respuestas de las tareas ----------
+  let tareasCargadas = false;
+
+  function escapar(t) {
+    return String(t == null ? "" : t)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function pintarTareasDeAlumnos(filas) {
+    const lista = document.getElementById("tareas-lista");
+    const vacio = document.getElementById("tareas-vacio");
+    const conAlgo = filas.filter(f => f.tarea1 || f.tarea2 || f.tarea3 || f.tarea4);
+    vacio.style.display = conAlgo.length ? "none" : "block";
+    const titulos = [
+      ["tarea1", "Tarea módulo I"],
+      ["tarea2", "Tarea módulo II"],
+      ["tarea3", "Tarea módulo III"],
+      ["tarea4", "Tarea módulo IV"]
+    ];
+    lista.innerHTML = conAlgo.map(f => {
+      const cuando = f.actualizado
+        ? new Date(f.actualizado).toLocaleString("es-ES", { dateStyle: "long", timeStyle: "short" })
+        : "sin fecha";
+      const bloques = titulos.map(([clave, titulo]) => {
+        const txt = f[clave];
+        return '<div class="tarea-resp' + (txt ? '' : ' sin') + '">' +
+                 '<p class="rotulo">' + titulo + '</p>' +
+                 '<p class="texto">' + (txt ? escapar(txt) : "Sin responder todavía.") + '</p>' +
+               '</div>';
+      }).join("");
+      return '<div class="alumno-tareas">' +
+               '<h3>' + escapar(f.email) + '</h3>' +
+               '<p class="cuando">' + f.marcadas + ' lecciones marcadas · última actividad: ' + cuando + '</p>' +
+               bloques +
+             '</div>';
+    }).join("");
+  }
+
+  async function cargarTareas() {
+    const err = document.getElementById("tareas-error");
+    err.style.display = "none";
+    try {
+      const res = await authFetch(`${window.SUPABASE_URL}/rest/v1/rpc/respuestas_de_tareas`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}"
+      });
+      if (!res.ok) throw new Error(await motivoDelFallo(res));
+      pintarTareasDeAlumnos(await res.json());
+      tareasCargadas = true;
+    } catch (e) {
+      err.textContent = "No se han podido cargar las tareas. " + (e.message || "");
+      err.style.display = "block";
+    }
+  }
+
+  tabBtnTareas.addEventListener("click", async () => {
+    activateTab("tareas");
+    if (!tareasCargadas) await cargarTareas();
+  });
   tabBtnEmails.addEventListener("click", async () => {
     activateTab("emails");
     if (currentAccessToken) {
