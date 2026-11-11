@@ -2366,7 +2366,15 @@
   var SAVE_DELAY = 250;
   var hayPendiente = false;
 
+  // Si los datos no se pudieron cargar, la pantalla está vacía y guardarla
+  // borraría el trabajo de la alumna. Mejor no tocar nada.
+  var cargaOk = true;
+
   function queueSave(){
+    if(!cargaOk){
+      setAutosave("error", "No hemos podido cargar tus datos. Recarga la página antes de escribir, para no perder lo que ya tenías.");
+      return;
+    }
     hayPendiente = true;
     setAutosave("saving", "Guardando...");
     setSaveBtn("Guardar", false);
@@ -2377,7 +2385,7 @@
   // Si cierra la pestaña o cambia de app con algo a medias, se manda ya.
   // keepalive permite que la petición sobreviva a la página.
   function flushSave(){
-    if(!hayPendiente || !session) return;
+    if(!hayPendiente || !session || !cargaOk) return;
     clearTimeout(saveTimer);
     hayPendiente = false;
     try{
@@ -4666,7 +4674,8 @@
         migrarRepartidos();
       }
     }catch(e){
-      setAutosave("error", "No se pudo cargar tu balance guardado. Escribir cifras nuevas las guardará igualmente.");
+      cargaOk = false;
+      setAutosave("error", "No hemos podido cargar tus datos. No se guardará nada hasta que recargues la página, para no borrar lo que ya tenías escrito.");
     }
     render();
     showOnly(appEl);
