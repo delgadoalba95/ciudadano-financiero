@@ -2303,7 +2303,7 @@
   function tipoDe(item){ return item.tipo === "pasivos" ? "pasivos" : "activos"; }
 
   var session = null; // { access_token, refresh_token, user_id, email }
-  var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [], flujo: {}, meses: [], test: null, tareas: {}, estrategia: "", tareaMod2: "", tareaMod3: "", tareaMod4: "", interes: null };
+  var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [], flujo: {}, meses: [], test: null, tareas: {}, estrategia: "", tareaMod2: "", tareaMod3: "", tareaMod4: "", interes: null, inmuebles: null };
   var filasFlujo = [];
   var saveTimer = null;
 
@@ -2980,6 +2980,7 @@
     renderMeses();
     cargarTestGuardado();
     pintarInteres();
+    pintarInmuebles();
     pintarTareas();
     recalc();
   }
@@ -3848,15 +3849,16 @@
     if(sel) sel.addEventListener("change", function(){
       propio.hidden = sel.value !== "otro";
       renderVehiculo();
+      inmoGuarda();
     });
 
     ["veh-precio", "veh-alquiler", "veh-credito"].forEach(function(id){
       var el = document.getElementById(id);
-      if(el) el.addEventListener("input", function(){ formatearMiles(el); renderVehiculo(); });
+      if(el) el.addEventListener("input", function(){ formatearMiles(el); renderVehiculo(); inmoGuarda(); });
     });
 
     var tasa = document.getElementById("veh-tasa");
-    if(tasa) tasa.addEventListener("input", renderVehiculo);
+    if(tasa) tasa.addEventListener("input", function(){ renderVehiculo(); inmoGuarda(); });
 
     // Cambiar entre inmueble y vehículo
     document.querySelectorAll(".opcion-activo").forEach(function(btn){
@@ -3868,6 +3870,7 @@
         document.getElementById("intro-inmueble").hidden = cual !== "inmueble";
         document.getElementById("intro-vehiculo").hidden = cual !== "vehiculo";
         document.getElementById("page-title").textContent = btn.getAttribute("data-titulo");
+        inmoGuarda();
       });
     });
   })();
@@ -3880,6 +3883,7 @@
     el.addEventListener("input", function(){
       formatearMiles(el);
       renderCalc();
+      inmoGuarda();
     });
   });
 
@@ -4283,6 +4287,49 @@
     });
   })();
 
+  // ---------- Inmuebles y vehículos ----------
+  // Se guarda lo que escribe, igual que el resto de aplicativos: en cuanto
+  // toca una cifra se manda a su cuenta, así no pierde el trabajo al salir.
+  var CAMPOS_INMO = ["calc-precio", "calc-alquiler", "calc-hipoteca",
+                     "veh-precio", "veh-alquiler", "veh-credito", "veh-tasa"];
+
+  function inmoGuarda(){
+    if(!document.getElementById("calc-precio")) return;
+    var d = {};
+    CAMPOS_INMO.forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) d[id] = el.value;
+    });
+    var tipo = document.getElementById("veh-tipo");
+    if(tipo) d["veh-tipo"] = tipo.value;
+    var activa = document.querySelector(".opcion-activo.activa");
+    if(activa) d.pestana = activa.getAttribute("data-activo");
+    state.inmuebles = d;
+    queueSave();
+  }
+
+  function pintarInmuebles(){
+    var d = state.inmuebles;
+    if(!d || !document.getElementById("calc-precio")) return;
+    CAMPOS_INMO.forEach(function(id){
+      var el = document.getElementById(id);
+      if(el && typeof d[id] === "string") el.value = d[id];
+    });
+    var tipo = document.getElementById("veh-tipo");
+    if(tipo && typeof d["veh-tipo"] === "string"){
+      tipo.value = d["veh-tipo"];
+      // El campo de "lo pongo yo" solo se ve si estaba elegido.
+      var propio = document.getElementById("veh-propio");
+      if(propio) propio.hidden = d["veh-tipo"] !== "otro";
+    }
+    if(d.pestana){
+      var btn = document.querySelector('.opcion-activo[data-activo="' + d.pestana + '"]');
+      if(btn) btn.click();
+    }
+    if(typeof renderCalc === "function") renderCalc();
+    if(typeof renderVehiculo === "function") renderVehiculo();
+  }
+
   // Vuelca en los campos lo que tenga guardado y dibuja.
   function pintarInteres(){
     if(!document.getElementById("int-svg")) return;
@@ -4615,6 +4662,7 @@
         state.tareaMod3 = typeof data.tareaMod3 === "string" ? data.tareaMod3 : "";
         state.tareaMod4 = typeof data.tareaMod4 === "string" ? data.tareaMod4 : "";
         state.interes = data.interes || null;
+        state.inmuebles = data.inmuebles || null;
         migrarRepartidos();
       }
     }catch(e){

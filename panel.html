@@ -418,6 +418,7 @@
   .tareas-aviso { font-size: 0.86rem; color: var(--ink-faint); margin: 0 0 18px; max-width: 60ch; }
   .alumno-tareas { border: 1px solid var(--rule); border-radius: 10px; padding: 18px 20px; margin-bottom: 14px; background: var(--surface-2, #fff); }
   .alumno-tareas h3 { font-size: 0.95rem; margin: 0 0 4px; }
+  .alumno-tareas h3 .correo { font-weight: 400; color: var(--ink-faint); font-size: 0.85rem; }
   .alumno-tareas .cuando { font-size: 0.78rem; color: var(--ink-faint); margin: 0 0 14px; }
   .tarea-resp { margin: 0 0 14px; }
   .tarea-resp:last-child { margin-bottom: 0; }
@@ -1182,8 +1183,11 @@
                  '<p class="texto">' + (txt ? escapar(txt) : "Sin responder todavía.") + '</p>' +
                '</div>';
       }).join("");
+      const quien = f.nombre
+        ? escapar(f.nombre) + ' <span class="correo">(' + escapar(f.email) + ')</span>'
+        : escapar(f.email);
       return '<div class="alumno-tareas">' +
-               '<h3>' + escapar(f.email) + '</h3>' +
+               '<h3>' + quien + '</h3>' +
                '<p class="cuando">' + f.marcadas + ' lecciones marcadas · última actividad: ' + cuando + '</p>' +
                bloques +
              '</div>';
