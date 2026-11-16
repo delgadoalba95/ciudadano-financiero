@@ -42,3 +42,14 @@ on conflict (modulo, orden) do update
 
 -- Módulo IV abierto para todos, Alba incluida.
 update public.lecciones_ocultas set publicar_en = now() where modulo = 4;
+
+-- Cuarta lección del módulo IV (16 nov 2026), visible desde el momento de
+-- añadirla porque el módulo ya estaba abierto.
+insert into public.lecciones_ocultas (modulo, orden, nombre, loom_id, duracion, miniatura, publicar_en) values
+  (4, 4, 'Ejemplos de análisis - Directo semanal', '1b884771363c48e9b857b362b5ba1549', '42:46', '1b884771363c48e9b857b362b5ba1549-e03479f7e650e83a', now())
+on conflict (modulo, orden) do update
+  set nombre      = excluded.nombre,
+      loom_id     = excluded.loom_id,
+      duracion    = excluded.duracion,
+      miniatura   = excluded.miniatura,
+      publicar_en = excluded.publicar_en;
