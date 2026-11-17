@@ -2303,7 +2303,7 @@
   function tipoDe(item){ return item.tipo === "pasivos" ? "pasivos" : "activos"; }
 
   var session = null; // { access_token, refresh_token, user_id, email }
-  var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [], flujo: {}, meses: [], test: null, tareas: {}, estrategia: "", tareaMod2: "", tareaMod3: "", tareaMod4: "", interes: null, inmuebles: null };
+  var state = { activo: {}, pasivo: {}, customActivo: [], customPasivo: [], flujo: {}, meses: [], test: null, tareas: {}, estrategia: "", tareaMod2: "", tareaMod3: "", tareaMod4: "", tareaMod5: "", interes: null, inmuebles: null };
   var filasFlujo = [];
   var saveTimer = null;
 
@@ -4494,6 +4494,13 @@
       enunciado: "Escribe qué porcentaje (%) de tu (1) Flujo de Caja y de tu (2) Balance " +
                  "personal estás destinando a Activos. Y describe cómo puedes mejorar este porcentaje."
     },
+    5: {
+      id: "tarea-mod5",
+      titulo: "Tarea módulo V",
+      clave: "tareaMod5",
+      enunciado: "Elige el tipo de estrategia de cartera que vas a llevar a cabo y " +
+                 "empieza a invertir cuando se den las oportunidades."
+    },
     4: {
       id: "tarea-mod4",
       titulo: "Tarea módulo IV",
@@ -4678,6 +4685,7 @@
         state.tareaMod2 = typeof data.tareaMod2 === "string" ? data.tareaMod2 : "";
         state.tareaMod3 = typeof data.tareaMod3 === "string" ? data.tareaMod3 : "";
         state.tareaMod4 = typeof data.tareaMod4 === "string" ? data.tareaMod4 : "";
+        state.tareaMod5 = typeof data.tareaMod5 === "string" ? data.tareaMod5 : "";
         state.interes = data.interes || null;
         state.inmuebles = data.inmuebles || null;
         migrarRepartidos();

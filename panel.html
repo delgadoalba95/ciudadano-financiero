@@ -1164,13 +1164,14 @@
   function pintarTareasDeAlumnos(filas) {
     const lista = document.getElementById("tareas-lista");
     const vacio = document.getElementById("tareas-vacio");
-    const conAlgo = filas.filter(f => f.tarea1 || f.tarea2 || f.tarea3 || f.tarea4);
+    const conAlgo = filas.filter(f => f.tarea1 || f.tarea2 || f.tarea3 || f.tarea4 || f.tarea5);
     vacio.style.display = conAlgo.length ? "none" : "block";
     const titulos = [
       ["tarea1", "Tarea módulo I"],
       ["tarea2", "Tarea módulo II"],
       ["tarea3", "Tarea módulo III"],
-      ["tarea4", "Tarea módulo IV"]
+      ["tarea4", "Tarea módulo IV"],
+      ["tarea5", "Tarea módulo V"]
     ];
     lista.innerHTML = conAlgo.map(f => {
       const cuando = f.actualizado
