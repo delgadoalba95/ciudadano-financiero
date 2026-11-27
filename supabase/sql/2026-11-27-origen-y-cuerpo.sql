@@ -43,3 +43,59 @@ begin
     updated_at         = now();
 end;
 $fn$;
+
+-- El grupo al que iba dirigido cada envío, para verlo luego en el panel.
+alter table public.emails_programados add column if not exists grupo text;
+alter table public.email_log          add column if not exists grupo text;
+
+-- El cron se lo pasa a la función de envío, que lo guarda en el historial
+-- junto con el cuerpo del email (eso se cambió en la propia función
+-- enviar-email, que vive en el panel de Supabase, no en este repositorio).
+create or replace function public.enviar_emails_programados()
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  fila record;
+  cuantos integer := 0;
+  k text;
+  interna text;
+begin
+  select valor into k from public.ajustes where clave = 'clave_publicable';
+  select valor into interna from public.ajustes where clave = 'clave_interna_email';
+
+  for fila in
+    select * from public.emails_programados
+    where estado = 'programado' and enviar_en <= now()
+    order by enviar_en
+    limit 20
+  loop
+    perform net.http_post(
+      url := 'https://srhopldaiqdyybomnhsh.supabase.co/functions/v1/enviar-email',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'apikey', k,
+        'Authorization', 'Bearer ' || k,
+        'x-cf-clave', interna
+      ),
+      body := jsonb_build_object(
+        'contacts', fila.destinatarios,
+        'subject',  fila.asunto,
+        'html',     fila.html,
+        'grupo',    fila.grupo
+      )
+    );
+
+    update public.emails_programados
+       set estado = 'enviado', enviado_en = now()
+     where id = fila.id;
+
+    cuantos := cuantos + 1;
+  end loop;
+  return cuantos;
+end;
+$fn$;
+
+revoke all on function public.enviar_emails_programados() from public, anon, authenticated;

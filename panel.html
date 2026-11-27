@@ -439,6 +439,7 @@
   .envio-lista { margin: 0; padding-left: 18px; font-size: 0.86rem; color: var(--ink-soft); }
   .envio-lista li { margin-bottom: 3px; }
   .envio-fallo { color: var(--stamp); }
+  .envio-grupo { color: var(--accent); font-weight: 600; }
   .envio-cuerpo {
     background: #fff; border: 1px solid var(--rule); border-radius: 8px;
     padding: 16px 18px; font-size: 0.9rem; color: var(--ink);
@@ -1148,9 +1149,10 @@
       const uno = grupo[0];
       const fallidos = grupo.filter(e => e.status !== "sent").length;
       const abierto = enviosAbiertos.has(i);
-      const cuantos = grupo.length === 1
+      const cuantos = (grupo.length === 1
         ? escapeHtml(uno.email)
-        : grupo.length + " destinatarios";
+        : grupo.length + " destinatarios")
+        + (uno.grupo ? ' <span class="envio-grupo">(' + escapeHtml(uno.grupo) + ')</span>' : "");
       const insignia = fallidos === 0
         ? '<span class="badge badge-sent">Enviado</span>'
         : `<span class="badge badge-failed">${fallidos} fallido${fallidos > 1 ? "s" : ""}</span>`;
@@ -1164,6 +1166,10 @@
         ? `<div class="envio-cuerpo">${uno.cuerpo}</div>`
         : `<p class="envio-sincuerpo">De este envío no se guardó el texto. A partir de ahora sí se guarda.</p>`;
 
+      const aQuien = uno.grupo
+        ? 'Se envió a ' + escapeHtml(uno.grupo)
+        : "Se envió a";
+
       return `
         <div class="envio${abierto ? " abierto" : ""}" data-envio="${i}">
           <button class="envio-head" type="button" aria-expanded="${abierto}">
@@ -1176,7 +1182,7 @@
             <span class="contact-date">${formatDate(uno.sent_at)}</span>
           </button>
           <div class="envio-detalle">
-            <p class="envio-rotulo">Se envió a</p>
+            <p class="envio-rotulo">${aQuien}</p>
             <ul class="envio-lista">${destinatarios}</ul>
             <p class="envio-rotulo">Contenido</p>
             ${cuerpo}
@@ -1796,6 +1802,21 @@
 
 
   // ---------- Programar el envío ----------
+  // Si lo seleccionado coincide exactamente con uno de los grupos, se guarda
+  // su nombre para que luego se vea en el historial a quién iba dirigido.
+  function grupoElegido() {
+    const elegidos = allContacts.filter(c => selectedContactIds.has(c.id));
+    if (!elegidos.length) return null;
+    const grupo = GRUPOS.find(g => {
+      const suyos = allContacts.filter(g.test);
+      return suyos.length === elegidos.length &&
+             suyos.every(c => selectedContactIds.has(c.id));
+    });
+    if (grupo) return grupo.titulo;
+    const todos = allContacts.length === elegidos.length;
+    return todos ? "Todos los contactos" : null;
+  }
+
   function destinatariosElegidos() {
     return allContacts.filter(c => selectedContactIds.has(c.id))
       .map(c => ({ id: c.id, email: c.email, name: primerNombre(c.name) }));
@@ -1838,7 +1859,8 @@
           enviar_en: fecha.toISOString(),
           asunto: subject,
           html: htmlParaEnviar(preheaderEl.value.trim(), body),
-          destinatarios: destinatarios
+          destinatarios: destinatarios,
+          grupo: grupoElegido()
         })
       });
       if (!res.ok) throw new Error(await motivoDelFallo(res));
