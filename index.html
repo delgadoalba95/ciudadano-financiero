@@ -1615,9 +1615,9 @@ document.querySelectorAll(".legal-modal-backdrop").forEach((backdrop) => {
         email: fEmail.value.trim(),
         whatsapp: null,
         consent: true,
-        // Tiene que ser "waitlist": es el valor con el que la base de datos
-        // marca el alta como lista de espera y dispara la bienvenida.
-        source: "waitlist"
+        // "aviso" tambien cuenta como lista de espera en la base de datos,
+        // y ademas deja registrado que entro por la ventana emergente.
+        source: "aviso"
       });
       formulario.reset();
       fEstado.textContent = "¡Listo! Te avisaremos en cuanto abramos matrícula.";

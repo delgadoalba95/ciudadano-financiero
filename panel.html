@@ -415,6 +415,36 @@
     margin-bottom: 24px;
     flex-wrap: wrap;
   }
+  .badge-origen { background: #E6E9F2; color: #48597D; }
+
+  /* ---------- Envíos de email, agrupados y desplegables ---------- */
+  .envio { border: 1px solid var(--rule); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+  .envio-head {
+    width: 100%; display: flex; align-items: center; gap: 12px; text-align: left;
+    background: none; border: 0; cursor: pointer; padding: 14px 16px;
+    font-family: inherit; color: var(--ink);
+  }
+  .envio-head:hover { background: rgba(255,255,255,0.6); }
+  .envio-head .flecha { flex: none; color: var(--ink-faint); transition: transform .15s ease; }
+  .envio.abierto .envio-head .flecha { transform: rotate(90deg); }
+  .envio-datos { flex: 1; min-width: 0; }
+  .envio-datos .subject { display: block; font-weight: 600; font-size: 0.93rem; }
+  .envio-datos .meta { display: block; font-size: 0.8rem; color: var(--ink-faint); }
+  .envio-detalle { display: none; padding: 0 16px 16px 42px; }
+  .envio.abierto .envio-detalle { display: block; }
+  .envio-rotulo {
+    font: 600 11px/1 -apple-system, system-ui, sans-serif; letter-spacing: .09em;
+    text-transform: uppercase; color: var(--ink-faint); margin: 14px 0 7px;
+  }
+  .envio-lista { margin: 0; padding-left: 18px; font-size: 0.86rem; color: var(--ink-soft); }
+  .envio-lista li { margin-bottom: 3px; }
+  .envio-fallo { color: var(--stamp); }
+  .envio-cuerpo {
+    background: #fff; border: 1px solid var(--rule); border-radius: 8px;
+    padding: 16px 18px; font-size: 0.9rem; color: var(--ink);
+  }
+  .envio-cuerpo p { margin: 0 0 10px; }
+  .envio-sincuerpo { font-size: 0.85rem; color: var(--ink-faint); font-style: italic; margin: 0; }
   .tareas-aviso { font-size: 0.86rem; color: var(--ink-faint); margin: 0 0 18px; max-width: 60ch; }
   .alumno-tareas { border: 1px solid var(--rule); border-radius: 10px; padding: 18px 20px; margin-bottom: 14px; background: var(--surface-2, #fff); }
   .alumno-tareas h3 { font-size: 0.95rem; margin: 0 0 4px; }
@@ -1103,19 +1133,69 @@
       return;
     }
     empty.style.display = "none";
-    list.innerHTML = allEmails.map(e => `
-      <div class="email-row">
-        <div>
-          <div class="subject">${escapeHtml(e.subject)}</div>
-          <div class="meta">${escapeHtml(e.email)}${e.error ? " · " + escapeHtml(e.error) : ""}</div>
-        </div>
-        <div style="display:flex; align-items:center; gap:10px;">
-          <span class="badge ${e.status === 'sent' ? 'badge-sent' : 'badge-failed'}">${e.status === 'sent' ? 'Enviado' : 'Fallido'}</span>
-          <div class="contact-date">${formatDate(e.sent_at)}</div>
-        </div>
-      </div>
-    `).join("");
+
+    // Un mismo email mandado a varias personas sale una sola vez. Se agrupan
+    // por asunto y por el minuto en que salieron: eso es un envío.
+    const envios = new Map();
+    allEmails.forEach(e => {
+      const minuto = (e.sent_at || "").slice(0, 16);
+      const clave = (e.subject || "") + "|" + minuto;
+      if (!envios.has(clave)) envios.set(clave, []);
+      envios.get(clave).push(e);
+    });
+
+    list.innerHTML = [...envios.values()].map((grupo, i) => {
+      const uno = grupo[0];
+      const fallidos = grupo.filter(e => e.status !== "sent").length;
+      const abierto = enviosAbiertos.has(i);
+      const cuantos = grupo.length === 1
+        ? escapeHtml(uno.email)
+        : grupo.length + " destinatarios";
+      const insignia = fallidos === 0
+        ? '<span class="badge badge-sent">Enviado</span>'
+        : `<span class="badge badge-failed">${fallidos} fallido${fallidos > 1 ? "s" : ""}</span>`;
+
+      const destinatarios = grupo.map(e =>
+        `<li>${escapeHtml(e.email)}${e.status !== "sent"
+            ? ' <span class="envio-fallo">' + escapeHtml(e.error || "falló") + '</span>'
+            : ""}</li>`).join("");
+
+      const cuerpo = uno.cuerpo
+        ? `<div class="envio-cuerpo">${uno.cuerpo}</div>`
+        : `<p class="envio-sincuerpo">De este envío no se guardó el texto. A partir de ahora sí se guarda.</p>`;
+
+      return `
+        <div class="envio${abierto ? " abierto" : ""}" data-envio="${i}">
+          <button class="envio-head" type="button" aria-expanded="${abierto}">
+            <span class="flecha" aria-hidden="true">&#9656;</span>
+            <span class="envio-datos">
+              <span class="subject">${escapeHtml(uno.subject)}</span>
+              <span class="meta">${cuantos}</span>
+            </span>
+            ${insignia}
+            <span class="contact-date">${formatDate(uno.sent_at)}</span>
+          </button>
+          <div class="envio-detalle">
+            <p class="envio-rotulo">Se envió a</p>
+            <ul class="envio-lista">${destinatarios}</ul>
+            <p class="envio-rotulo">Contenido</p>
+            ${cuerpo}
+          </div>
+        </div>`;
+    }).join("");
+
+    list.querySelectorAll(".envio-head").forEach(cab => {
+      cab.addEventListener("click", () => {
+        const caja = cab.closest(".envio");
+        const i = Number(caja.dataset.envio);
+        const abierto = caja.classList.toggle("abierto");
+        cab.setAttribute("aria-expanded", abierto);
+        if (abierto) enviosAbiertos.add(i); else enviosAbiertos.delete(i);
+      });
+    });
   }
+
+  const enviosAbiertos = new Set();
 
   async function loadEmailLogIntoDashboard(access_token) {
     const loadError = document.getElementById("email-load-error");
@@ -1521,6 +1601,16 @@
     if (c.alumno) badges.push('<span class="badge badge-alumno">Alumno</span>');
     badges.push(`<span class="badge badge-cohorte">Cohorte ${cohorteDe(c)}</span>`);
     if (c.is_waitlist) badges.push('<span class="badge badge-waitlist">Lista de espera</span>');
+    if (c.origen) {
+      const puertas = {
+        waitlist: "Formulario de la web",
+        aviso: "Ventana emergente",
+        vsl: "Vídeo de las 3 habilidades",
+        test: "Test"
+      };
+      badges.push('<span class="badge badge-origen">' +
+        escapeHtml(puertas[c.origen] || c.origen) + '</span>');
+    }
     if (c.is_test) badges.push(`<span class="badge badge-test">Test: ${escapeHtml(PROFILE_LABELS[c.test_result_top] || c.test_result_top || "")}</span>`);
 
     let detail = "";
