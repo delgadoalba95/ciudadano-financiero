@@ -360,6 +360,22 @@
     font-family:"IBM Plex Mono", monospace; font-size:12px; font-weight:500;
     color: var(--ink-faint); letter-spacing:.04em;
   }
+  .caducado {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--stamp);
+    border-radius: 10px;
+    padding: 22px 24px;
+    margin-bottom: 26px;
+  }
+  .caducado h2 { font-size: 1.1rem; margin: 0 0 8px; }
+  .caducado p { margin: 0; font-size: 0.94rem; color: var(--ink-soft); }
+  .caducado[hidden] { display: none !important; }
+
+  /* En una lección aún cerrada se ve la duración y cuándo se abre. */
+  .leccion-bloqueada .leccion-dur { margin-left: auto; }
+  .leccion-bloqueada .bloqueado-tag { flex: none; }
+
   /* Clase ya prevista a la que todavía le falta el vídeo: sin icono de play
      ni duración, para que se vea de un vistazo lo que queda por grabar. */
   .leccion-pendiente {
@@ -1261,6 +1277,11 @@
       </div>
 
       <section class="view active" id="view-curso">
+        <div class="caducado" id="acceso-caducado" hidden>
+          <h2>Tu acceso al curso ha terminado</h2>
+          <p>Tus respuestas y tus números siguen guardados. Si quieres recuperar
+             el acceso, escríbeme a hola@ciudadanofinanciero.com.</p>
+        </div>
         <div class="instructions">
           <span class="mark">&#9432;</span>
           <p>Aquí tienes las lecciones del curso. Se irán publicando por módulos y puedes verlas <strong>tantas veces como quieras</strong> durante tu año de acceso.</p>
@@ -4521,16 +4542,49 @@
     }
   };
 
+  // Cómo se lee una fecha de apertura: "el viernes 4 de diciembre".
+  function cuandoSeAbre(iso){
+    var d = new Date(iso);
+    if(isNaN(d)) return "";
+    var texto = d.toLocaleDateString("es-ES",
+      { weekday: "long", day: "numeric", month: "long" });
+    return "Se abre el " + texto;
+  }
+
+  // La fila de una lección que todavía no está abierta: se ve su nombre y su
+  // duración, para saber lo que viene, pero el vídeo no llega al navegador.
+  function filaLeccionCerrada(l){
+    var div = document.createElement("div");
+    div.className = "leccion";
+    div.innerHTML =
+      '<div class="leccion-bloqueada">' +
+        '<span class="leccion-candado" aria-hidden="true">' +
+          '<svg viewBox="0 0 24 24" fill="none">' +
+            '<rect x="4.75" y="10.25" width="14.5" height="9" rx="2" stroke="currentColor" stroke-width="1.5"></rect>' +
+            '<path d="M8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.5"></path>' +
+          '</svg>' +
+        '</span>' +
+        '<span class="leccion-name"></span>' +
+        '<span class="leccion-dur"></span>' +
+        '<span class="bloqueado-tag"></span>' +
+      '</div>';
+    div.querySelector(".leccion-name").textContent = l.nombre;
+    div.querySelector(".leccion-dur").textContent = l.duracion || "";
+    div.querySelector(".bloqueado-tag").textContent = cuandoSeAbre(l.se_abre) || "Bloqueado";
+    return div;
+  }
+
   async function abrirModulosPublicados(access_token){
     var res;
     try{
-      res = await fetch(window.SUPABASE_URL +
-        "/rest/v1/lecciones_ocultas?select=modulo,orden,nombre,loom_id,duracion,miniatura" +
-        "&publicar_en=lte.now()&order=modulo.asc,orden.asc", {
+      res = await fetch(window.SUPABASE_URL + "/rest/v1/rpc/lecciones_del_alumno", {
+        method: "POST",
         headers: {
+          "Content-Type": "application/json",
           "apikey": window.SUPABASE_ANON_KEY,
           "Authorization": "Bearer " + access_token
-        }
+        },
+        body: "{}"
       });
     }catch(e){ return; }
     if(!res.ok) return;
@@ -4547,15 +4601,23 @@
       if(!modulo) return;
       var lista = modulo.querySelector(".lecciones");
       if(!lista) return;
+      var deEste = porModulo[num];
+
       var yaGrabadas = {};
-      porModulo[num].forEach(function(l){ yaGrabadas[l.nombre] = true; });
+      deEste.forEach(function(l){ yaGrabadas[l.nombre] = true; });
       lista.querySelectorAll(".leccion").forEach(function(x){
         var nombre = x.querySelector(".leccion-name");
         if(nombre && yaGrabadas[nombre.textContent.trim()]) x.remove();
       });
       var pendientes = [].slice.call(lista.querySelectorAll(".leccion"));
-      porModulo[num].forEach(function(l){ lista.appendChild(filaLeccion(l)); });
+      deEste.forEach(function(l){
+        lista.appendChild(l.abierta ? filaLeccion(l) : filaLeccionCerrada(l));
+      });
       pendientes.forEach(function(x){ lista.appendChild(x); });
+
+      // Los aplicativos y la tarea solo cuando el módulo está abierto.
+      var abierto = deEste.some(function(l){ return l.abierta; });
+      if(!abierto) return;
 
       (HERRAMIENTAS_DE_MODULO[Number(num)] || []).forEach(abrirHerramienta);
 
@@ -4697,7 +4759,36 @@
     render();
     showOnly(appEl);
     if(window.mostrarBuzon) window.mostrarBuzon();
+    ajustarPorTipoDeAcceso(session.access_token);
     abrirModulosPublicados(session.access_token);
+  }
+
+  // Los directos son grabaciones de la primera edición. Quien entra ahora,
+  // a su ritmo, no los ve: tiene el contenido, las tareas y los aplicativos.
+  async function ajustarPorTipoDeAcceso(access_token){
+    var datos;
+    try{
+      var res = await fetch(window.SUPABASE_URL + "/rest/v1/rpc/mi_acceso", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": window.SUPABASE_ANON_KEY,
+          "Authorization": "Bearer " + access_token
+        },
+        body: "{}"
+      });
+      if(!res.ok) return;
+      datos = (await res.json())[0];
+    }catch(e){ return; }
+    if(!datos) return;
+
+    if(!datos.acceso_total){
+      document.querySelectorAll(".modulo-head .directo").forEach(function(a){ a.remove(); });
+    }
+    if(datos.activo === false){
+      var aviso = document.getElementById("acceso-caducado");
+      if(aviso) aviso.hidden = false;
+    }
   }
 
   async function boot(){
